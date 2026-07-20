@@ -14,15 +14,21 @@ class PropertySearchController extends Controller
             return view('property-search');
         }
 
-        $validated = $request->validate(
-            ['property_search' => ['required', 'string', 'max:255']],
-            [
-                'property_search.required' => 'Enter a street address or property ID to search.',
-                'property_search.max' => 'Your search must be 255 characters or fewer.',
-            ],
-        );
+        $search = trim((string) $request->input('property_search'));
 
-        $property = $properties->find($validated['property_search']);
+        if ($search === '') {
+            return view('property-search', [
+                'validationMessage' => 'Enter a street address or property ID to search.',
+            ]);
+        }
+
+        if (strlen($search) > 255) {
+            return view('property-search', [
+                'validationMessage' => 'Your search must be 255 characters or fewer.',
+            ]);
+        }
+
+        $property = $properties->find($search);
 
         $interpretation = null;
 

@@ -58,8 +58,8 @@
                                 value="{{ old('property_search', request('property_search')) }}"
                                 placeholder="Try 123 Sample Oak Drive or 100001"
                                 autocomplete="street-address"
-                                aria-describedby="search-hint @error('property_search') search-error @enderror"
-                                @error('property_search') aria-invalid="true" @enderror
+                                aria-describedby="search-hint @isset($validationMessage) search-error @endisset"
+                                @isset($validationMessage) aria-invalid="true" @endisset
                             >
                             <button type="submit">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -71,12 +71,12 @@
                         </div>
                         <p id="search-hint" class="field-hint">Enter a complete sample address or exact six-digit PID.</p>
 
-                        @error('property_search')
+                        @isset($validationMessage)
                             <p id="search-error" class="message message-error" role="alert">
                                 <span aria-hidden="true">!</span>
-                                {{ $message }}
+                                {{ $validationMessage }}
                             </p>
-                        @enderror
+                        @endisset
                     </form>
                 </div>
             </section>

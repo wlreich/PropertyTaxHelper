@@ -57,12 +57,7 @@ class PropertySearchTest extends TestCase
         $response = $this->get('/?property_search=');
 
         $response
-            ->assertRedirect()
-            ->assertSessionHasErrors([
-                'property_search' => 'Enter a street address or property ID to search.',
-            ]);
-
-        $this->followRedirects($response)
+            ->assertOk()
             ->assertSee('Enter a street address or property ID to search.');
     }
 
