@@ -1,0 +1,12 @@
+# Local government source exports and other raw data are never versioned.
+/data/local/
+/data/raw/
+/raw-data/
+
+# Reproducible profiler outputs may contain aggregate facts, but keep local runs
+# out of version control unless they are deliberately reviewed and documented.
+/data/profiling-output/
+
+# Python test/runtime caches.
+__pycache__/
+*.py[cod]

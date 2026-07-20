@@ -1,0 +1,27 @@
+{
+  "name": "TCAD Legacy 8.0.33 appraisal export layout, 2026 preliminary",
+  "source": "https://traviscad.org/wp-content/largefiles/Website_Legacy8.0.33-AppraisalExportLayout_06182026.zip",
+  "files": {
+    "*_APPRAISAL_HEADER.TXT": {"format":"fixed-width","record_length":244,"worksheet":"Header","business_purpose":"Export run metadata and value-presence indicator."},
+    "*_APPRAISAL_INFO.TXT": {"format":"fixed-width","record_length":9922,"worksheet":"Property","business_purpose":"Property, owner, situs, legal, classification, exemption, and roll-level value data.","key_audits":[{"name":"property_owner_roll_candidate","status":"candidate","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":18,"end":22},{"name":"sup_num","start":23,"end":34},{"name":"py_owner_id","start":597,"end":608}]}]},
+    "*_APPRAISAL_ENTITY_INFO.TXT": {"format":"fixed-width","record_length":3141,"worksheet":"PropertyEntity","business_purpose":"Property-owner associations with taxing entities and entity-level values."},
+    "*_APPRAISAL_ENTITY_TOTALS.TXT": {"format":"fixed-width","record_length":2491,"worksheet":"EntityTotals","business_purpose":"Aggregate value and exemption totals by taxing entity."},
+    "*_APPRAISAL_ABSTRACT_SUBDV.TXT": {"format":"fixed-width","record_length":50,"worksheet":"AbstractSubdivision","business_purpose":"Abstract or subdivision code descriptions."},
+    "*_APPRAISAL_STATE_CODE.TXT": {"format":"fixed-width","record_length":125,"worksheet":"StateCode","business_purpose":"Local-to-state property classification code reference."},
+    "*_APPRAISAL_ARB.TXT": {"format":"fixed-width","record_length":127,"worksheet":"ARB","business_purpose":"Appraisal Review Board status and reference identifiers by property/year.","key_audits":[{"name":"property_year_candidate","status":"candidate","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":13,"end":17}]}]},
+    "*_APPRAISAL_ENTITY.TXT": {"format":"fixed-width","record_length":17,"worksheet":"Entity","business_purpose":"Taxing-entity identifier and code lookup."},
+    "*_APPRAISAL_MOBILE_HOME_INFO.TXT": {"format":"fixed-width","record_length":928,"worksheet":"MobileHome","business_purpose":"Mobile-home identifiers and attributes."},
+    "*_APPRAISAL_AGENT.TXT": {"format":"fixed-width","record_length":378,"worksheet":"Agent","business_purpose":"Agent contact and identifier data."},
+    "*_APPRAISAL_LAWSUIT.TXT": {"format":"fixed-width","record_length":117,"worksheet":"Lawsuit","business_purpose":"Property/year lawsuit reference data."},
+    "*_ARBITRATION_LAWSUIT.TXT": {"format":"fixed-width","record_length":117,"worksheet":"Arbitration","business_purpose":"Property/year arbitration reference data."},
+    "*_APPRAISAL_IMPROVEMENT_INFO.TXT": {"format":"fixed-width","record_length":114,"worksheet":"Improvement","business_purpose":"Improvement identifiers, types, homesite flags, and values.","key_audits":[{"name":"property_year_improvement","status":"confirmed","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":13,"end":16},{"name":"imprv_id","start":17,"end":28}]}]},
+    "*_APPRAISAL_IMPROVEMENT_DETAIL.TXT": {"format":"fixed-width","record_length":622,"worksheet":"ImprovementDetail","business_purpose":"Improvement detail type, class, year, area, and value.","key_audits":[{"name":"property_year_improvement_detail","status":"confirmed","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":13,"end":16},{"name":"imprv_id","start":17,"end":28},{"name":"imprv_det_id","start":29,"end":40}]}]},
+    "*_APPRAISAL_IMPROVEMENT_DETAIL_ATTR.TXT": {"format":"fixed-width","record_length":87,"worksheet":"ImprovementDetailAttributes","business_purpose":"Coded attributes attached to an improvement detail.","key_audits":[{"name":"property_year_improvement_detail_attribute_candidate","status":"candidate","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":13,"end":16},{"name":"imprv_id","start":17,"end":28},{"name":"imprv_det_id","start":29,"end":40},{"name":"imprv_attr_id","start":41,"end":52}]}]},
+    "*_APPRAISAL_LAND_DETAIL.TXT": {"format":"fixed-width","record_length":199,"worksheet":"LandDetail","business_purpose":"Land segments, size, methods, classes, and values.","key_audits":[{"name":"property_year_land_segment_candidate","status":"candidate","fields":[{"name":"prop_id","start":1,"end":12},{"name":"prop_val_yr","start":13,"end":16},{"name":"land_seg_id","start":17,"end":28}]}]},
+    "*_APPRAISAL_TAX_DEFERRAL_INFO.TXT": {"format":"fixed-width","record_length":224,"worksheet":"Deferral","business_purpose":"Tax-deferral records for specified exemptions."},
+    "*_APPRAISAL_COUNTRY_CODE.TXT": {"format":"fixed-width","record_length":55,"worksheet":"CountryCode","business_purpose":"Country code lookup."},
+    "*_APPRAISAL_SKETCH_INFO.TXT": {"format":"tab-delimited","delimiter":"\t","expected_columns":7,"allow_trailing_empty":true,"worksheet":"Sketches","business_purpose":"Legacy directional sketches or enhanced JSON sketches."},
+    "*_APPRAISAL_SB12.TXT": {"format":"tab-delimited","delimiter":"\t","expected_columns":19,"allow_trailing_empty":true,"worksheet":"SB12","business_purpose":"SB 12 compression calculation details."},
+    "*.PDF": {"format":"binary","worksheet":null,"business_purpose":"Export totals report."}
+  }
+}
