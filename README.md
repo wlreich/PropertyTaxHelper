@@ -25,3 +25,7 @@ npm run dev
 Open http://localhost:3000. Validate changes with `npm run lint` and `npm run build` from `web/`.
 
 Changes should be reviewed in pull requests. Production deployment requires Wendy's approval. Automatic Vercel Git deployments are initially disabled by `web/vercel.json`; this does not block manual deployments or replace Vercel account permissions.
+
+## Comprehensive TCAD ingestion
+
+The private ingestion foundation covers every documented field in all 20 export text files, with complete ZIP retention and resumable file transactions. See [the operator guide](docs/ingestion/tcad-comprehensive.md). It runs separately from the Vercel website; hosted schema activation and a real county load remain pending review.
