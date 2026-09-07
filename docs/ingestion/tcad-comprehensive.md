@@ -37,11 +37,11 @@ The older preliminary package is a separate release. Roll stage is supplied expl
 
 ## Operator workflow
 
-The importer runs as a Python job outside the Vercel website. It uses a direct or session-pooler PostgreSQL connection, not a publishable API key or a transaction-pooler connection. Session affinity is required for its advisory lock. No schedule or cloud worker has been provisioned by this change.
+The importer runs as a Python job outside the Vercel website. It uses a direct or session-pooler PostgreSQL connection, not a publishable API key or a transaction-pooler connection. Session affinity is required for its advisory lock. The manual GitHub Actions worker and Supabase Storage adapter are now implemented; [activation instructions](run-first-import.md) cover the remaining one-time credentials. No scheduled imports are configured.
 
 1. Review and apply the committed `tcad_ingestion_foundation` and `tcad_source_chronology` migrations in order. Ensure migration versions in Git and Supabase agree before using CLI migration push. PR #7 separately reconciles the earlier database-health migration.
 2. Provision the ingestion login inheriting `tcad_loader`, with credentials held by the ingestion job. Set `TCAD_DATABASE_URL` with TLS enabled (`sslmode=require` or stronger). Never paste or commit that connection string, or give it to browser code.
-3. Download the complete chosen official ZIP to a private location. Retain a copy on durable private storage. The implemented archive store is a filesystem directory on a persistent volume; this PR does not upload to Supabase Storage, R2, or another cloud bucket. A temporary workstation/runner directory is not a durable archive.
+3. Download the complete chosen official ZIP to a private location. Retain a copy on durable private storage. The standalone CLI supports a filesystem directory on a persistent volume. The GitHub job uses the private Supabase Storage backend described in the activation guide. A temporary workstation/runner directory is not a durable archive.
 4. Validate the complete archive with the command below. This reads all members, verifies ZIP member CRCs and layout structure, and reports only aggregate metadata and checksums. It makes no database connection.
 
 ```sh
@@ -66,9 +66,10 @@ The importer rejects missing documented files, unknown file types, duplicate mem
 
 ## Validation
 
-Fourteen parser/archive/chronology unit tests pass. The loader integration check also passes against PGlite through its PostgreSQL socket adapter, with test-only adjustments for the adapter’s shared-session/prepared-statement limitations. It verifies a failed file after a batch was inserted, rollback, resume, repeat loading, restricted-role writes and private views. A native PostgreSQL run could not start in this environment because only the root OS user is mapped; hosted Supabase and full-size ingestion remain unverified.
+Twenty-one parser/archive/chronology/job unit tests pass. The loader integration check also passes against PGlite through its PostgreSQL socket adapter, with test-only adjustments for the adapter’s shared-session/prepared-statement limitations. It verifies a failed file after a batch was inserted, rollback, resume, repeat loading, restricted-role writes and private views. A native PostgreSQL run could not start in this environment because only the root OS user is mapped; hosted Supabase and full-size ingestion remain unverified.
 
 ```sh
+python -m pip install -r tools/ingestion/requirements-job.txt
 python -m unittest discover -s tools/ingestion/tests -v
 ```
 
@@ -76,7 +77,7 @@ The synthetic fixtures cover all 1,030 mapped fields, all 20 text members, PDFs,
 
 `tests/integration_check.py` additionally exercises real psycopg inserts under the restricted loader role, per-file rollback, resumable loading, duplicate prevention, RLS permissions and ready-only views against a disposable local PostgreSQL database. It requires `TCAD_TEST_DATABASE_URL` pointing to localhost and the migration already applied; it refuses remote database URLs.
 
-The first real county archive, throughput, disk requirements, long-running worker, durable cloud archive storage and production credentials remain activation work. No real property records have been loaded by this PR.
+The first real county archive, throughput, disk requirements and production credentials remain activation work. Worker and cloud archive code is included; its live execution awaits those credentials. No real property records have been loaded by this PR.
 
 
 ## Source chronology and import audit

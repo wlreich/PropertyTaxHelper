@@ -87,7 +87,7 @@ def parse_record(raw, spec, encoding='ascii'):
 
 
 def scan_member(archive, item, spec, year, encoding, consume=None):
-    hasher, count = hashlib.sha256(), 0
+    hasher, count, serialized_bytes = hashlib.sha256(), 0, 0
     with archive.open(item) as stream:
         if spec is None:
             while chunk := stream.read(1024 * 1024):
@@ -108,8 +108,10 @@ def scan_member(archive, item, spec, year, encoding, consume=None):
                     raise ValidationError(f'{spec["worksheet"]} row {count}: invalid encoding, width, fields, or year') from error
                 if consume:
                     consume(count, fields)
+                else:
+                    serialized_bytes += len(json.dumps(fields,ensure_ascii=False).encode('utf-8'))
     return {'sha256': hasher.hexdigest(), 'rows': count,
-            'uncompressed_bytes': item.file_size,
+            'uncompressed_bytes': item.file_size, 'serialized_fields_bytes':serialized_bytes,
             'record_type': spec['worksheet'] if spec else 'archive_only_pdf', **zip_clock(item)}
 
 
@@ -247,14 +249,24 @@ def run_validated(args, connection=None, attempt_id=None):
                      acquisition_receipt_sha256=receipt_sha,details={'archive_sha256':archive_sha})
     path = Path(args.archive)
     if args.load:
-        if not args.expected_sha256 or not args.archive_store:
+        if not args.expected_sha256 or not (args.archive_store or getattr(args,'archive_backend',None)):
             raise ValidationError('--load requires --expected-sha256 and --archive-store')
-        path = retain_archive(path, args.archive_store, archive_sha)
+        backend=getattr(args,'archive_backend',None)
+        if backend:
+            from archive_storage import archive_key,receipt_key
+            if not args.receipt:
+                raise ValidationError('Cloud archive loads require an acquisition receipt')
+            archived_location=backend.retain(path,archive_key(archive_sha),archive_sha,'application/zip')
+            receipt_sha=digest(args.receipt)
+            backend.retain(args.receipt,receipt_key(archive_sha,receipt_sha),receipt_sha,'application/json')
+        else:
+            path = retain_archive(path, args.archive_store, archive_sha)
+            archived_location=path
     with zipfile.ZipFile(path) as archive:
         members = inventory(archive,layout)
         header = check_header(archive,members,layout,args.year,args.encoding)
         if args.load:
-            result = load_postgres(archive,members,header,layout_sha,archive_sha,path,args,connection,attempt_id)
+            result = load_postgres(archive,members,header,layout_sha,archive_sha,archived_location,args,connection,attempt_id)
         else:
             result = {'status': 'validated', 'files': {
               item.filename: scan_member(archive,item,spec,args.year,args.encoding) for item,spec in members}}
@@ -287,7 +299,7 @@ def run(args):
         started = utc_now()
         result = run_validated(args)
         return {**result,'validation_started_at':started,'validation_completed_at':utc_now()}
-    if not args.expected_sha256 or not args.archive_store:
+    if not args.expected_sha256 or not (args.archive_store or getattr(args,'archive_backend',None)):
         raise ValidationError('--load requires --expected-sha256 and --archive-store')
     import psycopg
     dsn = os.environ.get('TCAD_DATABASE_URL')

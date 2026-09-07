@@ -1,0 +1,112 @@
+name: TCAD data import
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Validate and archive first; import only after review
+        type: choice
+        options: [validate, import]
+        default: validate
+        required: true
+      source_url:
+        description: Official traviscad.org ZIP URL (validate mode)
+        type: string
+      archive_sha256:
+        description: Archive checksum from the validation report (import mode)
+        type: string
+      receipt_sha256:
+        description: Receipt checksum from the validation report (import mode)
+        type: string
+      tax_year:
+        description: Tax year
+        type: string
+        default: "2026"
+        required: true
+      roll_stage:
+        description: Publisher-labelled roll stage
+        type: choice
+        options: [certified, preliminary, supplemental]
+        default: certified
+        required: true
+      encoding:
+        description: Fixed-width text encoding
+        type: choice
+        options: [ascii, utf-8, cp1252]
+        default: ascii
+      import_approved:
+        description: I reviewed the validation report, official layout and database capacity
+        type: boolean
+        default: false
+      published_on:
+        description: Confirmed publisher date YYYY-MM-DD, otherwise leave blank
+        type: string
+      publication_evidence:
+        description: Publisher URL or label supporting the publication date
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tcad-production-ingestion
+  cancel-in-progress: false
+
+jobs:
+  ingestion:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_PASSWORD: tcad-local-test-only
+        ports:
+          - 127.0.0.1:5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Install pinned dependencies
+        run: python -m pip install -r tools/ingestion/requirements-job.txt
+      - name: Test importer before using credentials
+        run: python -m unittest discover -s tools/ingestion/tests -v
+      - name: Test the complete job against disposable PostgreSQL
+        env:
+          TCAD_TEST_DATABASE_URL: postgresql://postgres:tcad-local-test-only@localhost:5432/postgres?sslmode=disable
+        run: python tools/ingestion/tests/job_integration_check.py
+      - name: Validate, archive, or import the selected release
+        env:
+          TCAD_DATABASE_URL: ${{ secrets.TCAD_DATABASE_URL }}
+          TCAD_STORAGE_ACCESS_KEY_ID: ${{ secrets.TCAD_STORAGE_ACCESS_KEY_ID }}
+          TCAD_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.TCAD_STORAGE_SECRET_ACCESS_KEY }}
+          TCAD_STORAGE_REGION: ${{ vars.TCAD_STORAGE_REGION }}
+          INPUT_MODE: ${{ inputs.mode }}
+          INPUT_SOURCE_URL: ${{ inputs.source_url }}
+          INPUT_ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
+          INPUT_RECEIPT_SHA256: ${{ inputs.receipt_sha256 }}
+          INPUT_TAX_YEAR: ${{ inputs.tax_year }}
+          INPUT_ROLL_STAGE: ${{ inputs.roll_stage }}
+          INPUT_ENCODING: ${{ inputs.encoding }}
+          INPUT_IMPORT_APPROVED: ${{ inputs.import_approved }}
+          INPUT_PUBLISHED_ON: ${{ inputs.published_on }}
+          INPUT_PUBLICATION_EVIDENCE: ${{ inputs.publication_evidence }}
+        run: python tools/ingestion/run_job.py --report reports/tcad-run.json
+      - name: Preserve the aggregate report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tcad-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/tcad-run.json
+          if-no-files-found: warn
+          retention-days: 30
+
