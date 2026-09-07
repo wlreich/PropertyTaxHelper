@@ -9,6 +9,6 @@ npm run lint
 npm run build
 ```
 
-The homepage is a coming-soon page. `GET /api/health` returns an application health response only; it does not test Supabase connectivity. No environment variables are required for this starter.
+The homepage is a coming-soon page. `GET /api/health` returns an application health response only. These work without environment settings. `GET /api/health/database` separately tests Supabase connectivity once its migration and environment settings are configured; see [Supabase connection](../docs/supabase-connection.md). Run `npm test` to check connection failure handling.
 
 See [Vercel setup](../docs/vercel-setup.md) for the remaining account and deployment work.
