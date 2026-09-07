@@ -4,10 +4,12 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import sys
 import unittest
 import zipfile
 
 MODULE = Path(__file__).resolve().parents[1] / 'ingest_tcad.py'
+sys.path.insert(0,str(MODULE.parent))
 spec = importlib.util.spec_from_file_location('ingest_tcad', MODULE)
 ingest = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ingest)

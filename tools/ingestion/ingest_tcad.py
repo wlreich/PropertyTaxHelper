@@ -13,7 +13,9 @@ import tempfile
 import uuid
 import zipfile
 
-PARSER_VERSION = '1.0.0'
+from chronology import read_receipt, zip_clock, utc_now
+
+PARSER_VERSION = '1.1.0'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
 
@@ -108,7 +110,7 @@ def scan_member(archive, item, spec, year, encoding, consume=None):
                     consume(count, fields)
     return {'sha256': hasher.hexdigest(), 'rows': count,
             'uncompressed_bytes': item.file_size,
-            'record_type': spec['worksheet'] if spec else 'archive_only_pdf'}
+            'record_type': spec['worksheet'] if spec else 'archive_only_pdf', **zip_clock(item)}
 
 
 def check_header(archive, members, layout, year, encoding):
@@ -153,90 +155,96 @@ def retain_archive(source, store, expected_sha):
         Path(temporary).unlink(missing_ok=True)
 
 
-def load_postgres(archive, members, header, layout_sha, archive_sha, archived_path, args):
+def load_postgres(archive, members, header, layout_sha, archive_sha, archived_path, args, connection, attempt_id):
     import psycopg
     from psycopg.types.json import Jsonb
-    dsn = os.environ.get('TCAD_DATABASE_URL')
-    if not dsn:
-        raise ValidationError('Set TCAD_DATABASE_URL in the ingestion environment')
     lock_key = int.from_bytes(hashlib.sha256((archive_sha + layout_sha + PARSER_VERSION + args.encoding).encode()).digest()[:8], 'big', signed=True)
     summary = {}
-    with psycopg.connect(dsn, autocommit=True, connect_timeout=15) as connection:
-        if not connection.execute('select pg_try_advisory_lock(%s)', (lock_key,)).fetchone()[0]:
-            raise ValidationError('Another loader is already processing this dataset')
-        row = connection.execute('''select id, tax_year, roll_stage, source_url from tcad_ingest.datasets
-          where archive_sha256=%s and layout_sha256=%s and parser_version=%s and source_encoding=%s''',
-          (archive_sha, layout_sha, PARSER_VERSION, args.encoding)).fetchone()
-        if row:
-            dataset_id = row[0]
-            if row[1:] != (args.year, args.roll_stage, args.source_url):
-                raise ValidationError('Existing dataset metadata differs; do not relabel a release')
-        else:
-            dataset_id = uuid.uuid4()
-            connection.execute('''insert into tcad_ingest.datasets
-              (id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header)
-              values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
-              (dataset_id, archive_sha, layout_sha, PARSER_VERSION, args.encoding, args.year, args.roll_stage,
-               args.source_url, str(archived_path), Jsonb(header)))
+    if not connection.execute('select pg_try_advisory_lock(%s)', (lock_key,)).fetchone()[0]:
+        raise ValidationError('Another loader is already processing this dataset')
+    row = connection.execute('''select id, tax_year, roll_stage, source_url from tcad_ingest.datasets
+      where archive_sha256=%s and layout_sha256=%s and parser_version=%s and source_encoding=%s''',
+      (archive_sha, layout_sha, PARSER_VERSION, args.encoding)).fetchone()
+    if row:
+        dataset_id = row[0]
+        if row[1:] != (args.year, args.roll_stage, args.source_url):
+            raise ValidationError('Existing dataset metadata differs; do not relabel a release')
+    else:
+        dataset_id = uuid.uuid4()
+        connection.execute('''insert into tcad_ingest.datasets
+          (id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header)
+          values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+          (dataset_id, archive_sha, layout_sha, PARSER_VERSION, args.encoding, args.year, args.roll_stage,
+           args.source_url, str(archived_path), Jsonb(header)))
+    record_event(connection, attempt_id, 'dataset_selected', dataset_id=dataset_id)
+    try:
+        connection.execute("update tcad_ingest.datasets set status='loading', completed_at=null, last_error=null where id=%s", (dataset_id,))
+        for item, spec in members:
+            previous = connection.execute('''select sha256,row_count,uncompressed_bytes,status from tcad_ingest.files
+              where dataset_id=%s and member_name=%s''', (dataset_id, item.filename)).fetchone()
+            if previous:
+                if previous[3] != 'complete' or previous[2] != item.file_size:
+                    raise ValidationError('Stored member state is inconsistent; investigate before retry')
+                summary[item.filename] = {'rows': previous[1], 'sha256': previous[0], 'resumed': True}
+                continue
+            # One transaction per file. Insert or parse failure rolls the entire file back.
+            with connection.transaction():
+                connection.execute('''insert into tcad_ingest.files
+                  (dataset_id,member_name,record_type,uncompressed_bytes,zip_modified_raw,zip_modified_local) values (%s,%s,%s,%s,%s,%s)''',
+                  (dataset_id,item.filename,spec['worksheet'] if spec else None,item.file_size,
+                   Jsonb(zip_clock(item)['zip_modified_raw']),zip_clock(item)['zip_modified_local']))
+                if spec:
+                    # COPY FROM is unavailable on RLS-protected tables. Psycopg
+                    # pipelines each executemany batch while retaining RLS checks.
+                    batch, batch_bytes = [], 0
+                    with connection.cursor() as cursor:
+                        def flush():
+                            nonlocal batch_bytes
+                            if batch:
+                                cursor.executemany('insert into tcad_ingest.records\n                                      (dataset_id,member_name,row_number,prop_id,prop_val_yr,fields)\n                                      values (%s,%s,%s,%s,%s,%s)', batch)
+                                batch.clear()
+                                batch_bytes = 0
+                        def consume(number, fields):
+                            nonlocal batch_bytes
+                            batch.append((dataset_id,item.filename,number,fields.get('prop_id'),
+                                          fields.get('prop_val_yr'),Jsonb(fields)))
+                            batch_bytes += sum(len(k) + len(v) for k,v in fields.items())
+                            if len(batch) >= 100 or batch_bytes >= 1024 * 1024:
+                                flush()
+                        result = scan_member(archive,item,spec,args.year,args.encoding,consume)
+                        flush()
+                else:
+                    result = scan_member(archive,item,spec,args.year,args.encoding)
+                connection.execute("""update tcad_ingest.files set status='complete',sha256=%s,row_count=%s
+                  where dataset_id=%s and member_name=%s""",
+                  (result['sha256'],result['rows'],dataset_id,item.filename))
+                summary[item.filename] = result
+        connection.execute("update tcad_ingest.datasets set status='ready',completed_at=now() where id=%s", (dataset_id,))
+    except Exception as error:
         try:
-            connection.execute("update tcad_ingest.datasets set status='loading', completed_at=null, last_error=null where id=%s", (dataset_id,))
-            for item, spec in members:
-                previous = connection.execute('''select sha256,row_count,uncompressed_bytes,status from tcad_ingest.files
-                  where dataset_id=%s and member_name=%s''', (dataset_id, item.filename)).fetchone()
-                if previous:
-                    if previous[3] != 'complete' or previous[2] != item.file_size:
-                        raise ValidationError('Stored member state is inconsistent; investigate before retry')
-                    summary[item.filename] = {'rows': previous[1], 'sha256': previous[0], 'resumed': True}
-                    continue
-                # One transaction per file. Insert or parse failure rolls the entire file back.
-                with connection.transaction():
-                    connection.execute('''insert into tcad_ingest.files
-                      (dataset_id,member_name,record_type,uncompressed_bytes) values (%s,%s,%s,%s)''',
-                      (dataset_id,item.filename,spec['worksheet'] if spec else None,item.file_size))
-                    if spec:
-                        # COPY FROM is unavailable on RLS-protected tables. Psycopg
-                        # pipelines each executemany batch while retaining RLS checks.
-                        batch, batch_bytes = [], 0
-                        with connection.cursor() as cursor:
-                            def flush():
-                                nonlocal batch_bytes
-                                if batch:
-                                    cursor.executemany('insert into tcad_ingest.records\n                                      (dataset_id,member_name,row_number,prop_id,prop_val_yr,fields)\n                                      values (%s,%s,%s,%s,%s,%s)', batch)
-                                    batch.clear()
-                                    batch_bytes = 0
-                            def consume(number, fields):
-                                nonlocal batch_bytes
-                                batch.append((dataset_id,item.filename,number,fields.get('prop_id'),
-                                              fields.get('prop_val_yr'),Jsonb(fields)))
-                                batch_bytes += sum(len(k) + len(v) for k,v in fields.items())
-                                if len(batch) >= 100 or batch_bytes >= 1024 * 1024:
-                                    flush()
-                            result = scan_member(archive,item,spec,args.year,args.encoding,consume)
-                            flush()
-                    else:
-                        result = scan_member(archive,item,spec,args.year,args.encoding)
-                    connection.execute("""update tcad_ingest.files set status='complete',sha256=%s,row_count=%s
-                      where dataset_id=%s and member_name=%s""",
-                      (result['sha256'],result['rows'],dataset_id,item.filename))
-                    summary[item.filename] = result
-            connection.execute("update tcad_ingest.datasets set status='ready',completed_at=now() where id=%s", (dataset_id,))
-        except Exception as error:
-            try:
-                connection.execute("update tcad_ingest.datasets set status='failed',last_error=%s where id=%s",
-                                   (type(error).__name__,dataset_id))
-            except psycopg.Error:
-                # A lost connection can leave the dataset loading; views hide it.
-                # Preserve the original failure rather than masking it.
-                pass
-            raise
+            connection.execute("update tcad_ingest.datasets set status='failed',last_error=%s where id=%s",
+                               (type(error).__name__,dataset_id))
+        except psycopg.Error:
+            # A lost connection can leave the dataset loading; views hide it.
+            # Preserve the original failure rather than masking it.
+            pass
+        raise
     return {'dataset_id': str(dataset_id), 'files': summary, 'status': 'ready'}
 
 
-def run(args):
+def run_validated(args, connection=None, attempt_id=None):
     layout, layout_sha = read_layout()
     archive_sha = digest(args.archive)
     if args.expected_sha256 and archive_sha != args.expected_sha256.lower():
         raise ValidationError('Archive SHA-256 does not match the approved checksum')
+    try:
+        observation = read_receipt(getattr(args,'receipt',None),archive_sha,args.source_url)
+    except (ValueError,KeyError,TypeError) as error:
+        raise ValidationError('Invalid acquisition receipt: check checksum, URL, dates and evidence') from error
+    if connection:
+        receipt_sha = record_acquisition(connection,observation)
+        record_event(connection,attempt_id,'archive_verified',
+                     acquisition_receipt_sha256=receipt_sha,details={'archive_sha256':archive_sha})
     path = Path(args.archive)
     if args.load:
         if not args.expected_sha256 or not args.archive_store:
@@ -246,12 +254,61 @@ def run(args):
         members = inventory(archive,layout)
         header = check_header(archive,members,layout,args.year,args.encoding)
         if args.load:
-            result = load_postgres(archive,members,header,layout_sha,archive_sha,path,args)
+            result = load_postgres(archive,members,header,layout_sha,archive_sha,path,args,connection,attempt_id)
         else:
             result = {'status': 'validated', 'files': {
               item.filename: scan_member(archive,item,spec,args.year,args.encoding) for item,spec in members}}
     return {'parser_version':PARSER_VERSION,'archive_sha256':archive_sha,'layout_sha256':layout_sha,
-            'tax_year':args.year,'roll_stage':args.roll_stage,**result}
+            'tax_year':args.year,'roll_stage':args.roll_stage,
+            'acquisition':observation['receipt'] if observation else None,**result}
+
+
+def record_event(connection, attempt_id, event_type, dataset_id=None,
+                 acquisition_receipt_sha256=None, details=None):
+    from psycopg.types.json import Jsonb
+    connection.execute('insert into tcad_ingest.import_events\n      (attempt_id,event_type,dataset_id,acquisition_receipt_sha256,details) values (%s,%s,%s,%s,%s)',
+      (attempt_id,event_type,dataset_id,acquisition_receipt_sha256,Jsonb(details or {})))
+
+
+def record_acquisition(connection, observation):
+    if observation is None:
+        return None
+    from psycopg.types.json import Jsonb
+    receipt, sha = observation['receipt'], observation['receipt_sha256']
+    connection.execute('insert into tcad_ingest.acquisitions\n      (receipt_sha256,archive_sha256,source_url,download_started_at,downloaded_at,\n       publisher_published_on,publication_evidence,http_last_modified_raw,receipt)\n      values (%s,%s,%s,%s,%s,%s,%s,%s,%s) on conflict (receipt_sha256) do nothing',
+      (sha,receipt['archive_sha256'],receipt['source_url'],receipt['download_started_at'],
+       receipt['downloaded_at'],receipt.get('publisher_published_on'),receipt.get('publication_evidence'),
+       receipt.get('http_last_modified_raw'),Jsonb(receipt)))
+    return sha
+
+
+def run(args):
+    if not args.load:
+        started = utc_now()
+        result = run_validated(args)
+        return {**result,'validation_started_at':started,'validation_completed_at':utc_now()}
+    if not args.expected_sha256 or not args.archive_store:
+        raise ValidationError('--load requires --expected-sha256 and --archive-store')
+    import psycopg
+    dsn = os.environ.get('TCAD_DATABASE_URL')
+    if not dsn:
+        raise ValidationError('Set TCAD_DATABASE_URL in the ingestion environment')
+    with psycopg.connect(dsn,autocommit=True,connect_timeout=15) as connection:
+        attempt_id = uuid.uuid4()
+        connection.execute('insert into tcad_ingest.import_attempts\n          (id,source_url,archive_filename,tax_year,roll_stage,parser_version,source_encoding)\n          values (%s,%s,%s,%s,%s,%s,%s)',
+          (attempt_id,args.source_url,Path(args.archive).name,args.year,args.roll_stage,PARSER_VERSION,args.encoding))
+        try:
+            result = run_validated(args,connection,attempt_id)
+            record_event(connection,attempt_id,'succeeded',dataset_id=result['dataset_id'],
+                         details={'resumed_files':sum(bool(f.get('resumed')) for f in result['files'].values())})
+        except BaseException as error:
+            try:
+                record_event(connection,attempt_id,'failed',details={'error_type':type(error).__name__})
+            except psycopg.Error:
+                # An unavailable connection leaves an honest unfinished attempt.
+                pass
+            raise
+    return {**result,'attempt_id':str(attempt_id)}
 
 
 def main():
@@ -262,6 +319,7 @@ def main():
     parser.add_argument('--source-url', required=True)
     parser.add_argument('--encoding', default='ascii', choices=['ascii','utf-8','cp1252'], help='Fixed-width encoding; tab files use UTF-8')
     parser.add_argument('--expected-sha256')
+    parser.add_argument('--receipt', type=Path, help='Checksum-bound acquisition receipt; omit for unknown download dates')
     parser.add_argument('--archive-store', type=Path, help='Persistent private filesystem directory for complete source ZIPs')
     parser.add_argument('--load', action='store_true', help='Write to PostgreSQL; omission means validation only')
     args = parser.parse_args()

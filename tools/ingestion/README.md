@@ -8,3 +8,5 @@ See [the operator guide](../../docs/ingestion/tcad-comprehensive.md).
 - `tests/`: synthetic validation and isolated database integration checks.
 
 No source data, credentials or full archives belong in this directory or Git.
+
+For chronology, use `download_tcad.py` to acquire a ZIP with a receipt, then pass `--receipt` to the importer. The operator guide explains unknown dates, private release views and append-only attempt history.
