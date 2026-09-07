@@ -14,4 +14,5 @@ This PR aligns Git filenames with the applied versions, preserving SQL unchanged
 
 Hosted verification: six tables with RLS enabled, 22 views using security_invoker, website roles denied schema access, loader unable to update import_events, and no Supabase security advisor notices. Records and import history are empty. There has been no real county load.
 
-Remaining activation: a long-running ingestion job, durable private archive storage, a dedicated loader login with securely configured credentials, and full-archive/layout validation with database capacity review. The current importer expects a persistent filesystem archive directory; a cloud bucket integration requires implementation. Vercel does not run these imports and no website deployment is needed for the schema.
+The manual GitHub Actions job and Supabase Storage backend are implemented; see [Run the first import](run-first-import.md). Remaining activation: run the restricted-login provisioning SQL, configure three GitHub secrets and the Storage region variable, then dispatch full-archive validation and review layout/capacity before import. The first authorized validation job creates the private bucket if missing. These credentials and live jobs are not provisioned merely by merging code. Vercel does not run these imports and no website deployment is needed for the schema.
+
