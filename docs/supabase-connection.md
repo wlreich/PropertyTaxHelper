@@ -9,10 +9,14 @@ The application now has two independent health routes:
 
 The database route calls `public.database_health()` with the Supabase JavaScript client and a publishable key. The function executes `select 1`; it has no table access, parameters, or writes. It runs as the caller (`security invoker`). This confirms connectivity, not property data availability, authentication, or access policies on future tables.
 
-## Activation after approval
+## Database activation status
+
+Applied to TaxTransparency on 2026-09-07 as migration `20260907202107` (`database_health`). A query under the `anon` role returned `1`. The committed filename matches the recorded Supabase version; do not reapply this migration to that project. The deployed website-to-database request still needs verification.
+
+## Activation for a new environment
 
 1. Review and merge this PR.
-2. Apply `supabase/migrations/20260907200308_database_health.sql` to the intended Supabase project through the migration workflow. This PR does not apply it automatically. If using Codex's `apply_migration` tool, confirm the version it records and reconcile the committed migration filename with that version before a later CLI migration push; do not apply the function creation twice.
+2. Apply `supabase/migrations/20260907202107_database_health.sql` to the intended Supabase project through the migration workflow. This PR does not apply it automatically. If using Codex's `apply_migration` tool, confirm the version it records and reconcile the committed migration filename with that version before a later CLI migration push; do not apply the function creation twice.
 3. In Vercel's `property-tax-helper` project, add the following environment variables for **Production**. Use a separate non-production Supabase project for general Preview/Development access when those environments are established; do not copy production settings into all previews.
 
 | Variable | Value |
