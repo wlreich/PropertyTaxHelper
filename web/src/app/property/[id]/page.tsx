@@ -31,7 +31,7 @@ export default async function PropertyPage({
     <>
       <SiteHeader />
       <main id="main-content" className="main-shell profile-shell">
-        <Link className="back-link" href={q ? resultsUrl(q, page) : "/"}>
+        <Link className="back-link" href={q ? resultsUrl(q, page, search.all === "1") : "/"}>
           ← {q ? "Back to search results" : "Search properties"}
         </Link>
         {!p ? (

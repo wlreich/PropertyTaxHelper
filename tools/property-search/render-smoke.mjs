@@ -81,6 +81,16 @@ try {
   const last = await page("/?q=Map&page=2");
   assert.deepEqual([cards(first), cards(second), cards(last)], [20, 20, 5]);
   assert.match(second, /Page 2/);
+  const defaultParcels = await page("/?q=Parkdemo");
+  assert.equal(cards(defaultParcels),5);
+  assert.match(defaultParcels,/Show all parcels/);
+  const allParcels = await page("/?q=Parkdemo&all=1");
+  assert.equal(cards(allParcels),20);
+  assert.match(allParcels,/Parkland/);
+  assert.match(allParcels, /page=1&amp;all=1/);
+  assert.equal(cards(await page("/?q=Parkdemo&page=1&all=1")),5);
+  assert.match(await page("/property/505?q=Parkdemo&page=1&all=1"), /href="\/\?q=Parkdemo&amp;page=1&amp;all=1"/);
+  assert.equal(cards(await page("/?q=505")),1);
   const profile = await page("/property/100?q=Oak&page=1");
   assert.match(profile, /Assessment at a glance/);
   assert.match(profile, /\$430,000/);

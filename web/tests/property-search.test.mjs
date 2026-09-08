@@ -32,7 +32,7 @@ const release = {
 const search = {
   available: true,
   ...release,
-  items: [item],
+  items: [{ ...item, is_parkland: false }],
   has_more: false,
   limit_reached: false,
 };
@@ -82,19 +82,20 @@ test("result and back links encode user text and stay inside the site", () => {
 test("valid search uses a read-only, uncached RPC and returns a strict field list", async () => {
   const r = await searchProperties("Oak", 1, config, async (input, init) => {
     const u = new URL(input);
-    assert.equal(u.pathname, "/rest/v1/rpc/search_properties");
+    assert.equal(u.pathname, "/rest/v1/rpc/search_property_parcels");
     assert.equal(u.searchParams.get("p_query"), "Oak");
     assert.equal(u.searchParams.get("p_page"), "1");
+    assert.equal(u.searchParams.get("p_show_all"), "false");
     assert.equal(init.method, "GET");
     assert.equal(init.cache, "no-store");
     assert.ok(init.signal instanceof AbortSignal);
     return Response.json({
       ...search,
-      items: [{ ...item, private_added_field: "do not pass through" }],
+      items: [{ ...item, is_parkland: false, private_added_field: "do not pass through" }],
     });
   });
   assert.equal(r.status, "ok");
-  assert.deepEqual(r.data.items, [item]);
+  assert.deepEqual(r.data.items, [{ ...item, is_parkland: false }]);
 });
 test("invalid searches, IDs and privileged configuration never make a request", async () => {
   const noRequest = async () => assert.fail("must not request");
@@ -194,4 +195,16 @@ test("profiles distinguish missing records from outages and remove extra fields"
       ).status,
       "unavailable",
     );
+});
+
+
+test("all-parcels mode reaches the RPC and survives navigation", async () => {
+  assert.equal(resultsUrl("Parkdemo", 1, true), "/?q=Parkdemo&page=1&all=1");
+  assert.equal(propertyUrl("505", "Parkdemo", 1, true), "/property/505?q=Parkdemo&page=1&all=1");
+  const r = await searchProperties("Parkdemo", 0, config, async (input) => {
+    assert.equal(new URL(input).searchParams.get("p_show_all"), "true");
+    return Response.json({...search, items:[{...item,is_parkland:true}]});
+  }, true);
+  assert.equal(r.status,"ok");
+  assert.equal(r.data.items[0].is_parkland,true);
 });
