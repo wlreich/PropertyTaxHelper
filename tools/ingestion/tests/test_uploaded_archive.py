@@ -68,6 +68,39 @@ class UploadedArchiveTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):ArchiveStorage(client).retrieve_upload('incoming/a.zip',path)
             self.assertEqual(path.read_bytes(),b'existing')
 
+    def test_failed_validation_saves_all_file_failures_and_blocks_import(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'synthetic.zip'
+            make_archive(source, overrides={'Property': {'prop_val_yr': 'PRIV!'},
+                                             'Lawsuit': {'prop_val_yr': '02027'}})
+            client = FakeS3()
+            client.objects['incoming/2026-certified.zip'] = source.read_bytes()
+            output = io.StringIO()
+            report = root / 'report.json'
+            with patch.dict(os.environ, self.environment(), clear=True), \
+                 patch('sys.argv', ['run_job', '--report', str(report)]), \
+                 patch.object(ArchiveStorage, 'from_environment', return_value=ArchiveStorage(client)), \
+                 patch.object(run_job, 'database_connection', return_value=MagicMock()), \
+                 patch.object(run_job, 'database_preflight', return_value={}), \
+                 patch.object(run_job, 'private_bucket'), \
+                 patch.object(ingest, 'load_postgres') as loader, contextlib.redirect_stdout(output):
+                self.assertEqual(run_job.main(), 1)
+                loader.assert_not_called()
+                first_report = json.loads(report.read_text())
+                os.environ.update(INPUT_MODE='import', INPUT_IMPORT_APPROVED='true',
+                                  INPUT_ARCHIVE_SHA256=first_report['archive_sha256'],
+                                  INPUT_RECEIPT_SHA256=first_report['receipt_sha256'])
+                self.assertEqual(run_job.main(), 1)
+                loader.assert_not_called()
+            data = json.loads(report.read_text())
+            self.assertEqual(data['status'], 'failed')
+            self.assertEqual(data['validation']['members_checked'], 21)
+            self.assertEqual(len(data['validation_failures']), 2)
+            self.assertIn('archive_location', data)
+            self.assertNotIn('row_count', data)  # A failed scan cannot report a complete archive total.
+            self.assertNotIn('PRIV!', report.read_text() + output.getvalue())
+
     def test_manual_receipt_rejects_invented_source_dates_and_preserves_reported_date(self):
         receipt={'version':2,'archive_sha256':'0'*64,'source_url':'https://traviscad.org/test.zip',
                  'acquisition_method':'manual_upload','download_started_at':None,'downloaded_at':None,

@@ -155,11 +155,40 @@ class IngestionTests(unittest.TestCase):
             ('ARB', '01899', 'outside the supported range'),
             ('ARB', 'PRIV!', 'not a valid integer'),
             ('Property', '02024', 'differs from the declared dataset year'),
-            ('Lawsuit', '02024', 'differs from the declared dataset year')]:
+            ('Improvement', '2024', 'differs from the declared dataset year'),
+            ('Lawsuit', '02027', 'later than the release year'),
+            ('Arbitration', 'PRIV!', 'not a valid integer')]:
             make_archive(self.path, overrides={worksheet: {'prop_val_yr': value}})
             with self.assertRaisesRegex(ingest.ValidationError, message) as caught:
                 ingest.run(arguments(self.path))
             self.assertNotIn(value, str(caught.exception))
+
+    def test_all_three_active_case_lists_keep_historical_years(self):
+        overrides = {name: {'prop_val_yr': '02024'} for name in ['ARB', 'Lawsuit', 'Arbitration']}
+        for short_names in [False, True]:
+            make_archive(self.path, overrides=overrides, short_names=short_names)
+            result = ingest.run(arguments(self.path))
+            summaries = {v['record_type']: v for v in result['files'].values()}
+            for name in overrides:
+                self.assertEqual(summaries[name]['record_year_counts'], {'2024': 1})
+            self.assertEqual(result['tax_year'], 2026)
+
+    def test_validation_reports_multiple_failures_and_checks_later_files(self):
+        make_archive(self.path, overrides={'Property': {'prop_val_yr': 'PRIV!'},
+                                           'Lawsuit': {'prop_val_yr': '02027'}})
+        updates = []
+        with self.assertRaises(ingest.ArchiveValidationError) as caught:
+            ingest.run(arguments(self.path, progress=updates.append))
+        report = caught.exception.report
+        self.assertEqual(report['status'], 'failed')
+        self.assertEqual(report['members_checked'], 21)
+        self.assertEqual(len(report['files']), 19)
+        self.assertEqual({f['record_type'] for f in report['validation_failures']}, {'Property', 'Lawsuit'})
+        self.assertIn('SB12', {v['record_type'] for v in report['files'].values()})
+        self.assertIn('validation_completed_at', report)
+        self.assertEqual(sum(u['status'] == 'started' for u in updates), 21)
+        self.assertEqual(sum(u['status'] == 'failed' for u in updates), 2)
+        self.assertNotIn('PRIV!', json.dumps(report) + json.dumps(updates) + str(caught.exception))
 
     def test_structural_errors_are_specific_and_exclude_row_values(self):
         spec = next(s for s in LAYOUT['files'].values() if s['worksheet'] == 'ARB')

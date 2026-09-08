@@ -149,6 +149,7 @@ def execute(config,report,storage,work):
     args=SimpleNamespace(archive=archive,year=config['year'],roll_stage=config['stage'],source_url=source_url,
                          encoding=config['encoding'],expected_sha256=sha,receipt=receipt,
                          archive_store=None,archive_backend=storage,load=False)
+    args.progress = lambda summary: print(json.dumps({'phase': 'archive_validation', **summary}), flush=True)
     # Validate the complete archive before any record inserts, including on import.
     report['phase']='archive_validation'
     validation=ingest.run(args)
@@ -192,6 +193,9 @@ def main():
         # These application errors are structural; driver/HTTP errors may contain secrets.
         if isinstance(error,(JobError,ingest.ValidationError)):
             report['error']=str(error)
+        if isinstance(error, ingest.ArchiveValidationError):
+            report['validation'] = error.report
+            report['validation_failures'] = error.report['validation_failures']
         if isinstance(error,HTTPError):
             # Never serialize HTTP URLs, headers, bodies, or reason strings.
             report['http_status']=int(error.code)

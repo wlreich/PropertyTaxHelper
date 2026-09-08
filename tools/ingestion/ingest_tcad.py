@@ -15,13 +15,22 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.1.2'
+PARSER_VERSION = '1.1.3'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
+ACTIVE_CASE_RECORD_TYPES = frozenset({'ARB', 'Lawsuit', 'Arbitration'})
 
 
 class ValidationError(Exception):
     """Messages contain structural metadata only, never source field values."""
+
+
+class ArchiveValidationError(ValidationError):
+    """Aggregate safe structural failures, retaining successful file summaries."""
+
+    def __init__(self, report):
+        self.report = report
+        super().__init__('; '.join(f['error'] for f in report['validation_failures']))
 
 
 def digest(path):
@@ -95,11 +104,11 @@ def validate_record_year(fields, spec, year):
         record_year = int(value)
     except ValueError:
         raise ValidationError('Record year is not a valid integer') from None
-    if spec['worksheet'] == 'ARB':
-        # This is a list of active cases, which can concern earlier appraisal years.
+    if spec['worksheet'] in ACTIVE_CASE_RECORD_TYPES:
+        # Active cases can concern earlier appraisal years (TCAD workbook lists).
         # Keep the original year in fields; never relabel it as the release year.
         if not 1900 <= record_year <= year:
-            raise ValidationError('ARB record year is outside the supported range or later than the release year')
+            raise ValidationError('Active-case record year is outside the supported range or later than the release year')
     elif record_year != year:
         raise ValidationError('Record year differs from the declared dataset year')
     return record_year
@@ -155,6 +164,32 @@ def check_header(archive, members, layout, year, encoding):
     # Retain NO VALUES if present; full ingestion is valid even for that variant.
     # Do not infer preliminary/certified status from supplement number zero.
     return header
+
+
+def validate_members(archive, members, args):
+    files, failures = {}, []
+    progress = getattr(args, 'progress', None)
+    for item, spec in members:
+        record_type = spec['worksheet'] if spec else 'archive_only_pdf'
+        if progress:
+            progress({'record_type': record_type, 'status': 'started'})
+        try:
+            summary = scan_member(archive, item, spec, args.year, args.encoding)
+        except (ValidationError, zipfile.BadZipFile) as error:
+            message = (str(error) if isinstance(error, ValidationError)
+                       else 'ZIP member checksum or structure is invalid')
+            failure = {'record_type': record_type, 'error': message}
+            failures.append(failure)
+            if progress:
+                progress({**failure, 'status': 'failed'})
+            # Diagnose the first failure per member, then check the other files.
+            continue
+        files[item.filename] = summary
+        if progress:
+            progress({'record_type': record_type, 'status': 'validated',
+                      'rows': summary['rows'], 'record_year_counts': summary['record_year_counts']})
+    return {'status': 'failed' if failures else 'validated', 'files': files,
+            'validation_failures': failures, 'members_checked': len(members)}
 
 
 def retain_archive(source, store, expected_sha):
@@ -294,11 +329,13 @@ def run_validated(args, connection=None, attempt_id=None):
         if args.load:
             result = load_postgres(archive,members,header,layout_sha,archive_sha,archived_location,args,connection,attempt_id)
         else:
-            result = {'status': 'validated', 'files': {
-              item.filename: scan_member(archive,item,spec,args.year,args.encoding) for item,spec in members}}
-    return {'parser_version':PARSER_VERSION,'archive_sha256':archive_sha,'layout_sha256':layout_sha,
+            result = validate_members(archive, members, args)
+    report = {'parser_version':PARSER_VERSION,'archive_sha256':archive_sha,'layout_sha256':layout_sha,
             'tax_year':args.year,'roll_stage':args.roll_stage,
             'acquisition':observation['receipt'] if observation else None,**result}
+    if result.get('validation_failures'):
+        raise ArchiveValidationError(report)
+    return report
 
 
 def record_event(connection, attempt_id, event_type, dataset_id=None,
@@ -323,7 +360,11 @@ def record_acquisition(connection, observation):
 def run(args):
     if not args.load:
         started = utc_now()
-        result = run_validated(args)
+        try:
+            result = run_validated(args)
+        except ArchiveValidationError as error:
+            error.report.update(validation_started_at=started, validation_completed_at=utc_now())
+            raise
         return {**result,'validation_started_at':started,'validation_completed_at':utc_now()}
     if not args.expected_sha256 or not (args.archive_store or getattr(args,'archive_backend',None)):
         raise ValidationError('--load requires --expected-sha256 and --archive-store')
