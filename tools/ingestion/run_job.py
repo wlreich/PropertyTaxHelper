@@ -8,6 +8,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 from urllib.parse import urlsplit
+from urllib.error import HTTPError
 
 import ingest_tcad as ingest
 from archive_storage import ArchiveStorage, BUCKET, PROJECT_REF, archive_key, receipt_key, checksum
@@ -88,19 +89,24 @@ def private_bucket(connection,archive_bytes=None):
 
 def execute(config,report,storage,work):
     # Preflight is read-only apart from creating the private archive bucket.
+    report['phase']='database_preflight'
     with database_connection() as connection:
         report.update(database_preflight(connection))
+        report['phase']='storage_preflight'
         storage.ensure_bucket()
         private_bucket(connection)
     archive=work/'source.zip'
     receipt=work/'source.zip.receipt.json'
     if config['mode']=='validate':
+        report['phase']='source_download'
         receipt=download(config['source_url'],archive,config['published_on'],config['publication_evidence'])
         sha=ingest.digest(archive);receipt_sha=ingest.digest(receipt)
     else:
+        report['phase']='archive_retrieval'
         sha=config['archive_sha'];receipt_sha=config['receipt_sha']
         storage.retrieve(archive_key(sha),archive,sha)
         storage.retrieve(receipt_key(sha,receipt_sha),receipt,receipt_sha)
+    report['phase']='receipt_verification'
     evidence=json.loads(receipt.read_text())
     source_url=official_source(evidence['source_url'])
     read_receipt(receipt,sha,source_url)
@@ -108,18 +114,21 @@ def execute(config,report,storage,work):
         private_bucket(connection,archive.stat().st_size)
     report.update(archive_sha256=sha,receipt_sha256=receipt_sha,archive_bytes=archive.stat().st_size,
                   source_url=source_url,tax_year=config['year'],roll_stage=config['stage'],encoding=config['encoding'])
+    report['phase']='archive_retention'
     report['archive_location']=storage.retain(archive,archive_key(sha),sha,'application/zip')
     report['receipt_location']=storage.retain(receipt,receipt_key(sha,receipt_sha),receipt_sha,'application/json')
     args=SimpleNamespace(archive=archive,year=config['year'],roll_stage=config['stage'],source_url=source_url,
                          encoding=config['encoding'],expected_sha256=sha,receipt=receipt,
                          archive_store=None,archive_backend=storage,load=False)
     # Validate the complete archive before any record inserts, including on import.
+    report['phase']='archive_validation'
     validation=ingest.run(args)
     report['validation']=validation
     report['row_count']=sum(f['rows'] for f in validation['files'].values())
     report['uncompressed_bytes']=sum(f['uncompressed_bytes'] for f in validation['files'].values())
     report['serialized_fields_bytes']=sum(f.get('serialized_fields_bytes',0) for f in validation['files'].values())
     if config['mode']=='import':
+        report['phase']='database_import'
         args.load=True
         result=ingest.run(args)
         report['import']={'attempt_id':result['attempt_id'],'dataset_id':result['dataset_id'],'status':result['status']}
@@ -129,6 +138,7 @@ def execute(config,report,storage,work):
             if actual!=report['row_count']:
                 raise JobError('Post-load row count differs from the validated archive')
             report['database_row_count']=actual
+    report['phase']='complete'
     report['status']='imported' if config['mode']=='import' else 'validated_and_archived'
 
 
@@ -142,20 +152,26 @@ def main():
         raise InterruptedError('Job interrupted')
     signal.signal(signal.SIGTERM,interrupted)
     try:
+        report['phase']='configuration'
         config=settings();report['mode']=config['mode']
         with tempfile.TemporaryDirectory(prefix='tcad-job-') as directory:
-            execute(config,report,ArchiveStorage.from_environment(),Path(directory))
+            report['phase']='storage_configuration'
+            storage=ArchiveStorage.from_environment()
+            execute(config,report,storage,Path(directory))
     except BaseException as error:
         report['status']='failed';report['error_type']=type(error).__name__
         # These application errors are structural; driver/HTTP errors may contain secrets.
         if isinstance(error,(JobError,ingest.ValidationError)):
             report['error']=str(error)
+        if isinstance(error,HTTPError):
+            # Never serialize HTTP URLs, headers, bodies, or reason strings.
+            report['http_status']=int(error.code)
         code=1
     finally:
         report['finished_at']=utc_now()
         args.report.parent.mkdir(parents=True,exist_ok=True)
         args.report.write_text(json.dumps(report,indent=2)+'\n')
-        print(json.dumps({k:report[k] for k in ('status','error_type','error','archive_sha256','receipt_sha256','row_count') if k in report}))
+        print(json.dumps({k:report[k] for k in ('status','phase','error_type','http_status','error','archive_sha256','receipt_sha256','row_count') if k in report}))
     return code
 
 
