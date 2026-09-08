@@ -108,3 +108,10 @@ The rendered-page check starts the production Next.js build and synthetic RPC se
 - Public roles cannot write the projection, access the raw schema, or invoke publication; the loader also cannot publish.
 - Supabase's security advisor reported no findings. No source property rows or credentials were emitted by these checks.
 - Vercel account access remains unavailable through the connector. Verify the website deployment separately from the database activation.
+
+
+### Acreage units
+
+TCAD Legacy 8.0.33 stores land acreage with four implied decimal places: the raw integer `14309` represents `1.4309` acres. The layout labels LandDetail.size_acres as four decimals and Property.land_acres as its sum; source segment square footage confirms the scale. Dollar amounts and ownership percentages use their existing conversions.
+
+The private `search_acres` converter applies this acreage-specific scale to integer strings and preserves explicit decimal strings with up to four places. Missing, malformed, or negative acreage remains unknown. The acreage repair recomputes existing non-null website values from the original Property fields, so rerunning it cannot divide a corrected value again. Raw ingestion records, other website fields, confidentiality filtering, and public permissions are unchanged.
