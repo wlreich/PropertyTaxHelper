@@ -1,49 +1,31 @@
-# Vercel setup
+# Vercel setup and release policy
 
-## Intended connections
-
-| Component | Service | State at preparation |
-| --- | --- | --- |
-| Source code | GitHub `wlreich/PropertyTaxHelper` | Repository readable and writable through the connected GitHub app |
-| Coding environment | Codex `PropertyTaxHelper` | Environment created; a coding task has not yet been run there |
-| Website hosting | Vercel | Plugin connected; project and deployment still need verification |
-| Database | Supabase `TaxTransparency` | Project healthy and read-only SQL succeeded; application wiring is still pending |
-
-Cloudflare is not needed to host this website. The previous `temp-app/` Laravel prototype is not the Vercel application.
+The active website is `web/`, built with Next.js and hosted on Vercel. Supabase `TaxTransparency` is the database; `temp-app/` is a preserved legacy prototype.
 
 ## Project settings
-
-After reviewing the foundation PR, configure the Vercel project with:
 
 | Setting | Value |
 | --- | --- |
 | Git repository | `wlreich/PropertyTaxHelper` |
-| Root Directory | `web` |
-| Framework Preset | Next.js |
-| Node.js version | 24.x |
-| Install Command | Default (using the committed npm lockfile) |
-| Build Command | Default (`next build`, or `npm run build`) |
-| Output Directory | Next.js default; do not set a static output folder |
-| Environment variables | None required for this starter |
+| Root directory | `web` |
+| Framework | Next.js |
+| Node.js | 24.x |
+| Install/build/output | Framework defaults; committed npm lockfile |
+| Production branch | Verify `main` in the Vercel project |
+| Environment variables | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` |
 
-The `web` directory must exist on the branch selected for deployment. Until the PR is merged, use its branch for any approved preview; `main` still contains only the older prototype.
+Enter environment values directly through the hosting settings. Never commit secrets or use a privileged database key in the website. `/api/health` checks the website runtime; `/api/health/database` also checks a database request.
 
-Creating/importing a project through Vercel can immediately deploy it. Review the target branch and deployment environment before selecting Deploy. Do not publish to production without Wendy's approval.
+## Routine releases
 
-## Preview and release
+On September 8, 2026, Wendy authorized routine production changes within the agreed task scope without a separate approval. Root `AGENTS.md` records the policy and its exceptions. Continue to use branches, PRs, relevant tests and post-deployment verification. Do not bypass branch protections or platform/tool approval requirements.
 
-`web/vercel.json` sets `git.deploymentEnabled` to `false`. This prevents automatic Git-triggered deployments for branches containing that configuration. It does not prevent manual deployment, protect other branches without the file, or establish an account-level approval gate.
+`web/vercel.json` enables automatic Git deployments. With the existing Vercel Git integration, branch pushes can produce previews and merges to the configured production branch can deploy production. Database changes required by new website code must be applied and verified before that merge. A configuration file does not itself prove the account integration, production branch, deployment, or domain assignment is correct: verify the resulting deployment when access is available.
 
-Once the project is configured, create an explicitly approved preview deployment from the foundation branch. Check the homepage and `/api/health`. The health response proves only that the website runtime responds; no database request is made.
+The Vercel connector currently returns no teams and rejects access to the `property-tax-helper` project. This account-access limitation must not be mistaken for a deployment failure. GitHub commit checks can provide deployment evidence when the integration reports it, but live-page verification is still required.
 
-Before enabling continuous deployment, review Vercel production branch tracking, automatic domain assignment, project access, and GitHub branch protection with Wendy. Production promotion is a separate approval step. Nothing in this PR publishes the site.
+## Codex setup
 
-## Supabase wiring remains a separate change
+Install dependencies with `cd web && npm ci`; run lint, tests and the production build for website changes. No separate routine production approval is required. Any old environment description that says otherwise is superseded by Wendy's September 8 instruction and root `AGENTS.md`.
 
-The Supabase account connection lets Codex inspect the database. It does not automatically supply credentials to Vercel or connect this application. Add only the environment variables required by the eventual data/auth implementation through Vercel's environment settings; never commit secrets. Validate real application queries and access policies before treating the end-to-end connection as complete.
-
-## Codex setup after merge
-
-The Codex environment points at this repository. Its setup must install dependencies from `web/` (`cd web && npm ci`) once this branch is available, and a first coding task should verify lint and build. Environment creation alone does not verify a successful task.
-
-References: [Vercel Git configuration](https://vercel.com/docs/project-configuration/git-configuration), [promoting deployments](https://vercel.com/docs/deployments/promoting-a-deployment), [Next.js installation](https://nextjs.org/docs/app/getting-started/installation).
+References: [Vercel Git configuration](https://vercel.com/docs/project-configuration/git-configuration), [promoting deployments](https://vercel.com/docs/deployments/promoting-a-deployment).
