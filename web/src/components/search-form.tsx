@@ -36,7 +36,7 @@ export function SearchForm({ query = "", showAll = false }: { query?: string; sh
           aria-describedby="search-help"
         />
         <button type="submit" disabled={pending}>
-          {pending ? "Searching…" : "Find my property"}
+          {pending ? "Searching…" : "Search property"}
           <span aria-hidden="true"> ↗</span>
         </button>
       </div>
