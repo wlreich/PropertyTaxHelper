@@ -1,4 +1,5 @@
 import "server-only";
+import { DATABASE_REQUEST_TIMEOUT_MS } from "./request-policy.ts";
 import { createClient } from "@supabase/supabase-js";
 import { parseSearch } from "../property-search.ts";
 
@@ -103,7 +104,7 @@ async function rpc(
     });
     const { data, error } = await client
       .rpc(name, args, { get: true })
-      .abortSignal(AbortSignal.timeout(5000));
+      .abortSignal(AbortSignal.timeout(DATABASE_REQUEST_TIMEOUT_MS));
     return error ? null : data;
   } catch {
     return null;

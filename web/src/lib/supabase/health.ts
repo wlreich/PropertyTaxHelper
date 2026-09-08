@@ -1,4 +1,5 @@
 import "server-only";
+import { DATABASE_REQUEST_TIMEOUT_MS } from "./request-policy.ts";
 import { createClient } from "@supabase/supabase-js";
 
 type Configuration = {
@@ -52,7 +53,7 @@ export async function diagnoseDatabaseHealth(
     return { database: "unavailable", reason: "invalid_project_url" };
   }
 
-  const signal = AbortSignal.timeout(5000);
+  const signal = AbortSignal.timeout(DATABASE_REQUEST_TIMEOUT_MS);
   let transportFailure: DatabaseHealthReason | undefined;
   try {
     const client = createClient(url, key, {

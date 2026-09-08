@@ -54,7 +54,7 @@ The raw `tcad_ingest` schema remains private. The three new public tables contai
 
 The administrator-only `tcad_ingest.publish_property_search(uuid)` function requires a ready dataset and all 20 completed text files. It builds from the raw records, deduplicates IDs, excludes confidential/unknown flags and conflicting addresses, and switches the active release atomically. Failure leaves the prior published release intact. Publication can be repeated in a new transaction without duplicating records. Loader and website roles cannot execute it.
 
-A trigram GIN index supports partial matching. The request only queries the small curated projection, not raw JSON. Requests have a five-second client abort, page/input bounds, and no response caching. The declared function timeout is defense in depth; it is not a substitute for measuring real hosted query duration or platform-level rate controls.
+A trigram GIN index supports partial matching. The request only queries the small curated projection, not raw JSON. Requests have a 15-second client abort, page/input bounds, and no response caching. The search, profile, and database-health routes allow 30 seconds for the request, rendering, and cleanup. A live `request_timed_out` result prompted this change; increasing the deadline accommodates slow successful API responses but does not prove or fix every underlying network issue. The declared function timeout is defense in depth; it is not a substitute for measuring real hosted query duration or platform-level rate controls.
 
 ## Review and activation order
 

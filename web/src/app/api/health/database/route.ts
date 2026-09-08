@@ -2,6 +2,7 @@ import { diagnoseDatabaseHealth } from "@/lib/supabase/health";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 export async function GET() {
   const result = await diagnoseDatabaseHealth({
