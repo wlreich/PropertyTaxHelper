@@ -44,13 +44,15 @@ export function parseSearch(query: string, page = "0") {
   return { q, page: Math.min(parsedPage, 249), error };
 }
 
-export function resultsUrl(q: string, page = 0) {
+export function resultsUrl(q: string, page = 0, showAll = false) {
   const params = new URLSearchParams({ q });
   if (page) params.set("page", String(page));
+  if (showAll) params.set("all", "1");
   return `/?${params}`;
 }
-export function propertyUrl(id: string, q: string, page: number) {
+export function propertyUrl(id: string, q: string, page: number, showAll = false) {
   const params = new URLSearchParams({ q, page: String(page) });
+  if (showAll) params.set("all", "1");
   return `/property/${encodeURIComponent(id)}?${params}`;
 }
 export function currency(value: number | null) {
