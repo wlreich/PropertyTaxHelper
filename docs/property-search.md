@@ -58,10 +58,10 @@ A trigram GIN index supports partial matching. The request only queries the smal
 
 ## Review and activation order
 
-**No hosted migration, publication or production deployment was performed while preparing this PR.** Repository instructions reserve production changes for Wendy's approval. Merging can trigger Vercel's production deployment, so complete the approval and database sequence before merging this PR.
+Wendy approved this activation on September 8, 2026 and authorized routine production work without a separate approval. See root `AGENTS.md` for the standing policy. Complete database verification before deploying dependent website code; tests and access controls remain required.
 
-1. Wendy reviews the PR and approves the database migration/publication and production website change. A visual preview is still required; the remote browser could not open this session's local server.
-2. After approval, Codex applies `20260908162847_property_search_projection.sql` through the Supabase migration process and verifies its recorded migration version. It introduces `pg_trgm`, three tables, policies, and functions but does not itself publish any records.
+1. Prepare and test the change in a PR. A visual preview check remains part of release verification; the remote browser could not open the original local server.
+2. Codex applies `20260908170902_property_search_projection.sql` through the Supabase migration process and verifies its recorded migration version. It introduces `pg_trgm`, three tables, policies, and functions but does not itself publish any records.
 3. Codex publishes the ready release using the database administrator connection in a dedicated transaction:
 
    ```sql
@@ -73,7 +73,7 @@ A trigram GIN index supports partial matching. The request only queries the smal
 
    Use a connection whose command timeout accommodates the operation. The 15-minute setting is a ceiling, not an estimated runtime. Publication is a separate projection build and does not rerun the county import. Do not use the restricted loader credential, expose an administrator credential to the website, or paste credentials in chat. No new website credential is required.
 4. Codex verifies publication counts, RLS, representative search/profile RPCs as `anon`, and hosted timings before the website is released. Recheck the Supabase security advisor. If publication or latency fails, keep the current website release and fix the projection first.
-5. Configure the **Preview** environment with the existing `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` if needed. Review partial addresses, a multiple-result search, page navigation and return links on desktop and a narrow/mobile screen. Inspect console/hydration errors, keyboard focus, loading, empty results, and unavailable states. Then merge/promote only with Wendy's approval.
+5. Configure the **Preview** environment with the existing `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` if needed. Review partial addresses, a multiple-result search, page navigation and return links on desktop and a narrow/mobile screen. Inspect console/hydration errors, keyboard focus, loading, empty results, and unavailable states. Then merge/promote after the checks pass; routine production changes no longer require a separate approval.
 
 The website already uses these two settings for the database health check; privileged keys and new database passwords are unnecessary. The site continues to request no indexing (`noindex, nofollow`), but that is not access control. Publication intentionally makes the approved, non-confidential curated fields readable through the database API.
 
@@ -98,3 +98,13 @@ node tools/property-search/render-smoke.mjs
 `Property search checks` runs these gates on relevant pull requests without any secrets. The SQL checks execute all repository migrations in a local PostgreSQL-compatible PGlite engine with the actual `pg_trgm` extension and synthetic data. They cover deduplication, ambiguity, confidentiality/unknown flags/shared groups, child relationships/year filtering, partial matching, paging, role permissions, inactive releases and publication rollback. The index check demonstrates index availability; it is not a hosted performance benchmark.
 
 The rendered-page check starts the production Next.js build and synthetic RPC service together, then requests the home, result and profile routes. Browser interaction, visual layout and production-scale timing remain separate review gates. To inspect the synthetic app locally, run `node tools/property-search/preview-data.mjs` and start the website with `SUPABASE_URL=http://127.0.0.1:4055` and `SUPABASE_PUBLISHABLE_KEY=sb_publishable_fixture`; these dummy values are for local testing only.
+
+## Activation verified on September 8, 2026
+
+- Applied migration version: `20260908170902` (repository filename aligned to Supabase's recorded version without rewriting database history).
+- Active dataset: `2d8b3a87-c402-4630-8231-5a1f26597631`; 491,220 searchable rows and 491,220 distinct property IDs.
+- Projection including indexes: 132 MB; 34 shared-ownership records have values under review.
+- As `anon`, a representative partial-street query returned 20 results with another page available, and its first property profile resolved. `EXPLAIN ANALYZE` measured approximately 304 ms for that database search; this is one query measurement, not an end-to-end website latency guarantee.
+- Public roles cannot write the projection, access the raw schema, or invoke publication; the loader also cannot publish.
+- Supabase's security advisor reported no findings. No source property rows or credentials were emitted by these checks.
+- Vercel account access remains unavailable through the connector. Verify the website deployment separately from the database activation.
