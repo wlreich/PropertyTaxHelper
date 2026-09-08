@@ -21,7 +21,7 @@ class FakeS3:
     def head_object(self,Key,**kwargs):
         if Key not in self.objects:raise ClientError({'Error':{'Code':'404'}},'HeadObject')
         return {'ContentLength':len(self.objects[Key])}
-    def get_object(self,Key,**kwargs):return {'Body':io.BytesIO(self.objects[Key])}
+    def get_object(self,Key,**kwargs):return {'Body':io.BytesIO(self.objects[Key]),'ContentLength':len(self.objects[Key])}
     def upload_file(self,Filename,Bucket,Key,**kwargs):
         self.uploads+=1;self.objects[Key]=Path(Filename).read_bytes()
     def download_file(self,Bucket,Key,Filename):Path(Filename).write_bytes(self.objects[Key])

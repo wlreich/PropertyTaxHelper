@@ -70,6 +70,33 @@ def main():
             assert location==f"s3://tcad-archives/archives/{report['archive_sha256']}.zip"
             assert c.execute("select count(*) from tcad_ingest.import_history where outcome='succeeded'").fetchone()[0]==2
         assert client.uploads==2  # one ZIP and one receipt, reused on import/retry
+        # The same source can also arrive through a private manual upload.
+        client.objects['incoming/synthetic.zip']=source.read_bytes()
+        config.update(mode='validate_uploaded', uploaded_key='incoming/synthetic.zip',
+                      expected_upload_sha=None, browser_downloaded_on='2026-09-07')
+        work=root/'uploaded';work.mkdir();uploaded={}
+        with patch.object(run_job,'database_connection',connection), \
+             patch.object(run_job,'download',side_effect=AssertionError('No source HTTP request')):
+            run_job.execute(config,uploaded,ArchiveStorage(client),work)
+        assert uploaded['status']=='validated_and_archived' and uploaded['row_count']==20
+        with psycopg.connect(dsn,autocommit=True) as c:
+            assert c.execute('select count(*) from tcad_ingest.import_attempts').fetchone()[0]==2
+        config.update(mode='import',archive_sha=uploaded['archive_sha256'],receipt_sha=uploaded['receipt_sha256'])
+        for attempt in range(2):
+            work=root/f'uploaded-import-{attempt}';work.mkdir();loaded={}
+            with patch.object(run_job,'database_connection',connection):
+                run_job.execute(config,loaded,ArchiveStorage(client),work)
+            assert loaded['database_row_count']==20
+        with psycopg.connect(dsn,autocommit=True) as c:
+            assert c.execute('select count(*) from tcad_ingest.datasets').fetchone()[0]==1
+            assert c.execute('select count(*) from tcad_ingest.records').fetchone()[0]==20
+            assert c.execute('select count(*) from tcad_ingest.acquisitions').fetchone()[0]==2
+            row=c.execute("select download_started_at, downloaded_at, acquisition_method, browser_downloaded_on_reported, storage_retrieved_at from tcad_ingest.release_chronology where acquisition_method='manual_upload'").fetchone()
+            assert row[:4]==(None,None,'manual_upload','2026-09-07') and row[4] is not None
+            assert c.execute("select count(*) from tcad_ingest.release_chronology where acquisition_method='direct_download' and downloaded_at is not null").fetchone()[0]==1
+            assert c.execute("select count(*) from tcad_ingest.import_history where outcome='succeeded'").fetchone()[0]==4
+            assert c.execute("select relrowsecurity from pg_class where oid='tcad_ingest.acquisitions'::regclass").fetchone()[0]
+            assert 'security_invoker=true' in c.execute("select reloptions from pg_class where oid='tcad_ingest.release_chronology'::regclass").fetchone()[0]
     print('PASS: private archive + receipt, validation without inserts, full import, retry, durable URI and audit history')
 
 

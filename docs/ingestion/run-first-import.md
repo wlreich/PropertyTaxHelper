@@ -46,6 +46,10 @@ In [repository Actions variables](https://github.com/wlreich/PropertyTaxHelper/s
 
 The endpoint and project ID are pinned in code. Workflow inputs cannot redirect Storage credentials to another endpoint. Only the final job step receives production secrets; parser and integration tests use a disposable local PostgreSQL database with synthetic records. The workflow runs no pull-request code and rejects dispatches on branches other than `main`. Repository administrators/collaborators who can change trusted workflow code remain part of the credential trust boundary.
 
+## Browser download fallback
+
+If TCAD refuses the GitHub download but the ZIP downloads in your browser, follow [Upload and validate a browser-downloaded ZIP](upload-downloaded-zip.md). This uses the same private storage and the new `validate_uploaded` mode. Preserve the complete ZIP and its source URL. No additional credentials are needed.
+
 ## First run: validate and archive
 
 1. Merge the workflow PR. Open **GitHub → Actions → TCAD data import → Run workflow** and select branch `main`.
