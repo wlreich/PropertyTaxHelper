@@ -9,6 +9,8 @@ import {
 } from "@/lib/property-search";
 import { getProperty } from "@/lib/supabase/properties";
 
+export const maxDuration = 30;
+
 export default async function PropertyPage({
   params,
   searchParams,
