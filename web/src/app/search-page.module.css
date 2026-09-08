@@ -1,0 +1,337 @@
+.page {
+  --ink: #132239;
+  --muted: #566174;
+  --teal: #245aff;
+  --line: #dce2ea;
+  --paper: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.headerBand {
+  background: #132239;
+  color: white;
+}
+
+.headerInner {
+  max-width: 1160px;
+  width: calc(100% - 80px);
+  min-height: 84px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 56px;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wordmark span {
+  color: #ea6548;
+}
+
+.activeLink {
+  display: flex;
+  min-height: 84px;
+  align-items: center;
+  border-bottom: 4px solid #6288ff;
+  padding: 4px 6px 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.county {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  color: #c2ccdc;
+}
+
+.page :global(.search-hero) {
+  max-width: none;
+  padding: 52px 0 40px;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 32px;
+}
+
+.page h1 {
+  font-size: clamp(38px, 4.6vw, 62px);
+  font-weight: 750;
+  letter-spacing: -2.7px;
+  line-height: 1.07;
+  margin-bottom: 20px;
+}
+
+.page :global(.hero-description) {
+  font-size: 17px;
+  margin-bottom: 0;
+}
+
+.parcel {
+  width: 100%;
+  height: auto;
+}
+
+.page :global(.search-form label) {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.page :global(.search-controls) {
+  gap: 12px;
+}
+
+.page :global(.search-controls input) {
+  min-height: 62px;
+  border: 1px solid #929eaf;
+  border-radius: 4px;
+  font-size: 17px;
+  padding: 18px 20px;
+  box-shadow: none;
+}
+
+.page :global(.search-controls input::placeholder) {
+  color: #657185;
+}
+
+.page :global(.search-controls button) {
+  border-radius: 4px;
+  padding: 18px 30px;
+  font-size: 15px;
+  min-width: 208px;
+}
+
+.page :global(.search-controls button:hover) {
+  background: #1746d6;
+}
+
+.page :global(.search-form > p) {
+  font-size: 13px;
+}
+
+.page :global(.intro-grid) {
+  padding-top: 32px;
+  padding-bottom: 42px;
+}
+
+.page :global(.step-number) {
+  color: #245aff;
+  font-weight: 700;
+}
+
+.page :global(.intro-grid h2) {
+  font-weight: 700;
+}
+
+.page :global(.section-heading) {
+  align-items: flex-start;
+  margin: 4px 0 24px;
+}
+
+.page :global(.section-heading h2) {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+}
+
+.page :global(.section-heading p) {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.page :global(.release-badge) {
+  background: #edf2ff;
+  border-color: #d9e2ff;
+  color: #24469c;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.page :global(.result-list) {
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.page :global(.result-card) {
+  padding: 22px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  transition: background-color 0.15s;
+}
+
+.page :global(.result-card:hover),
+.page :global(.result-card:focus-visible) {
+  background: #f3f6ff;
+  box-shadow: none;
+}
+
+.page :global(.result-address h3) {
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.page :global(.result-address p) {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.page :global(.result-meta),
+.page :global(.result-value span) {
+  font-size: 11px;
+}
+
+.page :global(.result-value strong) {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.page :global(.result-arrow) {
+  color: #245aff;
+  font-size: 23px;
+  padding-left: 22px;
+}
+
+.page :global(.pagination a) {
+  color: #245aff;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.page :global(.pagination a:hover) {
+  background: #edf2ff;
+}
+
+.page :global(.notice),
+.page :global(.empty-state) {
+  background: #f5f7fc;
+  border-color: var(--line);
+  border-radius: 4px;
+}
+
+.page :global(.notice h2),
+.page :global(.empty-state h3) {
+  font-weight: 700;
+}
+
+.page :global(.site-footer) {
+  margin-top: auto;
+}
+
+.page a:focus-visible,
+.page button:focus-visible,
+.page input:focus-visible {
+  outline: 3px solid #245aff;
+  outline-offset: 4px;
+}
+
+.headerBand a:focus-visible {
+  outline-color: #a9bdff;
+}
+
+@media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr) 190px;
+  }
+
+  .county {
+    display: none;
+  }
+
+  .headerInner nav {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .headerInner {
+    width: calc(100% - 36px);
+    min-height: 72px;
+    gap: 20px;
+  }
+
+  .wordmark {
+    font-size: 13px;
+    letter-spacing: 0.6px;
+  }
+
+  .activeLink {
+    min-height: 72px;
+    font-size: 13px;
+  }
+
+  .heroGrid {
+    display: block;
+    margin-bottom: 30px;
+  }
+
+  .parcel {
+    display: none;
+  }
+
+  .page :global(.search-hero) {
+    padding: 36px 0 32px;
+  }
+
+  .page h1 {
+    font-size: clamp(32px, 6.7vw, 44px);
+    letter-spacing: -1.5px;
+    line-height: 1.12;
+  }
+
+  .page :global(.hero-description) {
+    font-size: 15px;
+    max-width: 300px;
+  }
+
+  .page :global(.search-controls input) {
+    font-size: 16px;
+    padding: 16px 14px;
+    min-height: 58px;
+  }
+
+  .page :global(.search-controls button) {
+    min-height: 56px;
+  }
+
+  .page :global(.section-heading) {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page :global(.section-heading h2) {
+    font-size: 23px;
+  }
+
+  .page :global(.result-card) {
+    padding: 20px 8px;
+  }
+
+  .page :global(.result-arrow) {
+    padding-left: 0;
+  }
+
+  .page :global(.result-value) {
+    border-top-color: var(--line);
+  }
+
+  .page :global(.result-value strong) {
+    font-size: 20px;
+  }
+}
