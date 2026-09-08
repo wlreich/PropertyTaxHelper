@@ -1,0 +1,38 @@
+name: Property search checks
+on:
+  pull_request:
+    paths:
+      - "web/**"
+      - "supabase/migrations/**"
+      - "tools/property-search/**"
+      - ".github/workflows/property-search-checks.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            tools/property-search/package-lock.json
+      - name: Install website dependencies
+        run: npm ci --prefix web
+      - name: Check website
+        working-directory: web
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Install local database test engine
+        run: npm ci --prefix tools/property-search --ignore-scripts
+      - name: Test publication and access controls
+        run: npm test --prefix tools/property-search
+      - name: Exercise rendered pages with synthetic data
+        run: node tools/property-search/render-smoke.mjs
