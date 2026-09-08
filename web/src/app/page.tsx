@@ -23,7 +23,8 @@ export default async function Home({
     typeof params.q === "string" ? params.q : "",
     typeof params.page === "string" ? params.page : "0",
   );
-  const result = q && !error ? await searchProperties(q, page) : null;
+  const showAll = params.all === "1";
+  const result = q && !error ? await searchProperties(q, page, undefined, undefined, showAll) : null;
   return (
     <div className={styles.page}>
       <header className={styles.headerBand}>
@@ -52,7 +53,7 @@ export default async function Home({
               <circle cx="217" cy="62" r="5" fill="white" />
             </svg>
           </div>
-          <SearchForm query={q} />
+          <SearchForm query={q} showAll={showAll} />
         </section>
         {!q && (
           <section
@@ -117,10 +118,10 @@ export default async function Home({
                 <p>
                   {page
                     ? "Return to the first page or try another address."
-                    : "Try just the street name, remove a unit number, or check the spelling. Some properties do not have a searchable address."}
+                    : "Try just the street name, remove a unit number, or check the spelling. You can also select “Show all parcels” to include identified parkland. Some properties do not have a searchable address."}
                 </p>
                 {page > 0 && (
-                  <Link className="text-link" href={resultsUrl(q)}>
+                  <Link className="text-link" href={resultsUrl(q, 0, showAll)}>
                     Return to first page →
                   </Link>
                 )}
@@ -135,7 +136,7 @@ export default async function Home({
                     <li key={p.property_id}>
                       <Link
                         className="result-card"
-                        href={propertyUrl(p.property_id, q, page)}
+                        href={propertyUrl(p.property_id, q, page, showAll)}
                         prefetch={false}
                       >
                         <div className="result-address">
@@ -147,6 +148,7 @@ export default async function Home({
                             ID {p.property_id}{" "}
                             <span aria-hidden="true">·</span>{" "}
                             {propertyType(p.property_type)}
+                            {p.is_parkland && <span className={styles.parklandBadge}>Parkland</span>}
                           </p>
                         </div>
                         <div className="result-value">
@@ -170,7 +172,7 @@ export default async function Home({
               <nav className="pagination" aria-label="Search result pages">
                 <div>
                   {page > 0 && (
-                    <Link href={resultsUrl(q, page - 1)} prefetch={false}>
+                    <Link href={resultsUrl(q, page - 1, showAll)} prefetch={false}>
                       ← Previous
                     </Link>
                   )}
@@ -178,7 +180,7 @@ export default async function Home({
                 <span>Page {page + 1}</span>
                 <div>
                   {result.data.has_more && (
-                    <Link href={resultsUrl(q, page + 1)} prefetch={false}>
+                    <Link href={resultsUrl(q, page + 1, showAll)} prefetch={false}>
                       Next →
                     </Link>
                   )}
