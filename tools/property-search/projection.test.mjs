@@ -6,7 +6,7 @@ import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import test from "node:test";
 
 const dataset = "11111111-1111-4111-8111-111111111111";
-export async function fixtureDatabase() {
+export async function fixtureDatabase({ beforeAcreageFix = false } = {}) {
   const db = new PGlite({ extensions: { pg_trgm } });
   await db.exec(
     "create role anon; create role authenticated; create role service_role; grant usage on schema public to anon,authenticated;",
@@ -15,7 +15,7 @@ export async function fixtureDatabase() {
     new URL("../../supabase/migrations/", import.meta.url),
   );
   for (const filename of (await readdir(directory))
-    .filter((x) => x.endsWith(".sql"))
+    .filter((x) => x.endsWith(".sql") && !(beforeAcreageFix && x.endsWith("_property_acreage_scale.sql")))
     .sort())
     await db.exec(await readFile(`${directory}/${filename}`, "utf8"));
   await db.query(
@@ -50,7 +50,7 @@ export async function fixtureDatabase() {
     land_non_hstd_val: "0",
     imprv_hstd_val: "350000",
     imprv_non_hstd_val: "0",
-    land_acres: "0.25",
+    land_acres: "00000000000000002500",
     partial_owner: "F",
     ownership_pct: "100",
     py_confidential_flag: "F",
@@ -156,6 +156,7 @@ if (process.argv[1]?.endsWith("projection.test.mjs"))
         assert.equal(r.rows[0].result.published_properties, 50);
         assert.equal((await profile("100")).property.source_record_count, 2);
         assert.equal((await profile("100")).property.market_value, 450000);
+        assert.equal((await profile("100")).property.land_acres, 0.25);
         assert.equal((await profile("100")).property.improvement_records, 1);
         assert.equal((await profile("100")).property.land_segments, 1);
         assert.equal((await profile("106")).property.improvement_records, 1);
@@ -347,4 +348,34 @@ if (process.argv[1]?.endsWith("projection.test.mjs"))
         assert.match(JSON.stringify(plan.rows), /property_search_address_idx/);
       },
     );
+  });
+
+if (process.argv[1]?.endsWith("projection.test.mjs"))
+  test("acreage upgrade repairs existing values, preserves other fields, and is repeatable", async (t) => {
+    const db = await fixtureDatabase({ beforeAcreageFix: true });
+    t.after(() => db.close());
+    await db.query(`update tcad_ingest.records set fields=jsonb_set(fields,'{land_acres}','"00000000000000014309"') where prop_id='000100' and member_name='0.txt'`);
+    await db.query("select tcad_ingest.publish_property_search($1)",[dataset]);
+    const snapshot = async () => (await db.query("select property_id,land_acres::float8 acres,to_jsonb(d)-'land_acres' remaining from public.property_search_documents d order by property_id")).rows;
+    const before = await snapshot();
+    assert.equal(before.find(x=>x.property_id==='100').acres,14309);
+    const directory = fileURLToPath(new URL("../../supabase/migrations/",import.meta.url));
+    const name = (await readdir(directory)).find(x=>x.endsWith('_property_acreage_scale.sql'));
+    const sql = await readFile(`${directory}/${name}`,'utf8');
+    await db.exec(sql);
+    const after = await snapshot();
+    assert.equal(after.find(x=>x.property_id==='100').acres,1.4309);
+    assert.equal(after.find(x=>x.property_id==='106').acres,null);
+    assert.deepEqual(after.map(x=>x.remaining),before.map(x=>x.remaining));
+    await db.exec(sql);
+    assert.deepEqual(await snapshot(),after);
+    await db.query("select tcad_ingest.publish_property_search($1)",[dataset]);
+    assert.deepEqual(await snapshot(),after);
+    for(const [input,expected] of [['00000000000000014309',1.4309],['2500',0.25],['1',0.0001],['0',0],['1.4309',1.4309],[' 10000 ',1],['',null],[null,null],['garbage',null],['-10000',null],['1.23456',null]]) {
+      const result=(await db.query('select tcad_ingest.search_acres($1)::float8 acres',[input])).rows[0].acres;
+      assert.equal(result,expected);
+    }
+    await db.exec('set role anon');
+    const profile=(await db.query("select public.property_profile('100') result")).rows[0].result;
+    assert.equal(profile.property.land_acres,1.4309);
   });
