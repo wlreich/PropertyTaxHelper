@@ -134,6 +134,47 @@ class IngestionTests(unittest.TestCase):
             with self.assertRaises(ingest.ValidationError):
                 ingest.run(arguments(self.path))
 
+    def test_active_arb_cases_preserve_earlier_years_and_report_counts(self):
+        spec = next(s for s in LAYOUT['files'].values() if s['worksheet'] == 'ARB')
+        raw = b''.join(make_row(spec, {'prop_val_yr': year})
+                       for year in ['02018', '02024', '02024', '02026'])
+        make_archive(self.path, omit='ARB', extra={'ARB.TXT': raw})
+        result = ingest.run(arguments(self.path))
+        arb = result['files']['ARB.TXT']
+        self.assertEqual(arb['rows'], 4)
+        self.assertEqual(arb['record_year_counts'], {'2018': 1, '2024': 2, '2026': 1})
+        preserved = []
+        with zipfile.ZipFile(self.path) as archive:
+            ingest.scan_member(archive, archive.getinfo('ARB.TXT'), spec, 2026, 'ascii',
+                               lambda n, fields: preserved.append(fields['prop_val_yr']))
+        self.assertEqual(preserved, ['02018', '02024', '02024', '02026'])
+
+    def test_arb_year_exception_keeps_other_year_checks(self):
+        for worksheet, value, message in [
+            ('ARB', '02027', 'later than the release year'),
+            ('ARB', '01899', 'outside the supported range'),
+            ('ARB', 'PRIV!', 'not a valid integer'),
+            ('Property', '02024', 'differs from the declared dataset year'),
+            ('Lawsuit', '02024', 'differs from the declared dataset year')]:
+            make_archive(self.path, overrides={worksheet: {'prop_val_yr': value}})
+            with self.assertRaisesRegex(ingest.ValidationError, message) as caught:
+                ingest.run(arguments(self.path))
+            self.assertNotIn(value, str(caught.exception))
+
+    def test_structural_errors_are_specific_and_exclude_row_values(self):
+        spec = next(s for s in LAYOUT['files'].values() if s['worksheet'] == 'ARB')
+        good = make_row(spec)
+        invalid = bytearray(good)
+        invalid[0] = 255
+        for raw, message in [(b'PRIVATE\r\n', 'expected 127 bytes, got 7'),
+                             (bytes(invalid), 'invalid ascii encoding'),
+                             (good.replace(b' ', b'\x00', 1), 'NUL byte')]:
+            make_archive(self.path, omit='ARB', extra={'ARB.TXT': raw})
+            with self.assertRaisesRegex(ingest.ValidationError, message) as caught:
+                ingest.run(arguments(self.path))
+            self.assertIn('ARB row 1:', str(caught.exception))
+            self.assertNotIn('PRIVATE', str(caught.exception))
+
     def test_missing_unknown_and_unsafe_members_are_rejected(self):
         for kwargs in [dict(omit='Agent'),dict(extra={'unknown.txt':b'x'}),dict(extra={'../escape.pdf':b'x'}),
                        dict(extra={'second_APPRAISAL_INFO.TXT':b'x'})]:
