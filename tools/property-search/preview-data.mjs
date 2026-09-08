@@ -1,7 +1,7 @@
 // Local browser verification only. All records are synthetic; bind to loopback.
 import { createServer } from "node:http";
 import { fixtureDatabase } from "./projection.test.mjs";
-const db = await fixtureDatabase();
+const db = await fixtureDatabase({ parklandFixtures: true });
 await db.query(
   "select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')",
 );
@@ -14,11 +14,12 @@ createServer(async (req, res) => {
       return;
     }
     let rows;
-    if (url.pathname === "/rest/v1/rpc/search_properties")
+    if (url.pathname === "/rest/v1/rpc/search_property_parcels")
       rows = (
-        await db.query("select public.search_properties($1,$2) result", [
+        await db.query("select public.search_property_parcels($1,$2,$3) result", [
           url.searchParams.get("p_query"),
           Number(url.searchParams.get("p_page")),
+          url.searchParams.get("p_show_all") === "true",
         ])
       ).rows;
     else if (url.pathname === "/rest/v1/rpc/property_profile")
