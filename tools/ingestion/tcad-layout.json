@@ -105,7 +105,10 @@
           "end": 244
         }
       ],
-      "record_length": 244
+      "record_length": 244,
+      "filename_aliases": [
+        "APPR_HDR.TXT"
+      ]
     },
     "*_APPRAISAL_INFO.TXT": {
       "worksheet": "Property",
@@ -4056,7 +4059,10 @@
           "end": 9922
         }
       ],
-      "record_length": 9922
+      "record_length": 9922,
+      "filename_aliases": [
+        "PROP.TXT"
+      ]
     },
     "*_APPRAISAL_ENTITY_INFO.TXT": {
       "worksheet": "PropertyEntity",
@@ -5767,7 +5773,10 @@
           "end": 3141
         }
       ],
-      "record_length": 3141
+      "record_length": 3141,
+      "filename_aliases": [
+        "PROP_ENT.TXT"
+      ]
     },
     "*_APPRAISAL_ENTITY_TOTALS.TXT": {
       "worksheet": "EntityTotals",
@@ -7206,7 +7215,10 @@
           "end": 2491
         }
       ],
-      "record_length": 2491
+      "record_length": 2491,
+      "filename_aliases": [
+        "TOTALS.TXT"
+      ]
     },
     "*_APPRAISAL_ABSTRACT_SUBDV.TXT": {
       "worksheet": "AbstractSubdivision",
@@ -7229,7 +7241,10 @@
           "end": 50
         }
       ],
-      "record_length": 50
+      "record_length": 50,
+      "filename_aliases": [
+        "ABS_SUBD.TXT"
+      ]
     },
     "*_APPRAISAL_STATE_CODE.TXT": {
       "worksheet": "StateCode",
@@ -7276,7 +7291,10 @@
           "end": 125
         }
       ],
-      "record_length": 125
+      "record_length": 125,
+      "filename_aliases": [
+        "STATE_CD.TXT"
+      ]
     },
     "*_APPRAISAL_ARB.TXT": {
       "worksheet": "ARB",
@@ -7331,7 +7349,10 @@
           "end": 127
         }
       ],
-      "record_length": 127
+      "record_length": 127,
+      "filename_aliases": [
+        "ARB.TXT"
+      ]
     },
     "*_APPRAISAL_ENTITY.TXT": {
       "worksheet": "Entity",
@@ -7354,7 +7375,10 @@
           "end": 17
         }
       ],
-      "record_length": 17
+      "record_length": 17,
+      "filename_aliases": [
+        "ENTITY.TXT"
+      ]
     },
     "*_APPRAISAL_MOBILE_HOME_INFO.TXT": {
       "worksheet": "MobileHome",
@@ -7457,7 +7481,10 @@
           "end": 928
         }
       ],
-      "record_length": 928
+      "record_length": 928,
+      "filename_aliases": [
+        "MOBILE_HOME_INFO.TXT"
+      ]
     },
     "*_APPRAISAL_AGENT.TXT": {
       "worksheet": "Agent",
@@ -7552,7 +7579,10 @@
           "end": 378
         }
       ],
-      "record_length": 378
+      "record_length": 378,
+      "filename_aliases": [
+        "AGENT.TXT"
+      ]
     },
     "*_APPRAISAL_LAWSUIT.TXT": {
       "worksheet": "Lawsuit",
@@ -7599,7 +7629,10 @@
           "end": 117
         }
       ],
-      "record_length": 117
+      "record_length": 117,
+      "filename_aliases": [
+        "LAWSUIT.TXT"
+      ]
     },
     "*_ARBITRATION_LAWSUIT.TXT": {
       "worksheet": "Arbitration",
@@ -7646,7 +7679,10 @@
           "end": 117
         }
       ],
-      "record_length": 117
+      "record_length": 117,
+      "filename_aliases": [
+        "ARBITRATION.TXT"
+      ]
     },
     "*_APPRAISAL_IMPROVEMENT_INFO.TXT": {
       "worksheet": "Improvement",
@@ -7741,7 +7777,10 @@
           "end": 114
         }
       ],
-      "record_length": 114
+      "record_length": 114,
+      "filename_aliases": [
+        "IMP_INFO.TXT"
+      ]
     },
     "*_APPRAISAL_IMPROVEMENT_DETAIL.TXT": {
       "worksheet": "ImprovementDetail",
@@ -7844,7 +7883,10 @@
           "end": 622
         }
       ],
-      "record_length": 622
+      "record_length": 622,
+      "filename_aliases": [
+        "IMP_DET.TXT"
+      ]
     },
     "*_APPRAISAL_IMPROVEMENT_DETAIL_ATTR.TXT": {
       "worksheet": "ImprovementDetailAttributes",
@@ -7907,7 +7949,10 @@
           "end": 87
         }
       ],
-      "record_length": 87
+      "record_length": 87,
+      "filename_aliases": [
+        "IMP_ATR.TXT"
+      ]
     },
     "*_APPRAISAL_LAND_DETAIL.TXT": {
       "worksheet": "LandDetail",
@@ -8066,7 +8111,10 @@
           "end": 199
         }
       ],
-      "record_length": 199
+      "record_length": 199,
+      "filename_aliases": [
+        "LAND_DET.TXT"
+      ]
     },
     "*_APPRAISAL_TAX_DEFERRAL_INFO.TXT": {
       "worksheet": "Deferral",
@@ -8137,7 +8185,10 @@
           "end": 224
         }
       ],
-      "record_length": 224
+      "record_length": 224,
+      "filename_aliases": [
+        "TAX_DEFERRAL_INFO.TXT"
+      ]
     },
     "*_APPRAISAL_COUNTRY_CODE.TXT": {
       "worksheet": "CountryCode",
@@ -8160,7 +8211,10 @@
           "end": 55
         }
       ],
-      "record_length": 55
+      "record_length": 55,
+      "filename_aliases": [
+        "COUNTRY.TXT"
+      ]
     },
     "*_APPRAISAL_SKETCH_INFO.TXT": {
       "worksheet": "Sketches",
@@ -8208,6 +8262,10 @@
           "datatype": "json",
           "description": "Sketch JSON Object"
         }
+      ],
+      "filename_aliases": [
+        "SKETCH.TXT",
+        "SKETCH_INFO.TXT"
       ]
     },
     "*_APPRAISAL_SB12.TXT": {
@@ -8328,6 +8386,9 @@
           "datatype": "decimal(4,0)",
           "description": "Property Year"
         }
+      ],
+      "filename_aliases": [
+        "SB12.TXT"
       ]
     }
   }

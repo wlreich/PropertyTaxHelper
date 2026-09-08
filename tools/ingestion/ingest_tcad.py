@@ -15,7 +15,7 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.1.0'
+PARSER_VERSION = '1.1.1'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
 
@@ -47,7 +47,8 @@ def inventory(archive, layout):
             raise ValidationError('Duplicate archive member name')
         names.add(item.filename.casefold())
         matches = [(p, s) for p, s in layout['files'].items()
-                   if fnmatch.fnmatchcase(name.name.upper(), p.upper())]
+                   if (fnmatch.fnmatchcase(name.name.upper(), p.upper())
+                       or name.name.upper() in {alias.upper() for alias in s.get('filename_aliases', [])})]
         if len(matches) > 1:
             raise ValidationError('Ambiguous member layout')
         if matches:

@@ -15,6 +15,16 @@ ingest = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ingest)
 LAYOUT, _ = ingest.read_layout()
 
+# Filenames observed in the certified archive, independently of layout aliases.
+SHORT_NAMES = dict(zip(
+    ['Header', 'Property', 'PropertyEntity', 'EntityTotals', 'AbstractSubdivision',
+     'StateCode', 'ARB', 'Entity', 'MobileHome', 'Agent', 'Lawsuit', 'Arbitration',
+     'Improvement', 'ImprovementDetail', 'ImprovementDetailAttributes', 'LandDetail',
+     'Deferral', 'CountryCode', 'Sketches', 'SB12'],
+    ['APPR_HDR', 'PROP', 'PROP_ENT', 'TOTALS', 'ABS_SUBD', 'STATE_CD', 'ARB', 'ENTITY',
+     'MOBILE_HOME_INFO', 'AGENT', 'LAWSUIT', 'ARBITRATION', 'IMP_INFO', 'IMP_DET',
+     'IMP_ATR', 'LAND_DET', 'TAX_DEFERRAL_INFO', 'COUNTRY', 'SKETCH_INFO', 'SB12']))
+
 
 def make_row(spec, overrides=None):
     fields = {f['name']: '1' for f in spec['fields']}
@@ -33,13 +43,15 @@ def make_row(spec, overrides=None):
     return ('\t'.join(fields[f['name']] for f in spec['fields']) + '\t\r\n').encode('utf-8')
 
 
-def make_archive(path, overrides=None, omit=None, extra=None, repetitions=None):
+def make_archive(path, overrides=None, omit=None, extra=None, repetitions=None, short_names=False):
     with zipfile.ZipFile(path,'w',zipfile.ZIP_DEFLATED) as z:
         for pattern, spec in LAYOUT['files'].items():
             if spec['worksheet'] == omit:
                 continue
             raw = make_row(spec,(overrides or {}).get(spec['worksheet']))
-            z.writestr(pattern.replace('*','2026-07-08_2026'),raw * (repetitions or {}).get(spec['worksheet'],1))
+            name = ('release/' + SHORT_NAMES[spec['worksheet']].lower() + '.txt'
+                    if short_names else pattern.replace('*','2026-07-08_2026'))
+            z.writestr(name,raw * (repetitions or {}).get(spec['worksheet'],1))
         z.writestr('exportTotals.pdf',b'%PDF synthetic fixture')
         for name, raw in (extra or {}).items():
             z.writestr(name, raw)
@@ -81,6 +93,35 @@ class IngestionTests(unittest.TestCase):
         spec = next(s for s in LAYOUT['files'].values() if s['worksheet']=='Property')
         self.assertEqual(len(spec['fields']),len({f['name'] for f in spec['fields']}))
         self.assertGreater(len([f for f in spec['fields'] if f['name'].startswith('filler')]),1)
+
+    def test_short_names_preserve_all_record_types_and_original_names(self):
+        expected = ingest.run(arguments(self.path))
+        make_archive(self.path, short_names=True)
+        actual = ingest.run(arguments(self.path))
+        def by_type(result):
+            return {v['record_type']: (v['rows'], v['sha256']) for v in result['files'].values()}
+        self.assertEqual(by_type(expected), by_type(actual))
+        self.assertIn('release/prop.txt', actual['files'])
+        self.assertEqual(len(actual['files']), 21)
+
+    def test_workbook_sketch_alias_is_supported(self):
+        make_archive(self.path, short_names=True, omit='Sketches',
+                     extra={'SKETCH.TXT': make_row(next(s for s in LAYOUT['files'].values()
+                                                      if s['worksheet'] == 'Sketches'))})
+        result = ingest.run(arguments(self.path))
+        self.assertEqual(result['files']['SKETCH.TXT']['record_type'], 'Sketches')
+
+    def test_short_names_keep_duplicate_and_content_checks(self):
+        for extra in [{'PROP.TXT': b'x'}, {'second_APPRAISAL_INFO.TXT': b'x'},
+                      {'SKETCH.TXT': b'x'}, {'OTHER.TXT': b'x'}, {'../PROP.TXT': b'x'}]:
+            make_archive(self.path, short_names=True, extra=extra)
+            with self.assertRaises(ingest.ValidationError):
+                ingest.run(arguments(self.path))
+        for kwargs in [dict(omit='Agent'), dict(overrides={'Header': {'export_version': '9.0'}}),
+                       dict(overrides={'Property': {'prop_val_yr': '2025'}})]:
+            make_archive(self.path, short_names=True, **kwargs)
+            with self.assertRaises(ingest.ValidationError):
+                ingest.run(arguments(self.path))
 
     def test_dry_run_does_not_require_database_or_copy_archive(self):
         result = ingest.run(arguments(self.path))
