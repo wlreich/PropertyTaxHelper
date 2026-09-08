@@ -1,13 +1,9 @@
 import Link from "next/link";
+import { BrandLogo } from "./brand-logo";
 export function SiteHeader() {
   return (
     <header className="site-header">
-      <Link href="/" className="brand">
-        <span className="brand-icon" aria-hidden="true">
-          ⌂
-        </span>
-        Property Tax Helper
-      </Link>
+      <Link href="/" className="brand" aria-label="ParcelSavvy home"><BrandLogo /></Link>
       <span className="county-label">TRAVIS COUNTY, TEXAS</span>
     </header>
   );
@@ -15,7 +11,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <p>Public records. A clearer starting point.</p>
+      <p>Know your property. Understand your assessment.</p>
       <p>
         Independent of Travis Central Appraisal District. Values reflect the
         selected source release and are not a tax bill.

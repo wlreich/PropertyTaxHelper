@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
 import { SiteFooter, Unavailable } from "@/components/site-shell";
+import { BrandLogo } from "@/components/brand-logo";
+import { TermDefinition } from "@/components/term-definition";
 import styles from "./search-page.module.css";
 import {
   parseSearch,
@@ -29,7 +31,7 @@ export default async function Home({
     <div className={styles.page}>
       <header className={styles.headerBand}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.wordmark}>PROPERTY TAX HELPER<span aria-hidden="true">.</span></Link>
+          <Link href="/" className={styles.wordmark} aria-label="ParcelSavvy home"><BrandLogo /></Link>
           <nav aria-label="Main navigation">
             <Link href="/" aria-current="page" className={styles.activeLink}>Search</Link>
           </nav>
@@ -40,18 +42,10 @@ export default async function Home({
         <section className="search-hero">
           <div className={styles.heroGrid}>
             <div>
-              <h1>Your assessment.<br />Made understandable.</h1>
-              <p className="hero-description">Find the facts. See the context. Know what to ask.</p>
+              <h1>Know your property.<br />Understand your assessment.</h1>
+              <p className="hero-description">Search Travis County property records and understand the values behind your assessment.</p>
             </div>
-            <svg className={styles.parcel} viewBox="0 0 290 210" fill="none" aria-hidden="true" focusable="false">
-              <path d="M20 54 94 19l64 31 77-32 38 83-32 85-85-20-72 29-63-62Z" fill="#F5F7FC" />
-              <path d="m20 54 74 39-10 102m74-145-3 48 86 88M21 133l64-34m70 67 7-57 111-8M94 19v45" stroke="#DCE2EA" strokeWidth="2" />
-              <path d="m87 73 61-26 69 49-30 69-103-31Z" fill="#EDF2FF" stroke="#245AFF" strokeWidth="3" />
-              <path d="m110 93 37-15 39 27-14 34-61-20Z" fill="#245AFF" />
-              <path d="m141 124-3 21" stroke="#245AFF" strokeWidth="3" />
-              <circle cx="217" cy="62" r="16" fill="#EA6548" />
-              <circle cx="217" cy="62" r="5" fill="white" />
-            </svg>
+
           </div>
           <SearchForm query={q} showAll={showAll} />
         </section>
@@ -105,9 +99,10 @@ export default async function Home({
                 </p>
               </div>
               <span className="release-badge">
-                {result.data.tax_year} · {result.data.roll_stage}
+                Source: TCAD · {result.data.tax_year} {result.data.roll_stage}
               </span>
             </div>
+            <p className={styles.sourceNote}>{result.data.export_time_raw ? `TCAD export: ${result.data.export_time_raw}` : "Export date not reported in this release."}</p>
             {!result.data.items.length ? (
               <div className="empty-state">
                 <h3>
@@ -128,8 +123,8 @@ export default async function Home({
               </div>
             ) : (
               <>
-                <div className={styles.resultColumns} aria-hidden="true">
-                  <span>Property</span><span>TCAD market value</span><span />
+                <div className={styles.resultColumns}>
+                  <span>Property</span><TermDefinition term="TCAD market value">TCAD’s estimate of what the property would sell for as of January 1 of the source year. It is not your tax bill.</TermDefinition><span aria-hidden="true" />
                 </div>
                 <ul className="result-list">
                   {result.data.items.map((p) => (

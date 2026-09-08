@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "docs/brand/**"
+      - "AGENTS.md"
       - "supabase/migrations/**"
       - "tools/property-search/**"
       - ".github/workflows/property-search-checks.yml"
@@ -24,15 +26,25 @@ jobs:
             tools/property-search/package-lock.json
       - name: Install website dependencies
         run: npm ci --prefix web
-      - name: Check website
-        working-directory: web
-        run: |
-          npm run lint
-          npm test
-          npm run build
+      - name: Check website and brand
+        run: npm run verify --prefix web
       - name: Install local database test engine
         run: npm ci --prefix tools/property-search --ignore-scripts
       - name: Test publication and access controls
         run: npm test --prefix tools/property-search
       - name: Exercise rendered pages with synthetic data
         run: node tools/property-search/render-smoke.mjs
+      - name: Install Chromium for accessibility and responsive checks
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Check keyboard access, accessibility and responsive layouts
+        run: npm run test:brand-browser --prefix web
+      - name: Preserve browser reports and review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parcelsavvy-brand-review
+          path: |
+            web/brand-report
+            web/brand-test-results
+          if-no-files-found: ignore

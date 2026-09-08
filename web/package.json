@@ -7,7 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --conditions=react-server --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --conditions=react-server --test tests/*.test.mjs",
+    "brand:check": "node scripts/check-brand.mjs",
+    "format:check": "node scripts/check-format.mjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run format:check && npm run brand:check && npm run lint && npm test && npm run build && npm run typecheck",
+    "test:brand-browser": "playwright test --config=playwright.brand.config.ts",
+    "brand:visual": "BRAND_VISUAL_COMPARE=1 playwright test --config=playwright.brand.config.ts",
+    "brand:visual:update": "BRAND_VISUAL_COMPARE=1 playwright test --config=playwright.brand.config.ts --update-snapshots"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",
@@ -17,6 +24,8 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

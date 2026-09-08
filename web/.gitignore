@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Brand browser reports (approve screenshot baselines separately)
+/brand-report/
+/brand-test-results/

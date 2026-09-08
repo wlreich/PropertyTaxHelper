@@ -7,3 +7,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## ParcelSavvy UI work
+Follow the root AGENTS.md brand requirements. Before UI/copy edits read `../docs/brand/BRAND.md` and `../docs/brand/COPY_GUIDE.md`; validate with `npm run verify` and the documented responsive/accessibility checks. Keep Next.js's generated guidance above intact.
