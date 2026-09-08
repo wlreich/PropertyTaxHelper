@@ -6,7 +6,7 @@ import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import test from "node:test";
 
 const dataset = "11111111-1111-4111-8111-111111111111";
-export async function fixtureDatabase({ beforeAcreageFix = false } = {}) {
+export async function fixtureDatabase({ beforeAcreageFix = false, beforeParkland = false, parklandFixtures = false } = {}) {
   const db = new PGlite({ extensions: { pg_trgm } });
   await db.exec(
     "create role anon; create role authenticated; create role service_role; grant usage on schema public to anon,authenticated;",
@@ -15,7 +15,7 @@ export async function fixtureDatabase({ beforeAcreageFix = false } = {}) {
     new URL("../../supabase/migrations/", import.meta.url),
   );
   for (const filename of (await readdir(directory))
-    .filter((x) => x.endsWith(".sql") && !(beforeAcreageFix && x.endsWith("_property_acreage_scale.sql")))
+    .filter((x) => x.endsWith(".sql") && !(beforeAcreageFix && x >= "20260908183146") && !((beforeParkland || beforeAcreageFix) && x.endsWith("_property_parkland_filter.sql")))
     .sort())
     await db.exec(await readFile(`${directory}/${filename}`, "utf8"));
   await db.query(
@@ -117,6 +117,13 @@ export async function fixtureDatabase({ beforeAcreageFix = false } = {}) {
       "insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,$2,$3,$4,$5,$6)",
       [dataset, member, i, id, year, {}],
     );
+  }
+  if (parklandFixtures) {
+    for (let i = 500; i < 525; i++) await property(String(i), {
+      situs_num: String(i), situs_street: "PARKDEMO",
+      market_value: "35", legal_desc: i >= 505 ? "LOT 1 (PARKLAND)" : "LOT 1 PARKLAND ESTATES",
+    });
+    await property("526", {situs_num: "526", situs_street: "PARKDEMO", legal_desc: "LOT 1 (PARKLAND)", py_confidential_flag: "T"});
   }
   return db;
 }
@@ -378,4 +385,47 @@ if (process.argv[1]?.endsWith("projection.test.mjs"))
     await db.exec('set role anon');
     const profile=(await db.query("select public.property_profile('100') result")).rows[0].result;
     assert.equal(profile.property.land_acres,1.4309);
+  });
+
+
+if (process.argv[1]?.endsWith("projection.test.mjs"))
+  test("parkland upgrade, filtering before pagination, ID access and confidentiality", async (t) => {
+    const db = await fixtureDatabase({beforeParkland:true,parklandFixtures:true});
+    t.after(() => db.close());
+    await db.query("select tcad_ingest.publish_property_search($1)",[dataset]);
+    const directory = fileURLToPath(new URL("../../supabase/migrations/",import.meta.url));
+    const name = (await readdir(directory)).find(x=>x.endsWith('_property_parkland_filter.sql'));
+    const sql = await readFile(`${directory}/${name}`,'utf8');
+    await db.exec(sql);
+    const rpc = async (q,page=0,all=false) => (await db.query('select public.search_property_parcels($1,$2,$3) result',[q,page,all])).rows[0].result;
+    const check = async () => {
+      await db.exec('set role anon');
+      try {
+        const filtered = await rpc('Parkdemo');
+        assert.equal(filtered.items.length,5); // Low-value ordinary parcels remain.
+        assert.equal(filtered.has_more,false);
+        assert.ok(filtered.items.every(x=>x.market_value===35 && !x.is_parkland));
+        const pages = [await rpc('Parkdemo',0,true),await rpc('Parkdemo',1,true)];
+        assert.deepEqual(pages.map(x=>x.items.length),[20,5]);
+        assert.deepEqual(pages.map(x=>x.has_more),[true,false]);
+        assert.equal(new Set(pages.flatMap(x=>x.items.map(p=>p.property_id))).size,25);
+        assert.equal(pages.flatMap(x=>x.items).filter(x=>x.is_parkland).length,20);
+        assert.equal((await rpc('000505')).items[0].property_id,'505');
+        assert.equal((await rpc('526',0,true)).items.length,0); // Confidential record stays hidden.
+        const profile=(await db.query("select public.property_profile('505') result")).rows[0].result;
+        assert.equal(profile.property.property_id,'505');
+        const old=(await db.query("select public.search_properties('Parkdemo',0) result")).rows[0].result;
+        assert.equal(old.items.length,20); // Existing RPC remains unfiltered during deployment.
+        assert.ok(!JSON.stringify(pages).includes('legal_desc'));
+        await assert.rejects(db.query('select fields from tcad_ingest.records'),/permission denied/);
+      } finally { await db.exec('reset role'); }
+    };
+    await check();
+    await db.exec(sql); // Source-based backfill is repeatable.
+    await check();
+    await db.query('select tcad_ingest.publish_property_search($1)',[dataset]);
+    await check(); // Future publications carry the same classification.
+    for (const [description,expected] of [['LOT 1 (PARKLAND)',true],['LOT 1 ( parkland )',true],['PARKLAND ESTATES',false],['NOT PARKLAND',false],['PARK LANDING',false],[null,false]]) {
+      assert.equal((await db.query('select tcad_ingest.is_explicit_parkland($1) result',[description])).rows[0].result,expected);
+    }
   });
