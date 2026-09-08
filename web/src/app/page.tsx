@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
-import { SiteHeader, SiteFooter, Unavailable } from "@/components/site-shell";
+import { SiteFooter, Unavailable } from "@/components/site-shell";
+import styles from "./search-page.module.css";
 import {
   parseSearch,
   currency,
@@ -24,22 +25,33 @@ export default async function Home({
   );
   const result = q && !error ? await searchProperties(q, page) : null;
   return (
-    <>
-      <SiteHeader />
+    <div className={styles.page}>
+      <header className={styles.headerBand}>
+        <div className={styles.headerInner}>
+          <Link href="/" className={styles.wordmark}>PROPERTY TAX HELPER<span aria-hidden="true">.</span></Link>
+          <nav aria-label="Main navigation">
+            <Link href="/" aria-current="page" className={styles.activeLink}>Search</Link>
+          </nav>
+          <span className={styles.county}>TRAVIS COUNTY, TEXAS</span>
+        </div>
+      </header>
       <main id="main-content" className="main-shell">
-        <section className={`search-hero ${q ? "compact" : ""}`}>
-          <p className="eyebrow">
-            <span className="status-dot" /> YOUR PROPERTY, IN CONTEXT
-          </p>
-          <h1>
-            Start with an address.
-            <br />
-            <span>Understand your property.</span>
-          </h1>
-          <p className="hero-description">
-            Find Travis County property records and explore the values behind
-            your assessment.
-          </p>
+        <section className="search-hero">
+          <div className={styles.heroGrid}>
+            <div>
+              <h1>Your assessment.<br />Made understandable.</h1>
+              <p className="hero-description">Find the facts. See the context. Know what to ask.</p>
+            </div>
+            <svg className={styles.parcel} viewBox="0 0 290 210" fill="none" aria-hidden="true" focusable="false">
+              <path d="M20 54 94 19l64 31 77-32 38 83-32 85-85-20-72 29-63-62Z" fill="#F5F7FC" />
+              <path d="m20 54 74 39-10 102m74-145-3 48 86 88M21 133l64-34m70 67 7-57 111-8M94 19v45" stroke="#DCE2EA" strokeWidth="2" />
+              <path d="m87 73 61-26 69 49-30 69-103-31Z" fill="#EDF2FF" stroke="#245AFF" strokeWidth="3" />
+              <path d="m110 93 37-15 39 27-14 34-61-20Z" fill="#245AFF" />
+              <path d="m141 124-3 21" stroke="#245AFF" strokeWidth="3" />
+              <circle cx="217" cy="62" r="16" fill="#EA6548" />
+              <circle cx="217" cy="62" r="5" fill="white" />
+            </svg>
+          </div>
           <SearchForm query={q} />
         </section>
         {!q && (
@@ -83,9 +95,9 @@ export default async function Home({
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">PROPERTY RESULTS</p>
-                <h2 id="results-heading">Matches for “{q}”</h2>
+                <h2 id="results-heading">Matching properties</h2>
                 <p>
+                  Matches for “{q}” · {" "}
                   {result.data.items.length
                     ? `Showing ${page * 20 + 1}–${page * 20 + result.data.items.length}${result.data.has_more ? "; more results available" : ""}`
                     : "No matches on this page"}
@@ -122,9 +134,6 @@ export default async function Home({
                       href={propertyUrl(p.property_id, q, page)}
                       prefetch={false}
                     >
-                      <span className="property-mark" aria-hidden="true">
-                        ⌂
-                      </span>
                       <div className="result-address">
                         <h3>{p.address}</h3>
                         <p>
@@ -146,7 +155,7 @@ export default async function Home({
                         </strong>
                       </div>
                       <span className="result-arrow" aria-hidden="true">
-                        ↗
+                        →
                       </span>
                     </Link>
                   </li>
@@ -182,6 +191,6 @@ export default async function Home({
         )}
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }
