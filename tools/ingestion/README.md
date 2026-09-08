@@ -18,6 +18,14 @@ Aliases select the same field layouts; all 20 record types are still required,
 and duplicate types across either naming convention are rejected. Full county
 content validation is still required before approving an import.
 
+The archive's header identifies the release year. The active ARB case list can
+contain earlier appraisal years: retain its original `prop_val_yr` without
+rewriting it to the release year. ARB years from 1900 through the release year
+are accepted; malformed and future years are rejected. Other record types keep
+the existing release-year equality check. Validation reports include aggregate
+`record_year_counts` for each file and distinguish structural errors without
+printing source field values.
+
 For chronology, use `download_tcad.py` to acquire a ZIP with a receipt, then pass `--receipt` to the importer. The operator guide explains unknown dates, private release views and append-only attempt history.
 
 For the operational GitHub workflow and credential setup, follow [Run the first import](../../docs/ingestion/run-first-import.md). Install `requirements-job.txt` to run all tests, including the Storage adapter tests.

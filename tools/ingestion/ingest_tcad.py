@@ -15,7 +15,7 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.1.1'
+PARSER_VERSION = '1.1.2'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
 
@@ -73,22 +73,41 @@ def parse_record(raw, spec, encoding='ascii'):
         raise ValidationError('NUL byte cannot be stored in PostgreSQL text')
     if spec['format'] == 'fixed-width':
         if len(raw) != spec['record_length']:
-            raise ValidationError('Fixed-width record length mismatch')
+            raise ValidationError(f'Fixed-width record length mismatch: expected {spec["record_length"]} bytes, got {len(raw)}')
         values = [raw[f['start'] - 1:f['end']].decode(encoding) for f in spec['fields']]
     else:
         values = raw.decode('utf-8').split('\t')
         if len(values) == len(spec['fields']) + 1 and values[-1] == '':
             values.pop()
         if len(values) != len(spec['fields']):
-            raise ValidationError('Tab-delimited field count mismatch')
+            raise ValidationError(f'Tab-delimited field count mismatch: expected {len(spec["fields"])}, got {len(values)}')
     # All nonblank fields, including contact fields and filler slots, are retained.
     # Exact padding, blanks, bytes and line endings remain in the archived ZIP.
     return {field['name']: value.strip() for field, value in zip(spec['fields'], values)
             if value.strip()}
 
 
+def validate_record_year(fields, spec, year):
+    value = fields.get('prop_val_yr')
+    if not value:
+        return None
+    try:
+        record_year = int(value)
+    except ValueError:
+        raise ValidationError('Record year is not a valid integer') from None
+    if spec['worksheet'] == 'ARB':
+        # This is a list of active cases, which can concern earlier appraisal years.
+        # Keep the original year in fields; never relabel it as the release year.
+        if not 1900 <= record_year <= year:
+            raise ValidationError('ARB record year is outside the supported range or later than the release year')
+    elif record_year != year:
+        raise ValidationError('Record year differs from the declared dataset year')
+    return record_year
+
+
 def scan_member(archive, item, spec, year, encoding, consume=None):
     hasher, count, serialized_bytes = hashlib.sha256(), 0, 0
+    year_counts = {}
     with archive.open(item) as stream:
         if spec is None:
             while chunk := stream.read(1024 * 1024):
@@ -102,16 +121,22 @@ def scan_member(archive, item, spec, year, encoding, consume=None):
                 raw = raw.removesuffix(b'\n').removesuffix(b'\r')
                 try:
                     fields = parse_record(raw, spec, encoding)
-                    record_year = fields.get('prop_val_yr')
-                    if record_year and int(record_year) != year:
-                        raise ValidationError('Record year differs from the declared dataset year')
-                except (UnicodeError, ValueError, ValidationError) as error:
-                    raise ValidationError(f'{spec["worksheet"]} row {count}: invalid encoding, width, fields, or year') from error
+                    record_year = validate_record_year(fields, spec, year)
+                except UnicodeError as error:
+                    codec = encoding if spec['format'] == 'fixed-width' else 'utf-8'
+                    raise ValidationError(f'{spec["worksheet"]} row {count}: invalid {codec} encoding') from error
+                except ValidationError as error:
+                    # Only our structural messages, never source values or decoder exceptions.
+                    raise ValidationError(f'{spec["worksheet"]} row {count}: {error}') from error
+                if record_year is not None:
+                    key = str(record_year)
+                    year_counts[key] = year_counts.get(key, 0) + 1
                 if consume:
                     consume(count, fields)
                 else:
                     serialized_bytes += len(json.dumps(fields,ensure_ascii=False).encode('utf-8'))
     return {'sha256': hasher.hexdigest(), 'rows': count,
+            'record_year_counts': dict(sorted(year_counts.items())),
             'uncompressed_bytes': item.file_size, 'serialized_fields_bytes':serialized_bytes,
             'record_type': spec['worksheet'] if spec else 'archive_only_pdf', **zip_clock(item)}
 
