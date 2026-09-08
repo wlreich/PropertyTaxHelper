@@ -3,7 +3,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { resultsUrl } from "@/lib/property-search";
 
-export function SearchForm({ query = "" }: { query?: string }) {
+export function SearchForm({ query = "", showAll = false }: { query?: string; showAll?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
@@ -16,7 +16,8 @@ export function SearchForm({ query = "" }: { query?: string }) {
         const q = String(
           new FormData(event.currentTarget).get("q") ?? "",
         ).trim();
-        startTransition(() => router.push(resultsUrl(q)));
+        const includeAll = new FormData(event.currentTarget).get("all") === "1";
+        startTransition(() => router.push(resultsUrl(q, 0, includeAll)));
       }}
       aria-busy={pending}
     >
@@ -43,6 +44,16 @@ export function SearchForm({ query = "" }: { query?: string }) {
         A full address isn’t required. Start with a street name, or add a house
         number to narrow your results.
       </p>
+      <label className="parcel-filter">
+        <input
+          type="checkbox" name="all" value="1"
+          key={`${query}:${showAll}`} defaultChecked={showAll}
+          disabled={pending} aria-describedby="parcel-filter-help"
+          onChange={(event) => { if (query) event.currentTarget.form?.requestSubmit(); }}
+        />
+        Show all parcels
+      </label>
+      <p id="parcel-filter-help">Includes identified parkland. Property ID searches always include it.</p>
     </form>
   );
 }
