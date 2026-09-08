@@ -19,7 +19,7 @@ export type Release = {
   export_time_raw: string | null;
 };
 export type SearchResults = Release & {
-  items: SearchItem[];
+  items: (SearchItem & { is_parkland: boolean })[];
   has_more: boolean;
   limit_reached: boolean;
 };
@@ -83,7 +83,7 @@ function sourceUrl(v: unknown): v is string {
 }
 async function rpc(
   name: string,
-  args: Record<string, string | number>,
+  args: Record<string, string | number | boolean>,
   config: Config,
   fetchRequest: typeof fetch,
 ): Promise<unknown> {
@@ -118,12 +118,13 @@ export async function searchProperties(
     SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
   },
   fetchRequest: typeof fetch = fetch,
+  showAll = false,
 ): Promise<Result<SearchResults>> {
   if (parseSearch(q).error || !Number.isInteger(page) || page < 0 || page > 249)
     return { status: "invalid" };
   const v = await rpc(
-    "search_properties",
-    { p_query: q, p_page: page },
+    "search_property_parcels",
+    { p_query: q, p_page: page, p_show_all: showAll },
     config,
     fetchRequest,
   );
@@ -134,6 +135,7 @@ export async function searchProperties(
     !Array.isArray(v.items) ||
     v.items.length > 20 ||
     !v.items.every(item) ||
+    !v.items.every((x) => typeof x.is_parkland === "boolean") ||
     typeof v.has_more !== "boolean" ||
     typeof v.limit_reached !== "boolean"
   )
@@ -152,6 +154,7 @@ export async function searchProperties(
         property_type: x.property_type,
         market_value: x.market_value,
         values_under_review: x.values_under_review,
+        is_parkland: x.is_parkland as boolean,
       })),
       has_more: v.has_more,
       limit_reached: v.limit_reached,
