@@ -22,12 +22,36 @@ def read_receipt(path, archive_sha, source_url):
         return None
     payload = Path(path).read_bytes()
     receipt = json.loads(payload)
-    if receipt.get('version') != 1 or receipt.get('archive_sha256') != archive_sha or receipt.get('source_url') != source_url:
+    if receipt.get('version') not in (1, 2) or receipt.get('archive_sha256') != archive_sha or receipt.get('source_url') != source_url:
         raise ValueError('Receipt does not identify this source URL and archive checksum')
-    started = aware_time(receipt['download_started_at'])
-    finished = aware_time(receipt['downloaded_at'])
-    if finished < started:
-        raise ValueError('Download completion precedes its start')
+    if receipt['version'] == 1:
+        started = aware_time(receipt['download_started_at'])
+        finished = aware_time(receipt['downloaded_at'])
+        if finished < started:
+            raise ValueError('Download completion precedes its start')
+    else:
+        if (receipt.get('acquisition_method') != 'manual_upload'
+                or receipt['download_started_at'] is not None
+                or receipt['downloaded_at'] is not None
+                or receipt.get('resolved_url') is not None
+                or receipt.get('http_last_modified_raw') is not None):
+            raise ValueError('Manual uploads must not invent source download metadata')
+        started = aware_time(receipt['storage_retrieval_started_at'])
+        finished = aware_time(receipt['storage_retrieved_at'])
+        if finished < started:
+            raise ValueError('Storage retrieval completion precedes its start')
+        uploaded = receipt.get('storage_uploaded_at')
+        if uploaded is not None:
+            aware_time(uploaded)
+        if not re.fullmatch(r's3://tcad-archives/incoming/[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.zip', receipt['uploaded_object_uri']) or '..' in receipt['uploaded_object_uri']:
+            raise ValueError('Invalid private upload object URI')
+        if type(receipt.get('archive_bytes')) is not int or receipt['archive_bytes'] <= 0:
+            raise ValueError('Manual receipt requires the retrieved byte count')
+        reported_date = receipt.get('browser_downloaded_on_reported')
+        if reported_date is not None:
+            if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', reported_date):
+                raise ValueError('Browser download dates require YYYY-MM-DD')
+            date.fromisoformat(reported_date)
     publication = receipt.get('publisher_published_on')
     evidence = receipt.get('publication_evidence')
     if bool(publication) != bool(evidence):

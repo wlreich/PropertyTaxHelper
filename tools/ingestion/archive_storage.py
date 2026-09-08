@@ -7,10 +7,17 @@ import re
 PROJECT_REF = 'flnhdrkfaybruzlbixfy'
 BUCKET = 'tcad-archives'
 ENDPOINT = f'https://{PROJECT_REF}.storage.supabase.co/storage/v1/s3'
+MAX_UPLOADED_ARCHIVE_BYTES = 2 * 1024 * 1024 * 1024
 
 
 class StorageError(Exception):
     pass
+
+
+def uploaded_key(value):
+    if not isinstance(value, str) or not re.fullmatch(r'incoming/[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.zip', value) or '..' in value:
+        raise StorageError('Use incoming/ followed by a ZIP filename with letters, numbers, dots, underscores or hyphens')
+    return value
 
 
 def checksum(value):
@@ -105,3 +112,36 @@ class ArchiveStorage:
                 raise StorageError('Downloaded archive or receipt checksum mismatch')
         self.verified[key]=expected_sha
         return path
+
+    def retrieve_upload(self, key, path, expected_sha=None):
+        """Read one private object response; never overwrite the staged object."""
+        from chronology import utc_now
+        key = uploaded_key(key)
+        if expected_sha is not None:
+            checksum(expected_sha)
+        path = Path(path)
+        started = utc_now()
+        response = self.client.get_object(Bucket=BUCKET, Key=key)
+        hasher = hashlib.sha256()
+        size = 0
+        with response['Body'] as body:
+            declared = response.get('ContentLength')
+            if type(declared) is not int or not 0 < declared <= MAX_UPLOADED_ARCHIVE_BYTES:
+                raise StorageError('Uploaded archive must be nonempty and no larger than 2 GiB')
+            with path.open('xb') as target:
+                while chunk := body.read(1024 * 1024):
+                    size += len(chunk)
+                    if size > declared:
+                        raise StorageError('Uploaded archive exceeds its declared byte count')
+                    target.write(chunk)
+                    hasher.update(chunk)
+        if size != declared:
+            raise StorageError('Uploaded archive transfer is incomplete')
+        sha = hasher.hexdigest()
+        if expected_sha is not None and sha != expected_sha:
+            raise StorageError('Uploaded archive checksum differs from the supplied checksum')
+        modified = response.get('LastModified')
+        return {'archive_sha256': sha, 'archive_bytes': size,
+                'uploaded_object_uri': f's3://{BUCKET}/{key}',
+                'storage_uploaded_at': modified.isoformat() if modified is not None else None,
+                'storage_retrieval_started_at': started, 'storage_retrieved_at': utc_now()}

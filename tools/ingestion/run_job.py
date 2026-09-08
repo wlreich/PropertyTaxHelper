@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import signal
+from datetime import date
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -11,7 +12,7 @@ from urllib.parse import urlsplit
 from urllib.error import HTTPError
 
 import ingest_tcad as ingest
-from archive_storage import ArchiveStorage, BUCKET, PROJECT_REF, archive_key, receipt_key, checksum
+from archive_storage import ArchiveStorage, BUCKET, PROJECT_REF, archive_key, receipt_key, checksum, uploaded_key
 from chronology import read_receipt, utc_now
 from download_tcad import download
 
@@ -31,8 +32,8 @@ def official_source(value):
 
 def settings():
     mode=os.environ.get('INPUT_MODE','validate')
-    if mode not in ('validate','import'):
-        raise JobError('Choose validate or import')
+    if mode not in ('validate','validate_uploaded','import'):
+        raise JobError('Choose validate, validate_uploaded or import')
     year=int(os.environ.get('INPUT_TAX_YEAR','2026'))
     stage=os.environ.get('INPUT_ROLL_STAGE','certified')
     encoding=os.environ.get('INPUT_ENCODING','ascii')
@@ -41,10 +42,22 @@ def settings():
     if encoding not in ('ascii','utf-8','cp1252'):
         raise JobError('Invalid encoding')
     result={'mode':mode,'year':year,'stage':stage,'encoding':encoding}
-    if mode=='validate':
+    if mode in ('validate','validate_uploaded'):
         result['source_url']=official_source(os.environ.get('INPUT_SOURCE_URL',''))
         result['published_on']=os.environ.get('INPUT_PUBLISHED_ON') or None
         result['publication_evidence']=os.environ.get('INPUT_PUBLICATION_EVIDENCE') or None
+        if mode == 'validate_uploaded':
+            result['uploaded_key'] = uploaded_key(os.environ.get('INPUT_UPLOADED_ARCHIVE_KEY', ''))
+            value = os.environ.get('INPUT_ARCHIVE_SHA256', '')
+            result['expected_upload_sha'] = checksum(value.lower()) if value else None
+            reported = os.environ.get('INPUT_BROWSER_DOWNLOADED_ON') or None
+            if reported is not None:
+                try:
+                    if date.fromisoformat(reported).isoformat() != reported:
+                        raise ValueError()
+                except ValueError:
+                    raise JobError('Browser download date must be YYYY-MM-DD, or leave blank') from None
+            result['browser_downloaded_on'] = reported
     else:
         if os.environ.get('INPUT_IMPORT_APPROVED')!='true':
             raise JobError('Review the validation report, official layout and database capacity before approving import')
@@ -101,6 +114,17 @@ def execute(config,report,storage,work):
         report['phase']='source_download'
         receipt=download(config['source_url'],archive,config['published_on'],config['publication_evidence'])
         sha=ingest.digest(archive);receipt_sha=ingest.digest(receipt)
+    elif config['mode'] == 'validate_uploaded':
+        report['phase'] = 'uploaded_archive_retrieval'
+        evidence = storage.retrieve_upload(config['uploaded_key'], archive, config.get('expected_upload_sha'))
+        evidence.update(version=2, acquisition_method='manual_upload', source_url=config['source_url'],
+                        resolved_url=None, download_started_at=None, downloaded_at=None,
+                        http_last_modified_raw=None, publisher_published_on=config['published_on'],
+                        publication_evidence=config['publication_evidence'],
+                        browser_downloaded_on_reported=config.get('browser_downloaded_on'))
+        sha = evidence['archive_sha256']
+        receipt.write_text(json.dumps(evidence, indent=2) + '\n')
+        receipt_sha = ingest.digest(receipt)
     else:
         report['phase']='archive_retrieval'
         sha=config['archive_sha'];receipt_sha=config['receipt_sha']
@@ -110,6 +134,11 @@ def execute(config,report,storage,work):
     evidence=json.loads(receipt.read_text())
     source_url=official_source(evidence['source_url'])
     read_receipt(receipt,sha,source_url)
+    report['acquisition_method'] = evidence.get('acquisition_method', 'direct_download')
+    if evidence.get('acquisition_method') == 'manual_upload':
+        report['manual_acquisition'] = {k: evidence.get(k) for k in (
+            'uploaded_object_uri', 'storage_uploaded_at', 'storage_retrieval_started_at',
+            'storage_retrieved_at', 'browser_downloaded_on_reported')}
     with database_connection() as connection:
         private_bucket(connection,archive.stat().st_size)
     report.update(archive_sha256=sha,receipt_sha256=receipt_sha,archive_bytes=archive.stat().st_size,
