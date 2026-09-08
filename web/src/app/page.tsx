@@ -126,41 +126,45 @@ export default async function Home({
                 )}
               </div>
             ) : (
-              <ul className="result-list">
-                {result.data.items.map((p) => (
-                  <li key={p.property_id}>
-                    <Link
-                      className="result-card"
-                      href={propertyUrl(p.property_id, q, page)}
-                      prefetch={false}
-                    >
-                      <div className="result-address">
-                        <h3>{p.address}</h3>
-                        <p>
-                          {[p.city, p.postal_code].filter(Boolean).join(", ") ||
-                            "Travis County, TX"}
-                        </p>
-                        <span className="result-meta">
-                          Property ID {p.property_id}{" "}
-                          <span aria-hidden="true">·</span>{" "}
-                          {propertyType(p.property_type)}
+              <>
+                <div className={styles.resultColumns} aria-hidden="true">
+                  <span>Property</span><span>TCAD market value</span><span />
+                </div>
+                <ul className="result-list">
+                  {result.data.items.map((p) => (
+                    <li key={p.property_id}>
+                      <Link
+                        className="result-card"
+                        href={propertyUrl(p.property_id, q, page)}
+                        prefetch={false}
+                      >
+                        <div className="result-address">
+                          <h3>{p.address}</h3>
+                          <p className="result-meta">
+                            {[p.city, p.postal_code].filter(Boolean).join(", ") ||
+                              "Travis County, TX"}
+                            <span aria-hidden="true"> · </span>
+                            ID {p.property_id}{" "}
+                            <span aria-hidden="true">·</span>{" "}
+                            {propertyType(p.property_type)}
+                          </p>
+                        </div>
+                        <div className="result-value">
+                          <span className={styles.valueLabel}>TCAD market value</span>
+                          <strong>
+                            {p.market_value === null && p.values_under_review
+                              ? "Under review"
+                              : currency(p.market_value)}
+                          </strong>
+                        </div>
+                        <span className="result-arrow" aria-hidden="true">
+                          →
                         </span>
-                      </div>
-                      <div className="result-value">
-                        <span>TCAD market value</span>
-                        <strong>
-                          {p.market_value === null && p.values_under_review
-                            ? "Under review"
-                            : currency(p.market_value)}
-                        </strong>
-                      </div>
-                      <span className="result-arrow" aria-hidden="true">
-                        →
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
             {(page > 0 || result.data.has_more) && (
               <nav className="pagination" aria-label="Search result pages">
