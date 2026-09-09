@@ -16,10 +16,11 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.2.0'
+PARSER_VERSION = '1.3.0'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
 SUPPORTED_LAYOUTS = {
+    '8.0.0.30': Path(__file__).with_name('tcad-layout-8.0.30.json'),
     '8.0.0.32': Path(__file__).with_name('tcad-layout-8.0.32.json'),
     '8.0.0.33': LAYOUT_PATH,
 }
@@ -172,7 +173,7 @@ def check_header(archive, members, layout, year, encoding):
 
 
 def select_layout(archive, year, encoding):
-    # Both verified workbooks have the same header and inventory. Inspect only
+    # All verified workbooks have the same header and inventory. Inspect only
     # that common header before parsing any version-dependent property records.
     bootstrap, _ = read_layout()
     members = inventory(archive, bootstrap)
@@ -185,7 +186,8 @@ def select_layout(archive, year, encoding):
     if version not in SUPPORTED_LAYOUTS:
         # Only a numeric version may appear in logs; never echo arbitrary bytes.
         label = version if re.fullmatch(r'[0-9]+(?:\.[0-9]+){1,3}', version) else 'missing or malformed'
-        raise ValidationError(f'Unsupported export version ({label}); supported: 8.0.0.32, 8.0.0.33')
+        supported = ', '.join(SUPPORTED_LAYOUTS)
+        raise ValidationError(f'Unsupported export version ({label}); supported: {supported}')
     layout, layout_sha = read_layout(SUPPORTED_LAYOUTS[version])
     members = inventory(archive, layout)
     header = check_header(archive, members, layout, year, encoding)
