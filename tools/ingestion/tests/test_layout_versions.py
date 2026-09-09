@@ -17,17 +17,19 @@ class LayoutVersionTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def archive(self, version, header_version=None, short=True):
+    def archive(self, version, header_version=None, short=True, year=2026):
         layout, sha = ingest.read_layout(ingest.SUPPORTED_LAYOUTS[version])
         with zipfile.ZipFile(self.path, 'w') as archive:
             for pattern, spec in layout['files'].items():
                 name = (SHORT_NAMES[spec['worksheet']] + '.TXT' if short
-                        else pattern.replace('*', '2026-04-02_000001'))
-                archive.writestr(name, make_row(spec, {'export_version': header_version or version}))
+                        else pattern.replace('*', f'{year}-07-20_000001'))
+                archive.writestr(name, make_row(spec, {'export_version': header_version or version,
+                                                      'appraisal_year': str(year),
+                                                      'prop_val_yr': str(year)}))
         return layout, sha
 
-    def test_both_versions_select_their_own_layout_and_report_checksum(self):
-        for version, count in [('8.0.0.32', 1014), ('8.0.0.33', 1030)]:
+    def test_all_versions_select_their_own_layout_and_report_checksum(self):
+        for version, count in [('8.0.0.30', 929), ('8.0.0.32', 1014), ('8.0.0.33', 1030)]:
             for short in [True, False]:
                 layout, sha = self.archive(version, short=short)
                 result = ingest.run(arguments(self.path))
@@ -36,6 +38,68 @@ class LayoutVersionTests(unittest.TestCase):
                 self.assertEqual(result['layout_sha256'], sha)
                 self.assertEqual(sum(len(s['fields']) for s in layout['files'].values()), count)
                 self.assertEqual(sum(f['rows'] for f in result['files'].values()), 20)
+
+    def test_2025_certified_8030_validates_with_both_filename_conventions(self):
+        for short in [True, False]:
+            self.archive('8.0.0.30', short=short, year=2025)
+            result = ingest.run(arguments(self.path, year=2025, roll_stage='certified'))
+            self.assertEqual(result['status'], 'validated')
+            self.assertEqual(result['tax_year'], 2025)
+            self.assertEqual(result['roll_stage'], 'certified')
+            with self.assertRaisesRegex(ingest.ValidationError, 'Header appraisal year'):
+                ingest.run(arguments(self.path, year=2026))
+
+    def test_8030_reserved_offsets_are_not_newer_ownership_or_mineral_fields(self):
+        layout, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.30'])
+        spec = next(s for s in layout['files'].values() if s['worksheet'] == 'Property')
+        raw = bytearray(b' ' * 9247)
+        raw[0:12] = b'000000736302'
+        raw[3993:3996] = b'123'
+        raw[4227:4230] = b'ABC'
+        self.assertEqual(ingest.parse_record(bytes(raw), spec), {
+            'prop_id': '000000736302', 'filler__3994': '123', 'filler__4228': 'ABC'})
+
+    def test_8030_documented_widths_and_full_field_coverage(self):
+        old, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.30'])
+        newer, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.32'])
+        changed = {'Property': (9247, 446), 'PropertyEntity': (2750, 186),
+                   'EntityTotals': (2140, 153), 'SB12': (None, 18)}
+        for pattern, spec in old['files'].items():
+            if spec['worksheet'] in changed:
+                width, count = changed[spec['worksheet']]
+                self.assertEqual(spec.get('record_length'), width)
+                self.assertEqual(len(spec['fields']), count)
+            else:
+                self.assertEqual(spec, newer['files'][pattern])
+            self.assertEqual(len({f['name'] for f in spec['fields']}), len(spec['fields']))
+            if spec['format'] == 'fixed-width':
+                cursor = 1
+                for field in spec['fields']:
+                    self.assertEqual(field['start'], cursor)
+                    cursor = field['end'] + 1
+                self.assertEqual(cursor - 1, spec['record_length'])
+
+    def test_8030_sb12_has_no_fabricated_property_year(self):
+        layout, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.30'])
+        spec = next(s for s in layout['files'].values() if s['worksheet'] == 'SB12')
+        raw = make_row(spec, {'calc_year': '2023', 'freeze_yr': '2021'})
+        parsed = ingest.parse_record(raw.rstrip(b'\r\n'), spec)
+        self.assertEqual(parsed['calc_year'], '2023')
+        self.assertEqual(parsed['freeze_yr'], '2021')
+        self.assertNotIn('prop_val_yr', parsed)
+
+    def test_8030_mismatched_layout_rejects_changed_files(self):
+        for actual, claimed in [('8.0.0.30', '8.0.0.32'), ('8.0.0.32', '8.0.0.30')]:
+            self.archive(actual, header_version=claimed)
+            with self.assertRaises(ingest.ArchiveValidationError) as caught:
+                ingest.run(arguments(self.path))
+            expected = {'Property', 'PropertyEntity', 'EntityTotals'}
+            # An optional trailing tab in .30 can look like a blank 19th column
+            # in .32. The three exact fixed-width checks still reject the ZIP.
+            if actual == '8.0.0.32':
+                expected.add('SB12')
+            self.assertEqual({f['record_type'] for f in caught.exception.report['validation_failures']},
+                             expected)
 
     def test_documented_widths_and_unchanged_header(self):
         old, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.32'])
