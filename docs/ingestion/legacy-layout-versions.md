@@ -34,15 +34,42 @@ Fixed-width positions use the workbook's Start/End columns: the older
 PropertyEntity `freeze_ceiling_override` Length cell is inconsistent, while
 Start/End define a contiguous one-byte field.
 
-SB12 has no `prop_val_yr` in 8.0.30. Preserve its `calc_year` and `freeze_yr`;
+The documented 18-column SB12 has no `prop_val_yr` in 8.0.30. Preserve its `calc_year` and `freeze_yr`;
 do not synthesize a property appraisal year from either. Its release year is
 available through the parent dataset. Missing later-version fields remain absent.
 An optional trailing tab in an 18-column row can resemble a blank 19th column;
 header selection and exact widths in the other three files still reject an
 archive claiming the wrong supported version.
 
-The reported July 20, 2025 certified archive has not yet been validated against
-this implementation. Start a new `validate_uploaded` run on `main`, using its
+#### Observed July 2025 SB12 extension (parser 1.3.1)
+
+Validation run `34383395296` passed the other 19 text files but rejected SB12
+row 1 as 18 expected fields versus 20 split values. The user then supplied
+`SB12.TXT` from `2025 Certified Appraisal Export Supp 0_07202025`.
+All 324,242 rows contain the 18 documented columns, the later documented
+`prop_val_yr` column (`2025` throughout), and one trailing tab.
+File SHA-256: `4e12cbab2b66c7c5567e6c19100f9083aeb1c762e72ce1cffe1f67ac64a402e3`.
+The raw file is private and is not committed.
+
+Parser 1.3.1 accepts this specific 19-column SB12 variation with or without
+one trailing delimiter, alongside the documented 18-column rows. It preserves
+the appended year, requires four digits, and checks it against the dataset year.
+It does not infer that year from `calc_year` or `freeze_yr`, truncate unknown
+columns, relax other file counts, or modify the pinned workbook schemas.
+The validation report's SB12 `record_year_counts` identifies the observed years.
+Every supplied row was verified against the documented 19-column mapping and
+the normal file scanner. All 52 importer unit tests passed, including loader
+callback preservation and malformed/extra-column rejection.
+
+Start a **new** `validate_uploaded` run on `main` with
+`incoming/2025-certified.zip`, original filename
+`2025 Certified Appraisal Export Supp 0_07202025`, year `2025`, certified stage,
+ASCII encoding, and import approval unchecked. Rerunning the old failed run
+uses its old commit. Use the new successful report's archive and receipt hashes
+for import; the full archive has not yet passed validation with this correction.
+
+The July 20, 2025 certified archive still requires full validation against
+this correction. Start a new `validate_uploaded` run on `main`, using its
 actual private upload key, tax year `2025`, roll stage `certified`, encoding
 `ascii`, and import approval unchecked. Record the actual source filename and
 leave unknown URL/date evidence blank. The archive header must confirm the year
@@ -98,7 +125,8 @@ After this change is merged, start a **new** TCAD data import workflow on
 Full-archive validation and database capacity review are still required before
 importing the historical snapshot. Validation does not insert property records.
 This code change does not import April data or switch the public website release.
-The 8.0.32 change used parser `1.2.0`; 8.0.30 support advances it to `1.3.0`.
+The 8.0.32 change used parser `1.2.0`; 8.0.30 support used `1.3.0`, followed by
+the observed SB12 compatibility correction in `1.3.1`.
 Parser version is part of dataset identity, so do not reimport an already loaded
 April or July archive merely to apply this change.
 

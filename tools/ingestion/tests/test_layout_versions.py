@@ -96,10 +96,60 @@ class LayoutVersionTests(unittest.TestCase):
             expected = {'Property', 'PropertyEntity', 'EntityTotals'}
             # An optional trailing tab in .30 can look like a blank 19th column
             # in .32. The three exact fixed-width checks still reject the ZIP.
-            if actual == '8.0.0.32':
-                expected.add('SB12')
+            # The observed .30 SB12 extension now accepts the later 19-column
+            # record. It does not relax any of the fixed-width file checks.
             self.assertEqual({f['record_type'] for f in caught.exception.report['validation_failures']},
                              expected)
+
+    def test_8030_sb12_extension_preserves_fields_and_validates_year(self):
+        layout, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.30'])
+        spec = next(s for s in layout['files'].values() if s['worksheet'] == 'SB12')
+        raw = make_row(spec, {'calc_year': '2023', 'freeze_yr': '2021',
+                              'calc_compression_amt': '0', 'entity_name': ''}).rstrip(b'\r\n')[:-1]
+        ordinary = ingest.parse_record(raw, spec)
+        for suffix in [b'', b'\t']:
+            self.assertEqual(ingest.parse_record(raw + suffix, spec), ordinary)
+            parsed = ingest.parse_record(raw + b'\t2025' + suffix, spec)
+            self.assertEqual(parsed, {**ordinary, 'prop_val_yr': '2025'})
+            self.assertEqual(ingest.validate_record_year(parsed, spec, 2025), 2025)
+            with self.assertRaisesRegex(ingest.ValidationError, 'declared dataset year'):
+                ingest.validate_record_year(parsed, spec, 2026)
+        self.assertEqual(len(spec['fields']), 18)  # parsing never mutates the schema
+
+    def test_8030_sb12_extension_rejects_unknown_columns_and_malformed_years(self):
+        layout, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.30'])
+        spec = next(s for s in layout['files'].values() if s['worksheet'] == 'SB12')
+        raw = make_row(spec).rstrip(b'\r\n')[:-1]
+        for suffix in [b'\tPRIVATE!', b'\t25', b'\t20x5\t', b'\t\t',
+                       b'\t2025\textra', b'\t2025\t\t']:
+            with self.subTest(suffix=suffix), self.assertRaises(ingest.ValidationError) as caught:
+                ingest.parse_record(raw + suffix, spec)
+            self.assertNotIn('PRIVATE!', str(caught.exception))
+
+    def test_8030_extended_sb12_scans_and_reaches_the_loader(self):
+        layout, sha = self.archive('8.0.0.30', year=2025)
+        # Rewrite the synthetic archive with the observed SB12 shape.
+        with zipfile.ZipFile(self.path, 'r') as archive:
+            contents = {item.filename: archive.read(item) for item in archive.infolist()}
+        contents['SB12.TXT'] = contents['SB12.TXT'].removesuffix(b'\t\r\n') + b'\t2025\t\r\n'
+        with zipfile.ZipFile(self.path, 'w') as archive:
+            for name, raw in contents.items():
+                archive.writestr(name, raw)
+        args = arguments(self.path, year=2025, roll_stage='certified')
+        result = ingest.run(args)
+        sb12 = next(f for f in result['files'].values() if f['record_type'] == 'SB12')
+        self.assertEqual(sb12['record_year_counts'], {'2025': 1})
+        captured = []
+        def loader(archive, members, *unused):
+            item, spec = next((i, s) for i, s in members if s['worksheet'] == 'SB12')
+            ingest.scan_member(archive, item, spec, 2025, 'ascii', lambda _, f: captured.append(f))
+            return {'status': 'ready'}
+        args.load = True
+        args.expected_sha256 = ingest.digest(self.path)
+        args.archive_store = self.root / 'retained'
+        with patch.object(ingest, 'load_postgres', side_effect=loader):
+            ingest.run_validated(args)
+        self.assertEqual(captured[0]['prop_val_yr'], '2025')
 
     def test_documented_widths_and_unchanged_header(self):
         old, _ = ingest.read_layout(ingest.SUPPORTED_LAYOUTS['8.0.0.32'])

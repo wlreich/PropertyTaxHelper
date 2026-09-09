@@ -16,7 +16,7 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.3.0'
+PARSER_VERSION = '1.3.1'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
 SUPPORTED_LAYOUTS = {
@@ -86,19 +86,30 @@ def inventory(archive, layout):
 def parse_record(raw, spec, encoding='ascii'):
     if b'\x00' in raw:
         raise ValidationError('NUL byte cannot be stored in PostgreSQL text')
+    fields = spec['fields']
     if spec['format'] == 'fixed-width':
         if len(raw) != spec['record_length']:
             raise ValidationError(f'Fixed-width record length mismatch: expected {spec["record_length"]} bytes, got {len(raw)}')
         values = [raw[f['start'] - 1:f['end']].decode(encoding) for f in spec['fields']]
     else:
         values = raw.decode('utf-8').split('\t')
-        if len(values) == len(spec['fields']) + 1 and values[-1] == '':
+        # The July 2025 Legacy 8.0.30 export uses the later documented SB12
+        # prop_val_yr column after its 18 workbook fields. Accept only that
+        # verified extension (with or without one trailing delimiter).
+        if spec['worksheet'] == 'SB12' and len(fields) == 18:
+            extended = (len(values) == 19 and values[-1] != '') or (
+                len(values) == 20 and values[-1] == '')
+            if extended:
+                if not re.fullmatch(r'[0-9]{4}', values[18].strip()):
+                    raise ValidationError('Extended SB12 appraisal year must contain four digits')
+                fields = [*fields, {'name': 'prop_val_yr'}]
+        if len(values) == len(fields) + 1 and values[-1] == '':
             values.pop()
-        if len(values) != len(spec['fields']):
-            raise ValidationError(f'Tab-delimited field count mismatch: expected {len(spec["fields"])}, got {len(values)}')
+        if len(values) != len(fields):
+            raise ValidationError(f'Tab-delimited field count mismatch: expected {len(fields)}, got {len(values)}')
     # All nonblank fields, including contact fields and filler slots, are retained.
     # Exact padding, blanks, bytes and line endings remain in the archived ZIP.
-    return {field['name']: value.strip() for field, value in zip(spec['fields'], values)
+    return {field['name']: value.strip() for field, value in zip(fields, values)
             if value.strip()}
 
 
