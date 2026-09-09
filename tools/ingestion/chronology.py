@@ -5,6 +5,17 @@ import json
 from pathlib import Path
 import re
 
+PUBLISHER_REFERENCE_PAGE = 'https://traviscad.org/publicinformation/'
+
+
+def reported_filename(value):
+    """Operator-reported original basename; never a path or a date assertion."""
+    if (not isinstance(value, str) or not 1 <= len(value) <= 200
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9 ._()-]*', value)
+            or '..' in value or value != value.strip()):
+        raise ValueError('Provide the original archive filename only, without folders or URLs')
+    return value
+
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
@@ -30,6 +41,13 @@ def read_receipt(path, archive_sha, source_url):
         if finished < started:
             raise ValueError('Download completion precedes its start')
     else:
+        filename = receipt.get('original_filename_reported')
+        if filename is not None:
+            reported_filename(filename)
+        if receipt.get('source_url_kind') == 'publisher_reference_page':
+            if (receipt.get('source_url') != PUBLISHER_REFERENCE_PAGE
+                    or not filename or receipt.get('download_url_reported') is not None):
+                raise ValueError('Unknown download URLs require a publisher reference page and reported filename')
         if (receipt.get('acquisition_method') != 'manual_upload'
                 or receipt['download_started_at'] is not None
                 or receipt['downloaded_at'] is not None

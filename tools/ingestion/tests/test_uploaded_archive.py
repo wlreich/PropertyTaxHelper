@@ -11,11 +11,73 @@ from urllib.error import HTTPError
 from test_ingest_tcad import ingest, make_archive
 from test_job import FakeS3
 from archive_storage import ArchiveStorage, StorageError, uploaded_key, MAX_UPLOADED_ARCHIVE_BYTES
-from chronology import read_receipt
+from chronology import read_receipt, PUBLISHER_REFERENCE_PAGE
 import run_job
 
 
 class UploadedArchiveTests(unittest.TestCase):
+    def test_unknown_url_requires_filename_and_never_relaxes_direct_downloads(self):
+        env = {**self.environment(), 'INPUT_SOURCE_URL': ''}
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(run_job.JobError): run_job.settings()
+            os.environ['INPUT_ORIGINAL_FILENAME'] = '2026 Preliminary Appraisal Export Supp 0_04022026'
+            config = run_job.settings()
+            self.assertEqual(config['source_url'], PUBLISHER_REFERENCE_PAGE)
+            self.assertEqual(config['source_url_kind'], 'publisher_reference_page')
+            os.environ['INPUT_MODE'] = 'validate'
+            with self.assertRaises(run_job.JobError): run_job.settings()
+            os.environ['INPUT_MODE'] = 'validate_uploaded'
+            for source in ['https://evil.test/x.zip', PUBLISHER_REFERENCE_PAGE]:
+                os.environ['INPUT_SOURCE_URL'] = source
+                with self.assertRaises(run_job.JobError): run_job.settings()
+            os.environ['INPUT_SOURCE_URL'] = ''
+            for filename in ['../a.zip', 'folder/a.zip', 'https://traviscad.org/a.zip', 'a\n.zip']:
+                os.environ['INPUT_ORIGINAL_FILENAME'] = filename
+                with self.assertRaises(run_job.JobError): run_job.settings()
+
+    def test_unknown_url_validation_retains_evidence_and_import_uses_same_receipt(self):
+        filename = '2026 Preliminary Appraisal Export Supp 0_04022026'
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); source = root/'synthetic.zip'; make_archive(source)
+            client = FakeS3(); client.objects['incoming/2026-certified.zip'] = source.read_bytes()
+            env = {**self.environment(), 'INPUT_SOURCE_URL': '', 'INPUT_ORIGINAL_FILENAME': filename}
+            with patch.dict(os.environ, env, clear=True): config = run_job.settings()
+            work = root/'validate'; work.mkdir(); report = {}
+            with patch.object(run_job, 'database_connection', return_value=MagicMock()), \
+                 patch.object(run_job, 'database_preflight', return_value={}), \
+                 patch.object(run_job, 'private_bucket'), \
+                 patch.object(run_job, 'download', side_effect=AssertionError('No HTTP download')), \
+                 patch.object(ingest, 'load_postgres', side_effect=AssertionError('No validation inserts')):
+                run_job.execute(config, report, ArchiveStorage(client), work)
+            self.assertEqual(report['status'], 'validated_and_archived')
+            evidence = json.loads((work/'source.zip.receipt.json').read_text())
+            self.assertEqual(evidence['original_filename_reported'], filename)
+            self.assertEqual(evidence['source_url'], PUBLISHER_REFERENCE_PAGE)
+            for key in ['download_url_reported', 'downloaded_at', 'browser_downloaded_on_reported',
+                        'publisher_published_on', 'publication_evidence']:
+                self.assertIsNone(evidence[key])
+            # Recheck the same checksum-addressed receipt along the import path.
+            # Stop at the loader boundary; real DB import/retry is covered by integration_check.
+            config.update(mode='import', archive_sha=report['archive_sha256'], receipt_sha=report['receipt_sha256'])
+            work = root/'import'; work.mkdir()
+            reached_loader = []
+            def loader(*args, **kwargs):
+                reached_loader.append(True)
+                raise RuntimeError('Reached loader boundary')
+            with patch.object(run_job, 'database_connection', return_value=MagicMock()), \
+                 patch.object(run_job, 'database_preflight', return_value={}), \
+                 patch.object(run_job, 'private_bucket'), patch('psycopg.connect', side_effect=loader), \
+                 patch.dict(os.environ, {'TCAD_DATABASE_URL': 'postgresql://localhost/synthetic-unused'}):
+                with self.assertRaisesRegex(RuntimeError, 'Reached loader boundary'):
+                    run_job.execute(config, {}, ArchiveStorage(client), work)
+            self.assertEqual(reached_loader, [True])
+            for field, value in [('source_url', 'https://evil.test/'),
+                                 ('original_filename_reported', None),
+                                 ('download_url_reported', 'https://traviscad.org/guessed.zip')]:
+                bad = {**evidence, field: value}; path = root/'bad.json'; path.write_text(json.dumps(bad))
+                with self.assertRaises(ValueError):
+                    read_receipt(path, evidence['archive_sha256'], bad['source_url'])
+
     def environment(self):
         return {'INPUT_MODE':'validate_uploaded', 'INPUT_SOURCE_URL':'https://traviscad.org/test.zip',
                 'INPUT_UPLOADED_ARCHIVE_KEY':'incoming/2026-certified.zip'}

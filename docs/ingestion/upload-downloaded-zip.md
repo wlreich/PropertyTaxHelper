@@ -30,7 +30,8 @@ Open [TCAD data import](https://github.com/wlreich/PropertyTaxHelper/actions/wor
 | --- | --- |
 | Branch | `main` |
 | mode | `validate_uploaded` |
-| source_url | The original official TCAD ZIP URL shown below |
+| source_url | Original official TCAD ZIP URL if known; otherwise blank |
+| original_filename | Original filename, required when the download URL is unknown |
 | uploaded_archive_key | `incoming/2026-certified.zip` |
 | browser_downloaded_on | Your browser download date as `YYYY-MM-DD`, if known; otherwise blank |
 | tax_year | `2026` |
@@ -48,6 +49,12 @@ https://traviscad.org/wp-content/largefiles/2026%20Certified%20Appraisal%20Expor
 ```
 
 Click **Run workflow**. This mode reads the uploaded ZIP from private storage and makes no request to TCAD. The supplied source URL is provenance reported by the operator; it is not independently authenticated as the origin of manually uploaded bytes.
+
+If the original download URL is unknown, leave it blank and provide the original filename (with or without the hidden `.zip` extension). Do not reconstruct a URL from a filename. The receipt records `source_url_kind: publisher_reference_page`, the TCAD Public Information page as the publisher reference, `download_url_reported: null`, and `original_filename_reported`. The database's existing `source_url` column holds that reference page, **not an asserted ZIP download address**; the receipt and aggregate report retain the distinction. Direct-download validation still requires an official ZIP URL. No schema change is needed for these receipt fields.
+
+### April 2 preliminary archive
+
+For the uploaded historical baseline, use `main`, `validate_uploaded`, upload path `incoming/2026-Preliminary04022026.zip`, original filename `2026 Preliminary Appraisal Export Supp 0_04022026`, tax year `2026`, roll stage `preliminary`, and encoding `ascii`. Leave the source URL, both checksum inputs, browser download date, publication date, and publication evidence blank unless independently known; leave import approval unchecked. The `04022026` filename suffix is reported evidence, not a confirmed publication or acquisition date. Check the export header and layout compatibility in the validation report before importing. Importing a historical dataset does not select it as the website's current release.
 
 The workflow streams the object, checks its byte count, calculates its SHA-256, preserves the archive and receipt under checksum-based names, reads the preserved objects back to verify hashes, and validates all documented members and ZIP CRCs. An optional local SHA-256 proves the uploaded bytes match your local file. Without it, the first computed checksum identifies the bytes received from your private bucket.
 

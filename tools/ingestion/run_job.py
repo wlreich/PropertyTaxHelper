@@ -13,7 +13,7 @@ from urllib.error import HTTPError
 
 import ingest_tcad as ingest
 from archive_storage import ArchiveStorage, BUCKET, PROJECT_REF, archive_key, receipt_key, checksum, uploaded_key
-from chronology import read_receipt, utc_now
+from chronology import read_receipt, utc_now, reported_filename, PUBLISHER_REFERENCE_PAGE
 from download_tcad import download
 
 
@@ -43,7 +43,22 @@ def settings():
         raise JobError('Invalid encoding')
     result={'mode':mode,'year':year,'stage':stage,'encoding':encoding}
     if mode in ('validate','validate_uploaded'):
-        result['source_url']=official_source(os.environ.get('INPUT_SOURCE_URL',''))
+        source = os.environ.get('INPUT_SOURCE_URL','').strip()
+        filename = os.environ.get('INPUT_ORIGINAL_FILENAME','').strip() or None
+        if mode == 'validate_uploaded' and filename is not None:
+            try:
+                reported_filename(filename)
+            except ValueError as error:
+                raise JobError(str(error)) from None
+        if mode == 'validate_uploaded' and not source:
+            if filename is None:
+                raise JobError('Provide the original filename when the uploaded ZIP download URL is unknown')
+            result['source_url'] = PUBLISHER_REFERENCE_PAGE
+            result['source_url_kind'] = 'publisher_reference_page'
+        else:
+            result['source_url'] = official_source(source)
+            result['source_url_kind'] = 'operator_reported_download_url'
+        result['original_filename_reported'] = filename if mode == 'validate_uploaded' else None
         result['published_on']=os.environ.get('INPUT_PUBLISHED_ON') or None
         result['publication_evidence']=os.environ.get('INPUT_PUBLICATION_EVIDENCE') or None
         if mode == 'validate_uploaded':
@@ -122,6 +137,10 @@ def execute(config,report,storage,work):
                         http_last_modified_raw=None, publisher_published_on=config['published_on'],
                         publication_evidence=config['publication_evidence'],
                         browser_downloaded_on_reported=config.get('browser_downloaded_on'))
+        evidence.update(source_url_kind=config.get('source_url_kind', 'operator_reported_download_url'),
+                        original_filename_reported=config.get('original_filename_reported'),
+                        download_url_reported=(None if config.get('source_url_kind') == 'publisher_reference_page'
+                                               else config['source_url']))
         sha = evidence['archive_sha256']
         receipt.write_text(json.dumps(evidence, indent=2) + '\n')
         receipt_sha = ingest.digest(receipt)
@@ -132,13 +151,18 @@ def execute(config,report,storage,work):
         storage.retrieve(receipt_key(sha,receipt_sha),receipt,receipt_sha)
     report['phase']='receipt_verification'
     evidence=json.loads(receipt.read_text())
-    source_url=official_source(evidence['source_url'])
+    if (evidence.get('version') == 2 and evidence.get('acquisition_method') == 'manual_upload'
+            and evidence.get('source_url_kind') == 'publisher_reference_page'):
+        source_url = evidence['source_url']  # read_receipt enforces the exact reference page.
+    else:
+        source_url = official_source(evidence['source_url'])
     read_receipt(receipt,sha,source_url)
     report['acquisition_method'] = evidence.get('acquisition_method', 'direct_download')
     if evidence.get('acquisition_method') == 'manual_upload':
         report['manual_acquisition'] = {k: evidence.get(k) for k in (
             'uploaded_object_uri', 'storage_uploaded_at', 'storage_retrieval_started_at',
-            'storage_retrieved_at', 'browser_downloaded_on_reported')}
+            'storage_retrieved_at', 'browser_downloaded_on_reported', 'source_url_kind',
+            'original_filename_reported', 'download_url_reported')}
     with database_connection() as connection:
         private_bucket(connection,archive.stat().st_size)
     report.update(archive_sha256=sha,receipt_sha256=receipt_sha,archive_bytes=archive.stat().st_size,

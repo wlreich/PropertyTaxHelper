@@ -10,7 +10,10 @@ on:
         default: validate
         required: true
       source_url:
-        description: Official traviscad.org ZIP URL (both validation modes)
+        description: Official TCAD ZIP URL; leave blank for uploaded ZIPs if unknown
+        type: string
+      original_filename:
+        description: Original filename, required if uploaded ZIP URL is unknown (date is not inferred)
         type: string
       uploaded_archive_key:
         description: Private upload path, e.g. incoming/2026-certified.zip (validate_uploaded)
@@ -98,6 +101,7 @@ jobs:
           TCAD_STORAGE_REGION: ${{ vars.TCAD_STORAGE_REGION }}
           INPUT_MODE: ${{ inputs.mode }}
           INPUT_SOURCE_URL: ${{ inputs.source_url }}
+          INPUT_ORIGINAL_FILENAME: ${{ inputs.original_filename }}
           INPUT_UPLOADED_ARCHIVE_KEY: ${{ inputs.uploaded_archive_key }}
           INPUT_BROWSER_DOWNLOADED_ON: ${{ inputs.browser_downloaded_on }}
           INPUT_ARCHIVE_SHA256: ${{ inputs.archive_sha256 }}
