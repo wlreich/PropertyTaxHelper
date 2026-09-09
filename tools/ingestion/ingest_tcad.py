@@ -6,6 +6,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath
 import shutil
 import sys
@@ -15,9 +16,13 @@ import zipfile
 
 from chronology import read_receipt, zip_clock, utc_now
 
-PARSER_VERSION = '1.1.3'
+PARSER_VERSION = '1.2.0'
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 LAYOUT_PATH = Path(__file__).with_name('tcad-layout.json')
+SUPPORTED_LAYOUTS = {
+    '8.0.0.32': Path(__file__).with_name('tcad-layout-8.0.32.json'),
+    '8.0.0.33': LAYOUT_PATH,
+}
 ACTIVE_CASE_RECORD_TYPES = frozenset({'ARB', 'Lawsuit', 'Arbitration'})
 
 
@@ -160,10 +165,31 @@ def check_header(archive, members, layout, year, encoding):
     if header.get('appraisal_year') != str(year):
         raise ValidationError('Header appraisal year does not match --year')
     if header.get('export_version') != layout['expected_export_version']:
-        raise ValidationError('Export version is not supported by this pinned layout')
+        raise ValidationError('Export version does not match the selected pinned layout')
     # Retain NO VALUES if present; full ingestion is valid even for that variant.
     # Do not infer preliminary/certified status from supplement number zero.
     return header
+
+
+def select_layout(archive, year, encoding):
+    # Both verified workbooks have the same header and inventory. Inspect only
+    # that common header before parsing any version-dependent property records.
+    bootstrap, _ = read_layout()
+    members = inventory(archive, bootstrap)
+    item, spec = next((i, s) for i, s in members if s and s['worksheet'] == 'Header')
+    rows = []
+    scan_member(archive, item, spec, year, encoding, lambda _, f: rows.append(f))
+    if len(rows) != 1:
+        raise ValidationError('Header must contain exactly one record')
+    version = rows[0].get('export_version', '')
+    if version not in SUPPORTED_LAYOUTS:
+        # Only a numeric version may appear in logs; never echo arbitrary bytes.
+        label = version if re.fullmatch(r'[0-9]+(?:\.[0-9]+){1,3}', version) else 'missing or malformed'
+        raise ValidationError(f'Unsupported export version ({label}); supported: 8.0.0.32, 8.0.0.33')
+    layout, layout_sha = read_layout(SUPPORTED_LAYOUTS[version])
+    members = inventory(archive, layout)
+    header = check_header(archive, members, layout, year, encoding)
+    return layout, layout_sha, members, header
 
 
 def validate_members(archive, members, args):
@@ -296,7 +322,6 @@ def load_postgres(archive, members, header, layout_sha, archive_sha, archived_pa
 
 
 def run_validated(args, connection=None, attempt_id=None):
-    layout, layout_sha = read_layout()
     archive_sha = digest(args.archive)
     if args.expected_sha256 and archive_sha != args.expected_sha256.lower():
         raise ValidationError('Archive SHA-256 does not match the approved checksum')
@@ -324,13 +349,13 @@ def run_validated(args, connection=None, attempt_id=None):
             path = retain_archive(path, args.archive_store, archive_sha)
             archived_location=path
     with zipfile.ZipFile(path) as archive:
-        members = inventory(archive,layout)
-        header = check_header(archive,members,layout,args.year,args.encoding)
+        layout, layout_sha, members, header = select_layout(archive,args.year,args.encoding)
         if args.load:
             result = load_postgres(archive,members,header,layout_sha,archive_sha,archived_location,args,connection,attempt_id)
         else:
             result = validate_members(archive, members, args)
     report = {'parser_version':PARSER_VERSION,'archive_sha256':archive_sha,'layout_sha256':layout_sha,
+            'export_version':layout['expected_export_version'],'layout_name':layout['layout_name'],
             'tax_year':args.year,'roll_stage':args.roll_stage,
             'acquisition':observation['receipt'] if observation else None,**result}
     if result.get('validation_failures'):
