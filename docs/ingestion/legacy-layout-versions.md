@@ -132,6 +132,39 @@ April or July archive merely to apply this change.
 
 ## Verification
 
+### Recovery from a final count timeout
+
+The 2025 import run `34409791912` committed all files and marked dataset
+`39edc24e-5857-44c0-a099-a6e4b0576ec8` ready at `2026-09-09 23:14:45 UTC`.
+The import audit recorded success. The workflow then failed with `QueryCanceled`
+at `23:16:45 UTC` in its separate dataset-wide `count(*)` verification. File
+manifests total 12,388,214 records across 20 text files, plus the archived PDF.
+This failure did not roll back the completed file transactions.
+
+`run_job.py` now verifies exact row counts in ranges of at most 50,000 rows
+using the existing `(dataset_id, member_name, row_number)` primary key.
+It checks the complete manifest against validation, counts each expected range,
+and checks for surplus rows past each file's expected end. Positive row numbers
+and primary-key uniqueness make missing and extra rows detectable. All checks
+share a read-only, repeatable-read snapshot; database timeouts and RLS remain
+unchanged. Progress and failures identify `database_verification` separately
+from loading. The live query plan confirmed an index-only scan for a range,
+and a 50,000-row range returned its exact count. Sixty local unit tests passed;
+the import workflow runs the PostgreSQL integration gate before recovery.
+
+Parser version remains `1.3.1`, so a new import run selects the same dataset
+and skips committed files. Do not delete the dataset or re-upload the archive.
+Start a **new** workflow on `main` with mode `import`, tax year `2025`, stage
+`certified`, encoding `ascii`, and import approval checked, using:
+
+- Archive SHA-256: `975f378c0512db6ac752eef53bb982c6aa3d74ee509a63ac1b0e88b103c94ac7`
+- Receipt SHA-256: `9dd406b31272849cb52705c30f91630d01e39a12d94e5c00bbec5813b5949115`
+
+Other source/upload/date inputs are unused in import mode. The job revalidates
+the archive, resumes its existing dataset, and performs the corrected database
+verification. Rerunning the old failed run would retain the old count query.
+The 2026 public release is not changed by this recovery.
+
 Run `python -m unittest discover -s tools/ingestion/tests -v`.
 Version-specific tests exercise both filename conventions, layout checksums,
 documented field boundaries, blank preservation, malformed and unsupported

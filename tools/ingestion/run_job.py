@@ -21,6 +21,50 @@ class JobError(Exception):
     pass
 
 
+def verify_database_rows(connection, dataset_id, files, batch_size=50000):
+    """Exact counts using the existing (dataset, member, row) primary key.
+
+    A county-wide count can exceed the database's per-statement timeout after
+    a successful load. Each range here visits at most batch_size unique rows.
+    The manifest, positive row-number constraint and extra-row check together
+    ensure no unexpected members or records are omitted from verification.
+    """
+    if batch_size <= 0:
+        raise ValueError('Verification batch size must be positive')
+    total = 0
+    with connection.transaction():
+        connection.execute('set transaction isolation level repeatable read, read only')
+        manifest = connection.execute('''select member_name,status,row_count
+            from tcad_ingest.files where dataset_id=%s''', (dataset_id,)).fetchall()
+        if {row[0] for row in manifest} != set(files):
+            raise JobError('Post-load file inventory differs from the validated archive')
+        for member, status, count in manifest:
+            if status != 'complete' or count != files[member]['rows']:
+                raise JobError('Post-load file manifest differs from the validated archive')
+        for member, expected in files.items():
+            count = expected['rows']
+            actual = 0
+            for lower in range(0, count, batch_size):
+                upper = min(lower + batch_size, count)
+                found = connection.execute('''select count(*) from tcad_ingest.records
+                    where dataset_id=%s and member_name=%s
+                    and row_number>%s and row_number<=%s''',
+                    (dataset_id, member, lower, upper)).fetchone()[0]
+                if found != upper - lower:
+                    raise JobError('Post-load record range differs from the validated archive')
+                actual += found
+            extra = connection.execute('''select row_number from tcad_ingest.records
+                where dataset_id=%s and member_name=%s and row_number>%s
+                order by row_number limit 1''', (dataset_id, member, count)).fetchone()
+            if extra is not None:
+                raise JobError('Post-load records exceed the validated archive')
+            total += actual
+            print(json.dumps({'phase': 'database_verification',
+                              'record_type': expected['record_type'],
+                              'status': 'verified', 'rows': actual}), flush=True)
+    return total
+
+
 def official_source(value):
     url=urlsplit(value)
     if (url.scheme!='https' or url.hostname not in ('traviscad.org','www.traviscad.org')
@@ -187,8 +231,9 @@ def execute(config,report,storage,work):
         result=ingest.run(args)
         report['import']={'attempt_id':result['attempt_id'],'dataset_id':result['dataset_id'],'status':result['status']}
         # Confirm actual DB row count, not just the parser's report.
+        report['phase']='database_verification'
         with database_connection() as connection:
-            actual=connection.execute('select count(*) from tcad_ingest.records where dataset_id=%s',(result['dataset_id'],)).fetchone()[0]
+            actual=verify_database_rows(connection,result['dataset_id'],validation['files'])
             if actual!=report['row_count']:
                 raise JobError('Post-load row count differs from the validated archive')
             report['database_row_count']=actual
