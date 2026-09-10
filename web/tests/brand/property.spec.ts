@@ -40,6 +40,13 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  if (info.project.use.viewport!.width <= 800) {
+    for (const caption of await page.locator(".overview-table caption").all()) {
+      const captionBounds = await caption.boundingBox();
+      const tableBounds = await caption.locator("..").boundingBox();
+      expect(captionBounds!.width).toBeGreaterThan(tableBounds!.width * 0.9);
+    }
+  }
   expect(
     (
       await new AxeBuilder({ page })

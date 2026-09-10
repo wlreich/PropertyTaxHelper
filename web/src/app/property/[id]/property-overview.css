@@ -296,6 +296,7 @@
     overflow: visible;
   }
   .overview-table,
+  .overview-table caption,
   .overview-table tbody,
   .overview-table tr,
   .overview-table td,
