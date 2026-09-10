@@ -21,6 +21,27 @@ requires recovery, repeating that same cursor is safe. Suggested batch size: 10,
 Only run one publisher per dataset. The function supports at most 50,000 per batch.
 Run `ANALYZE public.property_snapshot_profiles` after completing publication.
 
+### Durable background preparation
+
+For a full catalog, initialize administrator-only `tcad_ingest.property_snapshot_jobs`
+rows with the active anchor, source dataset and a verified cursor (or the empty
+cursor for a new publication). `processed` counts current property IDs examined,
+including withheld or absent snapshots; use the projection table for published counts.
+Give the current release the first priority so current facts become available first.
+
+Run `tcad_ingest.advance_property_snapshot_jobs(10000)` through the single
+`parcelsavvy-property-snapshot-backfill` Supabase Cron job, every 30 seconds.
+One batch and its cursor commit together. A publication error rolls back that batch
+and marks the job failed with its SQLSTATE; an administrator can correct the cause
+and reset the status to queued without changing its cursor. A changed active search
+release pauses the job. Once no queued/running work remains, the runner unschedules
+its own named Cron job. It analyzes the public projection when a dataset completes.
+The queue, scheduler runner and raw data remain inaccessible to public roles.
+
+Inspect queue status and `cron.job_run_details` after starting the job. Completion
+requires all intended queue rows to be complete; an idle scheduler can also mean
+jobs are failed or paused. Do not infer completion solely from the scheduler stopping.
+
 The projection is tied to the active search dataset and only exposes currently
 searchable properties. A new active release requires rebuilding its profiles.
 Historical records must independently have all three confidentiality flags set to F,
