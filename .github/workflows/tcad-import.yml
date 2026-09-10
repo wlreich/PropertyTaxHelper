@@ -13,7 +13,7 @@ on:
         description: Official TCAD ZIP URL; leave blank for uploaded ZIPs if unknown
         type: string
       original_filename:
-        description: Original filename, required if uploaded ZIP URL is unknown (date is not inferred)
+        description: Original TCAD filename if known; leave blank if unknown (do not guess)
         type: string
       uploaded_archive_key:
         description: Private upload path, e.g. incoming/2026-certified.zip (validate_uploaded)
@@ -33,9 +33,9 @@ on:
         default: "2026"
         required: true
       roll_stage:
-        description: Publisher-labelled roll stage
+        description: Publisher-labelled roll stage; unknown is allowed for protest modes
         type: choice
-        options: [certified, preliminary, supplemental]
+        options: [certified, preliminary, supplemental, unknown]
         default: certified
         required: true
       encoding:

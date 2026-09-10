@@ -16,10 +16,10 @@ import run_job
 
 
 class UploadedArchiveTests(unittest.TestCase):
-    def test_unknown_url_requires_filename_and_never_relaxes_direct_downloads(self):
+    def test_unknown_url_and_filename_preserve_unknowns_without_relaxing_direct_downloads(self):
         env = {**self.environment(), 'INPUT_SOURCE_URL': ''}
         with patch.dict(os.environ, env, clear=True):
-            with self.assertRaises(run_job.JobError): run_job.settings()
+            self.assertIsNone(run_job.settings()['original_filename_reported'])
             os.environ['INPUT_ORIGINAL_FILENAME'] = '2026 Preliminary Appraisal Export Supp 0_04022026'
             config = run_job.settings()
             self.assertEqual(config['source_url'], PUBLISHER_REFERENCE_PAGE)
@@ -72,7 +72,6 @@ class UploadedArchiveTests(unittest.TestCase):
                     run_job.execute(config, {}, ArchiveStorage(client), work)
             self.assertEqual(reached_loader, [True])
             for field, value in [('source_url', 'https://evil.test/'),
-                                 ('original_filename_reported', None),
                                  ('download_url_reported', 'https://traviscad.org/guessed.zip')]:
                 bad = {**evidence, field: value}; path = root/'bad.json'; path.write_text(json.dumps(bad))
                 with self.assertRaises(ValueError):

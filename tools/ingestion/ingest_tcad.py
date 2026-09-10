@@ -31,6 +31,8 @@ def import_scope(args):
     scope = getattr(args, 'import_scope', 'full')
     if scope not in ('full', 'protests'):
         raise ValidationError('Invalid import scope')
+    if getattr(args, 'roll_stage', None) == 'unknown' and scope != 'protests':
+        raise ValidationError('Unknown roll stage is supported only for protest imports')
     return scope
 
 
@@ -460,7 +462,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', required=True, type=Path)
     parser.add_argument('--year', required=True, type=int, choices=range(1900,2201), metavar='YEAR')
-    parser.add_argument('--roll-stage', required=True, choices=['preliminary','certified','supplemental'])
+    parser.add_argument('--roll-stage', required=True, choices=['preliminary','certified','supplemental','unknown'])
     parser.add_argument('--source-url', required=True)
     parser.add_argument('--import-scope', default='full', choices=['full','protests'])
     parser.add_argument('--encoding', default='ascii', choices=['ascii','utf-8','cp1252'], help='Fixed-width encoding; tab files use UTF-8')
