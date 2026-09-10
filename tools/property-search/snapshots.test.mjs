@@ -2,6 +2,72 @@ import { fixtureDatabase } from "./projection.test.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
 const dataset = "11111111-1111-4111-8111-111111111111";
+test("background snapshots: atomic progress, failure recovery, completion, release changes and private access", async (t) => {
+  const db = await fixtureDatabase();
+  t.after(() => db.close());
+  await db.query("select tcad_ingest.publish_property_search($1)", [dataset]);
+  await db.query(
+    "insert into tcad_ingest.property_snapshot_jobs(anchor_dataset_id,dataset_id) values($1,$1)",
+    [dataset],
+  );
+  const step = async (limit = 1) =>
+    (
+      await db.query(
+        "select tcad_ingest.advance_property_snapshot_jobs($1) result",
+        [limit],
+      )
+    ).rows[0].result;
+  const progress = async () =>
+    (await db.query("select * from tcad_ingest.property_snapshot_jobs"))
+      .rows[0];
+  assert.equal((await step()).status, "running");
+  const first = await progress();
+  assert.equal(first.after_property_id, "100");
+  await db.exec(`create function pg_temp.fail_progress() returns trigger language plpgsql as $$
+    begin if new.processed>old.processed then raise exception 'synthetic progress failure'; end if; return new; end $$;
+    create trigger fail_progress before update on tcad_ingest.property_snapshot_jobs for each row execute function pg_temp.fail_progress();`);
+  assert.equal((await step()).status, "failed");
+  const failed = await progress();
+  assert.equal(failed.after_property_id, first.after_property_id);
+  assert.equal(failed.processed, first.processed);
+  assert.equal(failed.error_sqlstate, "P0001");
+  assert.equal(
+    (
+      await db.query(
+        "select count(*)::int n from public.property_snapshot_profiles where property_id='101'",
+      )
+    ).rows[0].n,
+    0,
+  );
+  await db.exec(
+    "drop trigger fail_progress on tcad_ingest.property_snapshot_jobs; update tcad_ingest.property_snapshot_jobs set status='queued'",
+  );
+  assert.equal((await step()).status, "running");
+  assert.equal((await progress()).after_property_id, "101");
+  assert.equal(
+    (
+      await db.query(
+        "select count(*)::int n from public.property_snapshot_profiles where property_id='101'",
+      )
+    ).rows[0].n,
+    1,
+  );
+  await assert.rejects(step(0), /Invalid batch size/);
+  for (const role of ["anon", "authenticated"]) {
+    await db.exec(`set role ${role}`);
+    await assert.rejects(step(), /permission denied/);
+    await assert.rejects(progress(), /permission denied/);
+    await db.exec("reset role");
+  }
+  await step(1000);
+  assert.equal((await step(1000)).status, "complete");
+  assert.equal((await step()).status, "idle");
+  await db.exec(
+    "update tcad_ingest.property_snapshot_jobs set status='queued'; delete from public.property_search_state",
+  );
+  assert.equal((await step()).status, "paused");
+  assert.equal((await progress()).status, "paused");
+});
 test("snapshot publication: privacy, absence, entity amounts, repeat batches and RLS", async (t) => {
   const db = await fixtureDatabase();
   t.after(() => db.close());
