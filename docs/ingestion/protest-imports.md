@@ -17,10 +17,10 @@ First run on `main`:
 | --- | --- |
 | Mode | `validate_protests_uploaded` |
 | Private upload path | Actual `incoming/<original-or-distinct-name>.zip` |
-| Original filename | TCAD's original archive filename |
+| Original filename | TCAD's original archive filename, or blank if unknown |
 | Source URL | Actual direct TCAD URL, or blank when unknown |
 | Tax year | Header's appraisal year |
-| Roll stage | Publisher's preliminary/certified/supplemental label |
+| Roll stage | Publisher's label, or `unknown` if unavailable |
 | Encoding | `ascii`, unless the source specifies otherwise |
 | Archive checksum | Optional independently computed ZIP SHA-256 |
 | Receipt checksum | Blank |
@@ -50,6 +50,17 @@ report for `status: imported` and `database_row_count` matching `row_count`.
 
 `tcad_ingest.datasets.import_scope` and `import_attempts.import_scope` distinguish
 `full` from `protests`; this is independent of the publisher's `roll_stage`.
+Original filename and download URL may both be unknown: their receipt fields
+remain null. The checksum, private upload URI, byte count and storage retrieval
+timestamps identify the actual uploaded bytes. The publisher reference page is
+explicitly a reference, never an invented original download URL.
+
+Protest modes accept `roll_stage: unknown`; full valuation modes still require
+a known stage. Do not substitute the renamed upload filename for an unknown
+original filename or infer a stage from the export date. If better provenance
+is found later, preserve the original observation rather than silently relabeling
+an existing dataset.
+
 The unique dataset identity includes archive, layout, parser, encoding and scope.
 The same ZIP can therefore be loaded once per scope and retried independently.
 The original archive object is reused. Existing datasets default to `full` and

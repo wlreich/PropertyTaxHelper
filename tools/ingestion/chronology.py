@@ -46,8 +46,8 @@ def read_receipt(path, archive_sha, source_url):
             reported_filename(filename)
         if receipt.get('source_url_kind') == 'publisher_reference_page':
             if (receipt.get('source_url') != PUBLISHER_REFERENCE_PAGE
-                    or not filename or receipt.get('download_url_reported') is not None):
-                raise ValueError('Unknown download URLs require a publisher reference page and reported filename')
+                    or receipt.get('download_url_reported') is not None):
+                raise ValueError('Unknown download URLs require the publisher reference page without an invented download URL')
         if (receipt.get('acquisition_method') != 'manual_upload'
                 or receipt['download_started_at'] is not None
                 or receipt['downloaded_at'] is not None

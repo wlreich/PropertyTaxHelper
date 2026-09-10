@@ -92,3 +92,20 @@ class ProtestImportTests(TestCase):
                 os.environ['INPUT_IMPORT_APPROVED'] = 'true'
                 config = run_job.settings()
                 self.assertEqual(config['import_scope'], 'protests' if mode.endswith('protests') else 'full')
+
+    def test_unknown_stage_requires_protest_scope_in_workflow_and_direct_parser(self):
+        for mode in ('validate_protests_uploaded', 'validate_uploaded'):
+            with patch.dict(os.environ, {'INPUT_MODE':mode, 'INPUT_ROLL_STAGE':'unknown',
+                                          'INPUT_UPLOADED_ARCHIVE_KEY':'incoming/renamed.zip'}, clear=True):
+                if mode == 'validate_protests_uploaded':
+                    config = run_job.settings()
+                    self.assertEqual(config['stage'], 'unknown')
+                    self.assertIsNone(config['original_filename_reported'])
+                    self.assertEqual(config['source_url_kind'], 'publisher_reference_page')
+                else:
+                    with self.assertRaises(run_job.JobError):
+                        run_job.settings()
+        make_archive(self.path)
+        self.assertEqual(ingest.run(arguments(self.path, import_scope='protests', roll_stage='unknown'))['roll_stage'], 'unknown')
+        with self.assertRaisesRegex(ingest.ValidationError, 'only for protest imports'):
+            ingest.run(arguments(self.path, roll_stage='unknown'))

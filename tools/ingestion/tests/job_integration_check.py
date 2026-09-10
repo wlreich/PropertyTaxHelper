@@ -98,10 +98,15 @@ def main():
             assert c.execute("select relrowsecurity from pg_class where oid='tcad_ingest.acquisitions'::regclass").fetchone()[0]
             assert 'security_invoker=true' in c.execute("select reloptions from pg_class where oid='tcad_ingest.release_chronology'::regclass").fetchone()[0]
         # The same archive gets independent full and protest dataset identities.
-        config.update(mode='validate_protests_uploaded')
+        config.update(mode='validate_protests_uploaded',stage='unknown',
+                      source_url=run_job.PUBLISHER_REFERENCE_PAGE,
+                      source_url_kind='publisher_reference_page',original_filename_reported=None)
         work=root/'protest-validate';work.mkdir();protest_validation={}
         with patch.object(run_job,'database_connection',connection):
             run_job.execute(config,protest_validation,ArchiveStorage(client),work)
+        assert protest_validation['roll_stage']=='unknown'
+        assert protest_validation['manual_acquisition']['original_filename_reported'] is None
+        assert protest_validation['manual_acquisition']['download_url_reported'] is None
         assert protest_validation['row_count']==4
         assert protest_validation['validation']['members_checked']==4
         assert len(protest_validation['validation']['skipped_members'])==17
@@ -143,6 +148,14 @@ def main():
             assert c.execute("select count(*) from tcad_ingest.import_attempts where import_scope='protests'").fetchone()[0]==3
             types={row[0] for row in c.execute('select record_type from tcad_ingest.files where dataset_id=%s',(protest_id,))}
             assert types==ingest.PROTEST_RECORD_TYPES
+            assert c.execute('select roll_stage from tcad_ingest.datasets where id=%s',(protest_id,)).fetchone()[0]=='unknown'
+            # Database constraints enforce the same rule as the CLI: full
+            # valuation imports cannot use the unknown stage.
+            try:
+                c.execute("update tcad_ingest.datasets set roll_stage='unknown' where id=%s",(full_id,))
+                raise AssertionError('Unknown stage allowed for full valuation release')
+            except psycopg.errors.CheckViolation:
+                pass
             # Both public publishers must refuse a selective observation dataset.
             for function in ('publish_property_search','publish_property_snapshots'):
                 try:
@@ -160,7 +173,8 @@ def main():
                 c.execute('reset role')
         # The original full mode still selects its original dataset after a
         # protest load. Neither order of imports can duplicate/corrupt the other.
-        config.update(mode='import')
+        config.update(mode='import',stage='certified',
+                      archive_sha=uploaded['archive_sha256'],receipt_sha=uploaded['receipt_sha256'])
         work=root/'full-after-protests';work.mkdir();loaded={}
         with patch.object(run_job,'database_connection',connection):
             run_job.execute(config,loaded,ArchiveStorage(client),work)

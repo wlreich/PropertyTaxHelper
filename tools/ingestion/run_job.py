@@ -87,7 +87,7 @@ def settings():
     year=int(os.environ.get('INPUT_TAX_YEAR','2026'))
     stage=os.environ.get('INPUT_ROLL_STAGE','certified')
     encoding=os.environ.get('INPUT_ENCODING','ascii')
-    if year not in range(1900,2201) or stage not in ('preliminary','certified','supplemental'):
+    if year not in range(1900,2201) or stage not in (('preliminary','certified','supplemental','unknown') if scope == 'protests' else ('preliminary','certified','supplemental')):
         raise JobError('Invalid year or roll stage')
     if encoding not in ('ascii','utf-8','cp1252'):
         raise JobError('Invalid encoding')
@@ -101,8 +101,6 @@ def settings():
             except ValueError as error:
                 raise JobError(str(error)) from None
         if mode == 'validate_uploaded' and not source:
-            if filename is None:
-                raise JobError('Provide the original filename when the uploaded ZIP download URL is unknown')
             result['source_url'] = PUBLISHER_REFERENCE_PAGE
             result['source_url_kind'] = 'publisher_reference_page'
         else:
