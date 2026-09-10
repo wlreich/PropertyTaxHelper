@@ -42,6 +42,10 @@ const base = {
   ],
 };
 export const fixtureHistory = {
+  protest_observations: [{
+    dataset_id: "protest-april", tax_year: 2026, export_date: "2026-04-29", export_time_raw: "04/29/2026 22:20",
+    protest_flag: true, arb_case_listed: true, arb_agent_listed: true, arb_status_codes: ["EF"],
+  }],
   snapshots: [
     {
       ...base,

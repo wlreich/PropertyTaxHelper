@@ -10,6 +10,9 @@ hover/focus/tap `TermDefinition` component are reused.
 `property_profile` remains the source of active-release headline values. The new
 `property_history` RPC reads only `public.property_snapshot_profiles` under RLS;
 website requests never use privileged credentials or read the raw import schema.
+The same RPC also returns separately curated supplemental protest observations; see
+`docs/ingestion/protest-imports.md` for the required publication step. They appear
+in the navy Protest evidence section and never enter valuation baselines or totals.
 
 An administrator explicitly prepares snapshots with
 `tcad_ingest.publish_property_snapshots(dataset_uuid, after_property_id, batch_size)`.

@@ -42,6 +42,8 @@ export default async function PropertyPage({
             property={result.data}
             snapshots={history.status === "ok" ? history.data : []}
             historyUnavailable={history.status !== "ok"}
+            protests={history.protests ?? []}
+            protestsUnavailable={history.status !== "ok" || history.protestsUnavailable === true}
           />
         ) : (
           <Unavailable />

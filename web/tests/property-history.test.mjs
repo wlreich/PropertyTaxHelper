@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   comparison,
+  parseProtestObservations,
+  protestEvidence,
   annualBaseline,
   preliminaryBaseline,
   parseHistory,
@@ -167,4 +169,26 @@ test("history uses read-only RPC and cannot leak unlisted payload fields", async
     ).status,
     "unavailable",
   );
+});
+
+test("dated supplemental evidence survives later absence without entering valuation baselines", () => {
+ const source = {dataset_id:"supplement",tax_year:2026,export_date:"2026-04-29",export_time_raw:"04/29/2026 22:20",
+  protest_flag:true,arb_case_listed:true,arb_agent_listed:false,arb_status_codes:["EF"],owner_name:"PRIVATE"};
+ const records=parseProtestObservations({protest_observations:[source]});
+ assert.ok(records); assert.ok(!JSON.stringify(records).includes("PRIVATE"));
+ assert.equal(protestEvidence([sample],records).length,1);
+ assert.equal(protestEvidence([sample],records)[0].export_date,"2026-04-29");
+ assert.equal(annualBaseline([sample],sample),undefined);
+ assert.deepEqual(parseProtestObservations({snapshots:[]}),[]);
+ assert.equal(parseProtestObservations({protest_observations:[source,source]}),null);
+ for(const change of [{tax_year:"2026"},{export_date:"2026-02-30"},{arb_status_codes:["<bad>"]},{arb_case_listed:false},{protest_flag:"T"}]) {
+  assert.equal(parseProtestObservations({protest_observations:[{...source,...change}]}),null);
+ }
+ const agent={...source,protest_flag:false,arb_case_listed:false,arb_status_codes:[],arb_agent_listed:true};
+ assert.equal(protestEvidence([],parseProtestObservations({protest_observations:[agent]}))[0].arb_case_listed,false);
+});
+test("invalid supplemental payload does not hide valid valuation history or imply no protest", async () => {
+ const result=await getPropertyHistory("101",{SUPABASE_URL:"https://fixture.supabase.co",SUPABASE_PUBLISHABLE_KEY:"sb_publishable_fixture"},
+  async()=>new Response(JSON.stringify({snapshots:[sample],protest_observations:false})));
+ assert.equal(result.status,"ok"); assert.equal(result.data.length,1); assert.equal(result.protestsUnavailable,true);
 });

@@ -302,3 +302,48 @@ export function entityDisplayName(entity: Entity) {
   };
   return names[entity.code] ?? entity.name;
 }
+
+// Protest-only imports have no valuation values and never become comparison baselines.
+export type ProtestObservation = Pick<Snapshot,
+  "dataset_id" | "tax_year" | "export_date" | "export_time_raw" |
+  "protest_flag" | "arb_case_listed" | "arb_agent_listed"
+> & { arb_status_codes: string[] };
+export function parseProtestObservations(value: unknown): ProtestObservation[] | null {
+  if (!object(value)) return null;
+  // Older RPC deployments remain compatible during rollout.
+  if (value.protest_observations === undefined) return [];
+  if (!Array.isArray(value.protest_observations) || value.protest_observations.length > 1000) return null;
+  const output: ProtestObservation[] = [];
+  for (const s of value.protest_observations) {
+    if (!object(s) || typeof s.dataset_id !== "string" ||
+      !Number.isInteger(s.tax_year) || Number(s.tax_year) < 1900 || Number(s.tax_year) > 2200 ||
+      !nullableText(s.export_time_raw) ||
+      !(s.export_date === null || (typeof s.export_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.export_date) &&
+        !Number.isNaN(Date.parse(s.export_date)) && new Date(s.export_date).toISOString().slice(0, 10) === s.export_date)) ||
+      !(s.protest_flag === null || typeof s.protest_flag === "boolean") ||
+      typeof s.arb_case_listed !== "boolean" || typeof s.arb_agent_listed !== "boolean" ||
+      !Array.isArray(s.arb_status_codes) || s.arb_status_codes.length > 100 ||
+      !s.arb_status_codes.every((c: unknown) => typeof c === "string" && /^[A-Za-z0-9_-]{1,20}$/.test(c)) ||
+      (!s.arb_case_listed && s.arb_status_codes.length > 0) ||
+      !(s.protest_flag || s.arb_case_listed || s.arb_agent_listed)) return null;
+    output.push({dataset_id:s.dataset_id,tax_year:s.tax_year as number,
+      export_date:s.export_date as string|null,export_time_raw:s.export_time_raw as string|null,
+      protest_flag:s.protest_flag as boolean|null,arb_case_listed:s.arb_case_listed,
+      arb_agent_listed:s.arb_agent_listed,arb_status_codes:[...s.arb_status_codes] as string[]});
+  }
+  if (new Set(output.map(s => `${s.dataset_id}:${s.tax_year}`)).size !== output.length) return null;
+  return output;
+}
+export function protestEvidence(snapshots: Snapshot[], observations: ProtestObservation[]) {
+  const records = new Map<string, ProtestObservation>();
+  for (const s of snapshots) {
+    if (s.protest_flag || s.arb_case_listed || s.arb_agent_listed) {
+      records.set(`${s.dataset_id}:${s.tax_year}`, {
+        dataset_id:s.dataset_id,tax_year:s.tax_year,export_date:s.export_date,export_time_raw:s.export_time_raw,
+        protest_flag:s.protest_flag,arb_case_listed:s.arb_case_listed,arb_agent_listed:s.arb_agent_listed,arb_status_codes:[],
+      });
+    }
+  }
+  for (const s of observations) records.set(`${s.dataset_id}:${s.tax_year}`,s);
+  return [...records.values()].sort((a,b) => b.tax_year-a.tax_year || (b.export_date ?? "").localeCompare(a.export_date ?? "") || a.dataset_id.localeCompare(b.dataset_id));
+}
