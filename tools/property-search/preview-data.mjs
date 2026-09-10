@@ -1,4 +1,5 @@
 // Local browser verification only. All records are synthetic; bind to loopback.
+import { fixtureHistory } from "./history-fixture.mjs";
 import { createServer } from "node:http";
 import { fixtureDatabase } from "./projection.test.mjs";
 const db = await fixtureDatabase({ parklandFixtures: true });
@@ -28,6 +29,8 @@ createServer(async (req, res) => {
           url.searchParams.get("p_id"),
         ])
       ).rows;
+    else if (url.pathname === "/rest/v1/rpc/property_history")
+      rows = [{result: url.searchParams.get("p_id") === "100" ? fixtureHistory : {snapshots:[]}}];
     else {
       res.writeHead(404).end();
       return;

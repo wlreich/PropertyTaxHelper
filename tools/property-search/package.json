@@ -2,6 +2,10 @@
   "name": "property-search-sql-checks",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test projection.test.mjs" },
-  "devDependencies": { "@electric-sql/pglite": "0.3.14" }
+  "scripts": {
+    "test": "node --test projection.test.mjs snapshots.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14"
+  }
 }

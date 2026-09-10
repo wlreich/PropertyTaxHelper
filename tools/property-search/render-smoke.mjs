@@ -99,8 +99,11 @@ try {
   assert.match(await page("/property/505?q=Parkdemo&page=1&all=1"), /href="\/\?q=Parkdemo&amp;page=1&amp;all=1"/);
   assert.equal(cards(await page("/?q=505")),1);
   const profile = await page("/property/100?q=Oak&page=1");
-  assert.match(profile, /Assessment at a glance/);
-  assert.match(profile, /\$430,000/);
+  assert.match(profile, /Assessment history/);
+  assert.match(profile, /\$420,000/);
+  assert.match(profile, /Separately valued features/);
+  assert.match(profile, /Not listed/);
+  assert.match(profile, /Exemptions &amp; taxable values/);
   assert.match(profile, /Back to search results/);
   assert.match(profile, /q=Oak&amp;page=1/);
   assert.match(await page("/property/106"), /Some values need further review/);

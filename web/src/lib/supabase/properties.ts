@@ -1,4 +1,5 @@
 import "server-only";
+import { parseHistory, type Snapshot } from "../property-history.ts";
 import { DATABASE_REQUEST_TIMEOUT_MS } from "./request-policy.ts";
 import { createClient } from "@supabase/supabase-js";
 import { parseSearch } from "../property-search.ts";
@@ -219,4 +220,21 @@ export async function getProperty(
       source_url: p.source_url,
     },
   };
+}
+
+export async function getPropertyHistory(
+  id: string,
+  config: Config = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
+  },
+  fetchRequest: typeof fetch = fetch,
+): Promise<Result<Snapshot[]>> {
+  if (!/^\d{1,12}$/.test(id)) return { status: "invalid" };
+  const snapshots = parseHistory(
+    await rpc("property_history", { p_id: id }, config, fetchRequest),
+  );
+  return snapshots === null
+    ? { status: "unavailable" }
+    : { status: "ok", data: snapshots };
 }
