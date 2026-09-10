@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Validate and archive first; import only after review
+        description: Full release or protest-only (Header, Property, ARB, Agent); validate first
         type: choice
-        options: [validate, validate_uploaded, import]
+        options: [validate, validate_uploaded, import, validate_protests_uploaded, import_protests]
         default: validate
         required: true
       source_url:

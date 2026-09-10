@@ -24,6 +24,16 @@ SUPPORTED_LAYOUTS = {
     '8.0.0.32': Path(__file__).with_name('tcad-layout-8.0.32.json'),
     '8.0.0.33': LAYOUT_PATH,
 }
+PROTEST_RECORD_TYPES = frozenset({'Header', 'Property', 'ARB', 'Agent'})
+
+
+def import_scope(args):
+    scope = getattr(args, 'import_scope', 'full')
+    if scope not in ('full', 'protests'):
+        raise ValidationError('Invalid import scope')
+    return scope
+
+
 ACTIVE_CASE_RECORD_TYPES = frozenset({'ARB', 'Lawsuit', 'Arbitration'})
 
 
@@ -50,7 +60,7 @@ def read_layout(path=LAYOUT_PATH):
     return layout, hashlib.sha256(payload).hexdigest()
 
 
-def inventory(archive, layout):
+def inventory(archive, layout, scope='full'):
     members, matched, names = [], set(), set()
     for item in archive.infolist():
         name = PurePosixPath(item.filename)
@@ -76,8 +86,11 @@ def inventory(archive, layout):
         else:
             raise ValidationError('Undocumented member type: update the layout before loading')
         members.append((item, spec))
-    if matched != set(layout['files']):
-        raise ValidationError('Archive is missing one or more of the 20 documented text files')
+    required = {p for p, spec in layout['files'].items()
+                if scope == 'full' or spec['worksheet'] in PROTEST_RECORD_TYPES}
+    if not required.issubset(matched):
+        label = '20 documented text files' if scope == 'full' else 'required Header, Property, ARB and Agent files'
+        raise ValidationError('Archive is missing one or more of the ' + label)
     if sum(i.file_size for i, _ in members) > 100 * 1024**3:
         raise ValidationError('Archive exceeds the 100 GiB uncompressed validation limit')
     return members
@@ -183,11 +196,11 @@ def check_header(archive, members, layout, year, encoding):
     return header
 
 
-def select_layout(archive, year, encoding):
+def select_layout(archive, year, encoding, scope='full'):
     # All verified workbooks have the same header and inventory. Inspect only
     # that common header before parsing any version-dependent property records.
     bootstrap, _ = read_layout()
-    members = inventory(archive, bootstrap)
+    members = inventory(archive, bootstrap, scope)
     item, spec = next((i, s) for i, s in members if s and s['worksheet'] == 'Header')
     rows = []
     scan_member(archive, item, spec, year, encoding, lambda _, f: rows.append(f))
@@ -200,7 +213,7 @@ def select_layout(archive, year, encoding):
         supported = ', '.join(SUPPORTED_LAYOUTS)
         raise ValidationError(f'Unsupported export version ({label}); supported: {supported}')
     layout, layout_sha = read_layout(SUPPORTED_LAYOUTS[version])
-    members = inventory(archive, layout)
+    members = inventory(archive, layout, scope)
     header = check_header(archive, members, layout, year, encoding)
     return layout, layout_sha, members, header
 
@@ -260,13 +273,14 @@ def retain_archive(source, store, expected_sha):
 def load_postgres(archive, members, header, layout_sha, archive_sha, archived_path, args, connection, attempt_id):
     import psycopg
     from psycopg.types.json import Jsonb
-    lock_key = int.from_bytes(hashlib.sha256((archive_sha + layout_sha + PARSER_VERSION + args.encoding).encode()).digest()[:8], 'big', signed=True)
+    scope = import_scope(args)
+    lock_key = int.from_bytes(hashlib.sha256((archive_sha + layout_sha + PARSER_VERSION + args.encoding + scope).encode()).digest()[:8], 'big', signed=True)
     summary = {}
     if not connection.execute('select pg_try_advisory_lock(%s)', (lock_key,)).fetchone()[0]:
         raise ValidationError('Another loader is already processing this dataset')
     row = connection.execute('''select id, tax_year, roll_stage, source_url from tcad_ingest.datasets
-      where archive_sha256=%s and layout_sha256=%s and parser_version=%s and source_encoding=%s''',
-      (archive_sha, layout_sha, PARSER_VERSION, args.encoding)).fetchone()
+      where archive_sha256=%s and layout_sha256=%s and parser_version=%s and source_encoding=%s and import_scope=%s''',
+      (archive_sha, layout_sha, PARSER_VERSION, args.encoding, scope)).fetchone()
     if row:
         dataset_id = row[0]
         if row[1:] != (args.year, args.roll_stage, args.source_url):
@@ -274,11 +288,11 @@ def load_postgres(archive, members, header, layout_sha, archive_sha, archived_pa
     else:
         dataset_id = uuid.uuid4()
         connection.execute('''insert into tcad_ingest.datasets
-          (id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header)
-          values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+          (id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,import_scope)
+          values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
           (dataset_id, archive_sha, layout_sha, PARSER_VERSION, args.encoding, args.year, args.roll_stage,
-           args.source_url, str(archived_path), Jsonb(header)))
-    record_event(connection, attempt_id, 'dataset_selected', dataset_id=dataset_id)
+           args.source_url, str(archived_path), Jsonb(header), scope))
+    record_event(connection, attempt_id, 'dataset_selected', dataset_id=dataset_id, details={'import_scope': scope})
     try:
         connection.execute("update tcad_ingest.datasets set status='loading', completed_at=null, last_error=null where id=%s", (dataset_id,))
         for item, spec in members:
@@ -335,6 +349,7 @@ def load_postgres(archive, members, header, layout_sha, archive_sha, archived_pa
 
 
 def run_validated(args, connection=None, attempt_id=None):
+    scope = import_scope(args)
     archive_sha = digest(args.archive)
     if args.expected_sha256 and archive_sha != args.expected_sha256.lower():
         raise ValidationError('Archive SHA-256 does not match the approved checksum')
@@ -362,7 +377,17 @@ def run_validated(args, connection=None, attempt_id=None):
             path = retain_archive(path, args.archive_store, archive_sha)
             archived_location=path
     with zipfile.ZipFile(path) as archive:
-        layout, layout_sha, members, header = select_layout(archive,args.year,args.encoding)
+        layout, layout_sha, members, header = select_layout(archive,args.year,args.encoding,scope)
+        skipped = []
+        if scope == 'protests':
+            selected = []
+            for item, spec in members:
+                if spec and spec['worksheet'] in PROTEST_RECORD_TYPES:
+                    selected.append((item, spec))
+                else:
+                    skipped.append({'record_type': spec['worksheet'] if spec else 'archive_only_pdf',
+                                    'uncompressed_bytes': item.file_size, 'status': 'not_validated_or_loaded'})
+            members = selected
         if args.load:
             result = load_postgres(archive,members,header,layout_sha,archive_sha,archived_location,args,connection,attempt_id)
         else:
@@ -370,6 +395,8 @@ def run_validated(args, connection=None, attempt_id=None):
     report = {'parser_version':PARSER_VERSION,'archive_sha256':archive_sha,'layout_sha256':layout_sha,
             'export_version':layout['expected_export_version'],'layout_name':layout['layout_name'],
             'tax_year':args.year,'roll_stage':args.roll_stage,
+            'import_scope':scope,'skipped_members':skipped,
+            'export_run_time_raw':header.get('run_date_time') or None,
             'acquisition':observation['receipt'] if observation else None,**result}
     if result.get('validation_failures'):
         raise ArchiveValidationError(report)
@@ -396,6 +423,7 @@ def record_acquisition(connection, observation):
 
 
 def run(args):
+    scope = import_scope(args)
     if not args.load:
         started = utc_now()
         try:
@@ -412,8 +440,8 @@ def run(args):
         raise ValidationError('Set TCAD_DATABASE_URL in the ingestion environment')
     with psycopg.connect(dsn,autocommit=True,connect_timeout=15) as connection:
         attempt_id = uuid.uuid4()
-        connection.execute('insert into tcad_ingest.import_attempts\n          (id,source_url,archive_filename,tax_year,roll_stage,parser_version,source_encoding)\n          values (%s,%s,%s,%s,%s,%s,%s)',
-          (attempt_id,args.source_url,Path(args.archive).name,args.year,args.roll_stage,PARSER_VERSION,args.encoding))
+        connection.execute('insert into tcad_ingest.import_attempts\n          (id,source_url,archive_filename,tax_year,roll_stage,parser_version,source_encoding,import_scope)\n          values (%s,%s,%s,%s,%s,%s,%s,%s)',
+          (attempt_id,args.source_url,Path(args.archive).name,args.year,args.roll_stage,PARSER_VERSION,args.encoding,scope))
         try:
             result = run_validated(args,connection,attempt_id)
             record_event(connection,attempt_id,'succeeded',dataset_id=result['dataset_id'],
@@ -434,6 +462,7 @@ def main():
     parser.add_argument('--year', required=True, type=int, choices=range(1900,2201), metavar='YEAR')
     parser.add_argument('--roll-stage', required=True, choices=['preliminary','certified','supplemental'])
     parser.add_argument('--source-url', required=True)
+    parser.add_argument('--import-scope', default='full', choices=['full','protests'])
     parser.add_argument('--encoding', default='ascii', choices=['ascii','utf-8','cp1252'], help='Fixed-width encoding; tab files use UTF-8')
     parser.add_argument('--expected-sha256')
     parser.add_argument('--receipt', type=Path, help='Checksum-bound acquisition receipt; omit for unknown download dates')

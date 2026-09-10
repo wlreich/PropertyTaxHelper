@@ -38,3 +38,10 @@ no source rows are printed. Direct database loads retain their fail-fast behavio
 For chronology, use `download_tcad.py` to acquire a ZIP with a receipt, then pass `--receipt` to the importer. The operator guide explains unknown dates, private release views and append-only attempt history.
 
 For the operational GitHub workflow and credential setup, follow [Run the first import](../../docs/ingestion/run-first-import.md). Install `requirements-job.txt` to run all tests, including the Storage adapter tests.
+
+## Protest-season updates
+
+Use `validate_protests_uploaded` followed by `import_protests` to retain the full
+ZIP while processing only Header, Property, ARB and Agent. Full modes remain
+available. See [protest import instructions](../../docs/ingestion/protest-imports.md)
+for parameters, storage review, recovery, chronology and publication boundaries.
