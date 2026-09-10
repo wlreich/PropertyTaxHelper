@@ -34,6 +34,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await page.keyboard.press("Enter");
   await expect(historyDetails).toHaveAttribute("open", "");
   await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
     name: "TCAD market value",
     exact: false,

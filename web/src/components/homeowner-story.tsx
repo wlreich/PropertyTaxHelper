@@ -90,7 +90,7 @@ export function HomeownerNextSteps({address}:{address:string}) {
       <li><a href="#exemptions-heading">Check your exemptions</a><span>Review what is recorded and the taxable value for each taxing authority.</span></li>
       <li><strong>Look for a fair comparison</strong><span>Start with the same TCAD neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
     </ol>
-    {street && <Link className="homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link>}
+    {street && <Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link>}
     <details className="homeowner-details"><summary>Could I prepare my own protest?</summary>
       <p>Start by identifying a specific issue you can support: an incorrect property detail, documented condition, or a well-chosen comparison. Organize the evidence and the value you believe it supports.</p>
       <p><TermDefinition term="Sales and assessment comparisons">Sales help evaluate market value. Assessment comparisons examine how similar properties are appraised. They support different questions; keep the evidence separate.</TermDefinition></p>
