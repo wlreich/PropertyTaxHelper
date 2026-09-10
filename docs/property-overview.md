@@ -24,7 +24,7 @@ Run `ANALYZE public.property_snapshot_profiles` after completing publication.
 The projection is tied to the active search dataset and only exposes currently
 searchable properties. A new active release requires rebuilding its profiles.
 Historical records must independently have all three confidentiality flags set to F,
-full ownership, no shared group, and exactly one property source row. Ambiguous
+full ownership, no shared group, and exactly one property source row. Layout 8.0.0.30 has no ownership percentage; only for that verified version, the explicit non-partial-owner flag and other checks provide the ownership gate. Missing percentages in later formats remain withheld. Ambiguous
 records are withheld, including duplicate owner records. Public access is read-only.
 No owner names, contact details, agent names/contact records, legal descriptions or
 raw JSON reach the page. Agent status requires an ARB agent ID linked to the same

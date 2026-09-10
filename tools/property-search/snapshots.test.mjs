@@ -86,6 +86,26 @@ test("snapshot publication: privacy, absence, entity amounts, repeat batches and
     await db.exec("reset role");
   }
   await db.query(
+    "update tcad_ingest.records set fields=fields-'ownership_pct' where prop_id='101' and member_name='0.txt'",
+  );
+  await publish();
+  assert.deepEqual(await history("101"), []);
+  await db.query(
+    'update tcad_ingest.datasets set header=header||\'{"export_version":"8.0.0.30"}\'::jsonb where id=$1',
+    [dataset],
+  );
+  await publish();
+  assert.equal((await history("101")).length, 1);
+  await db.query(
+    'update tcad_ingest.datasets set header=header||\'{"export_version":"8.0.0.32"}\'::jsonb where id=$1',
+    [dataset],
+  );
+  await publish();
+  assert.deepEqual(await history("101"), []);
+  await db.query(
+    "update tcad_ingest.records set fields=fields||'{\"ownership_pct\":\"100\"}'::jsonb where prop_id='101' and member_name='0.txt'",
+  );
+  await db.query(
     `update tcad_ingest.records set fields=fields||'{"py_confidential_flag":"T"}' where prop_id='101' and member_name='0.txt'`,
   );
   await publish();
