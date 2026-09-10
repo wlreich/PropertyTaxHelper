@@ -177,3 +177,25 @@ test("snapshot publication: privacy, absence, entity amounts, repeat batches and
   await publish();
   assert.deepEqual(await history("101"), []); // Re-publication removes newly withheld data.
 });
+
+test("agent names: full snapshots, exact directory identity, duplicates and confidentiality", async t => {
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ await db.exec("update tcad_ingest.files set record_type='Agent' where member_name='6.txt'");
+ await db.query("update tcad_ingest.records set fields=fields||'{\"arb_agent_id\":\"0007\"}' where prop_id='101' and member_name='0.txt'");
+ await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,fields) values($1,'6.txt',1,'{"agent_id":"0007","agent_name":"FIXTURE TAX PARTNERS","agent_addr_line1":"PRIVATE ADDRESS"}')`,[dataset]);
+ await db.query('select tcad_ingest.publish_property_search($1)',[dataset]);
+ await db.query('select tcad_ingest.publish_property_snapshots($1)',[dataset]);
+ const publish=()=>db.query('select tcad_ingest.publish_property_agent_names($1)',[dataset]);
+ await publish();
+ await db.exec('set role anon');
+ const history=(await db.query("select public.property_history('101') result")).rows[0].result;
+ assert.equal(history.snapshots[0].arb_agent_name,'FIXTURE TAX PARTNERS');
+ assert.ok(!JSON.stringify(history).includes('PRIVATE ADDRESS'));
+ await db.exec('reset role');
+ await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,fields) values($1,'6.txt',2,'{"agent_id":"7","agent_name":"OTHER AGENT"}')`,[dataset]);
+ await publish();
+ assert.equal((await db.query('select count(*)::int n from public.property_agent_names')).rows[0].n,0);
+ await db.exec("delete from tcad_ingest.records where member_name='6.txt' and row_number=2; update tcad_ingest.records set fields=fields||'{\"py_confidential_flag\":\"T\"}' where prop_id='101' and member_name='0.txt'");
+ await publish();
+ assert.equal((await db.query('select count(*)::int n from public.property_agent_names')).rows[0].n,0);
+});

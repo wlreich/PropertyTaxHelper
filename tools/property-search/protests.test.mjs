@@ -18,7 +18,7 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
  const add=(type,id,data,year='02026',ds=source)=>db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,$2,$3,$4,$5,$6)`,[ds,type,++row,id===null?null:String(id).padStart(12,'0'),year,data]);
  for(const id of [101,102,103,104,106,110,200,201,202,203,204,205,206,207,208,209,210]) await add('Property',id,{...fields});
  await add('Property',200,{...fields}); // Duplicate owner rows are ambiguous.
- await add('Agent',null,{agent_id:'0007',name:'PRIVATE AGENT',phone:'PRIVATE PHONE'});
+ await add('Agent',null,{agent_id:'0007',agent_name:'FIXTURE TAX ADVISERS',phone:'PRIVATE PHONE'});
  await add('Agent',null,{agent_id:'0008'},'02026',later); // Wrong dataset cannot supply an agent link.
  await add('ARB',101,{arb_status:'EF',geo_id:'G',ref_id1:'R1',ref_id2:'R2'});
  await add('ARB',110,{arb_status:'PRIOR'},'02025'); // Current property row cannot authorize prior-year evidence.
@@ -41,7 +41,11 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
  await assert.rejects(publish(source,'',0),/Invalid batch size/);
  const first=(await publish(source,'',2)).rows[0].result;
  await publish(source,first.next);
+ await db.query('select tcad_ingest.publish_property_agent_names($1)',[source]);
  const obs=(await history(101)).protest_observations;
+ assert.equal(obs[0].arb_agent_name,'FIXTURE TAX ADVISERS');
+ assert.equal((await history(201)).protest_observations[0].arb_agent_name,'FIXTURE TAX ADVISERS');
+ await db.query('select tcad_ingest.publish_property_agent_names($1)',[source]);
  assert.equal(obs.length,1); assert.equal(obs[0].tax_year,2026); assert.equal(obs[0].export_date,'2026-04-29');
  assert.equal(obs[0].protest_flag,true); assert.equal(obs[0].arb_case_listed,true); assert.equal(obs[0].arb_agent_listed,true); assert.deepEqual(obs[0].arb_status_codes,['EF']);
  assert.deepEqual((await history(101)).snapshots,[]); // No valuation publication.
@@ -63,12 +67,19 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
   assert.ok(!JSON.stringify(await history(101)).includes('PRIVATE'));
   assert.deepEqual((await history('bad')).protest_observations,[]);
   await assert.rejects(publish(),/permission denied/);
+  await assert.rejects(db.query('select tcad_ingest.publish_property_agent_names($1)',[source]),/permission denied/);
+  await assert.rejects(db.exec('delete from public.property_agent_names'),/permission denied/);
   await assert.rejects(db.exec('delete from public.property_protest_observations'),/permission denied/);
   await assert.rejects(db.exec('select fields from tcad_ingest.records'),/permission denied/);
   await db.exec('reset role');
  }
  await db.query(`update tcad_ingest.records set fields=fields||'{"py_confidential_flag":"T"}' where dataset_id=$1 and member_name='Property' and prop_id='000000000101'`,[source]);
  await publish(); assert.deepEqual((await history(101)).protest_observations,[]);
+ await db.exec('set role anon');
+ assert.equal((await db.query("select count(*)::int n from public.property_agent_names where property_id='101'")).rows[0].n,0);
+ await db.exec('reset role');
+ await db.query('select tcad_ingest.publish_property_agent_names($1)',[source]);
+ assert.equal((await db.query("select count(*)::int n from public.property_agent_names where property_id='101'")).rows[0].n,0);
  await db.exec(`update public.property_search_documents set values_under_review=true where property_id='202'; set role anon`);
  assert.deepEqual((await history(202)).protest_observations,[]);
  await db.exec('reset role; delete from public.property_search_state; set role anon');
