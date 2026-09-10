@@ -20,6 +20,10 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(
     page.getByRole("heading", { name: "Exemptions & taxable values" }),
   ).toBeVisible();
+  await expect(page.getByText("Protest recorded · 2026", {exact:true})).toBeVisible();
+  await expect(page.getByText("2026 tax year · Apr 29, 2026", {exact:true})).toBeVisible();
+  await expect(page.getByText("TCAD status code: EF", {exact:true})).toBeVisible();
+  await expect(page.getByText("ARB correspondence agent linked", {exact:true})).toBeVisible();
   const term = page.getByRole("button", {
     name: "TCAD market value",
     exact: false,

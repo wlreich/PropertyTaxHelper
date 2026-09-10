@@ -13,6 +13,8 @@ import {
   componentName,
   exemptionName,
   propertyFacts,
+  protestEvidence,
+  type ProtestObservation,
   type Snapshot,
   type Entity,
 } from "@/lib/property-history";
@@ -100,10 +102,14 @@ export function PropertyOverview({
   property: p,
   snapshots,
   historyUnavailable,
+  protests = [],
+  protestsUnavailable = false,
 }: {
   property: Property;
   snapshots: Snapshot[];
   historyUnavailable: boolean;
+  protests?: ProtestObservation[];
+  protestsUnavailable?: boolean;
 }) {
   // Never substitute a different release for the active property profile.
   const current = snapshots.find(
@@ -139,13 +145,8 @@ export function PropertyOverview({
           label: `${entity ? entityDisplayName(entity) : ""} taxable value`,
         }
       : null;
-  const yearsWithProtest = [
-    ...new Set(
-      snapshots
-        .filter((s) => s.protest_flag || s.arb_case_listed)
-        .map((s) => s.tax_year),
-    ),
-  ];
+  const evidence = protestEvidence(snapshots, protests);
+  const yearsWithProtest = [...new Set(evidence.filter(s => s.protest_flag || s.arb_case_listed).map(s => s.tax_year))];
   const dated = snapshots.filter((s) => s.export_date);
   const featureSnapshots = current
     ? dated.filter((s) => s.tax_year <= current.tax_year)
@@ -254,34 +255,44 @@ export function PropertyOverview({
               TCAD class definitions ↗
             </a>
           </section>
-          <section>
-            <h3>Protest evidence</h3>
+          <section aria-labelledby="protest-heading">
+            <h3 id="protest-heading">Protest evidence</h3>
             <p className="overview-evidence">
               {yearsWithProtest.length
-                ? `Protest evidence recorded for ${yearsWithProtest.join(", ")}.`
-                : hasSources
-                  ? "No protest indication in the available snapshots."
-                  : "Protest information unavailable."}
+                ? `Protest recorded · ${yearsWithProtest.join(", ")}`
+                : protestsUnavailable || !hasSources
+                  ? "Protest information unavailable."
+                  : "No protest indication in the available records."}
             </p>
             <p>
-              This does not establish that no protest was filed. ARB files
-              describe active cases at export time.
+              A dated flag or ARB case records protest evidence for that tax year.
+              It does not establish a current case status or outcome. A later
+              missing entry does not erase an earlier protest.
             </p>
-            <p>
-              <strong>ARB correspondence agent</strong>
-              <br />
-              {!current
-                ? "Not available"
-                : current.arb_agent_listed
-                  ? "Agent listed in this snapshot"
-                  : "None linked in this snapshot"}
-            </p>
-            {yearsWithProtest.length > 0 && (
-              <p>
-                A filing flag or listed ARB case is historical evidence; it does
-                not establish an active case today.
-              </p>
+            {evidence.length > 0 && (
+              <ul className="overview-protest-observations">
+                {evidence.map(s => (
+                  <li key={`${s.dataset_id}:${s.tax_year}`}>
+                    <strong>{s.tax_year} tax year · {dateLabel(s.export_date)}</strong>
+                    <span>
+                      {s.protest_flag && s.arb_case_listed ? "Protest flag and ARB case listed"
+                        : s.arb_case_listed ? "ARB case listed"
+                          : s.protest_flag ? "Protest flag recorded" : "Agent assignment recorded"}
+                    </span>
+                    {s.arb_status_codes.length > 0 && <span>TCAD status code: {s.arb_status_codes.join(", ")}</span>}
+                    <span>{s.arb_agent_listed ? "ARB correspondence agent linked" : "No ARB correspondence agent linked in this record"}</span>
+                  </li>
+                ))}
+              </ul>
             )}
+            {evidence.some(s => s.arb_status_codes.length > 0) && (
+              <p>Status codes are shown as supplied; their definitions have not been verified.</p>
+            )}
+            {evidence.some(s => s.arb_agent_listed) && (
+              <p>An agent link records a correspondence assignment, not proof of who filed the protest.</p>
+            )}
+            {protestsUnavailable && <p>Additional protest history is temporarily unavailable. Try again in a few minutes.</p>}
+            {!yearsWithProtest.length && <p>Missing evidence does not establish that no protest was filed.</p>}
           </section>
           <p className="overview-sidebar-source">
             {snapshots.length} available{" "}

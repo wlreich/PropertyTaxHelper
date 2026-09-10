@@ -79,20 +79,43 @@ assignment by inference. Header, ZIP-member clock, acquisition time and any
 operator-reported dates remain distinct; no filename date becomes a verified
 export date. An unknown source date remains unknown.
 
-## Publication boundary
+## Publication and the property overview
 
-This change loads private evidence only. It does not switch the active search
-release, create valuation snapshots, schedule collection, or update the public
-protest display. Existing public valuation publishers reject these four-file
-imports because they require 20 completed text files. Public read permissions
-and confidentiality protections remain unchanged.
+Ingestion preserves private evidence. An administrator then reviews the header,
+case/property/agent links and confidentiality before publishing it. It does not
+switch the active search release or add valuation comparison snapshots.
 
-After the first real selective import, inspect its property/case/agent links and
-source dates before adding a separate curated protest-history publisher and UI
-integration. Retain positive observations across snapshots; later absence never
-means no protest, withdrawal or resolution. Verify TCAD's status dictionary
-before translating codes. Publication must check same-source confidentiality
-and current public eligibility and must not expose owner/agent contact data.
+Run `tcad_ingest.publish_property_protests(dataset_uuid, after_property_id, batch_size)`
+for a ready protest import with all four required files complete. Start at the empty
+cursor, save the returned `next` and `anchor`, then continue until `processed` is zero.
+Use 10,000 properties per batch initially, up to 50,000 after measuring performance.
+Only run one publisher per dataset and stop if the active anchor changes; start again
+from the empty cursor for the new anchor. Each batch is atomic and repeatable, so an
+uncertain result can safely be retried with the same cursor. Run
+`ANALYZE public.property_protest_observations` when publication finishes.
+
+The publisher stores a small allowlist of positive observations in
+`public.property_protest_observations`: property/year/source identity, header date,
+protest flag, ARB presence, source status codes and a linked-agent boolean. It requires
+an unambiguous same-source Property row with all three confidentiality flags false,
+full ownership and no shared group, plus current public eligibility. ARB must match
+property ID and appraisal year; conflicting supplied geo/reference IDs are withheld.
+An agent ID must match exactly one normalized ID in that dataset's Agent file.
+Earlier-year ARB cases remain private when the archive has no same-year Property row;
+we never attach the archive year's agent to an older case or relabel its appraisal year.
+
+`property_history` returns these observations separately from valuation snapshots.
+The overview combines their positive evidence with the existing full snapshots and
+shows each observation's tax year and export date. Later absence never means no protest,
+withdrawal or resolution. Status codes remain untranslated pending verified definitions.
+An agent assignment alone is not labeled a protest. No owner/agent names, contacts,
+raw fields or privileged database access are added to website requests. Public RLS
+requires the same active search anchor and current property eligibility on every read.
+
+After every new protest import, run this reviewed publication step; ingestion alone
+does not activate the website history. A later source gets its own dataset and cannot
+erase positive observations in earlier datasets. Re-publishing one source removes any
+of its observations that no longer satisfy confidentiality or ambiguity checks.
 
 ## Verification
 

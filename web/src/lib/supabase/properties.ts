@@ -1,5 +1,5 @@
 import "server-only";
-import { parseHistory, type Snapshot } from "../property-history.ts";
+import { parseHistory, parseProtestObservations, type Snapshot, type ProtestObservation } from "../property-history.ts";
 import { DATABASE_REQUEST_TIMEOUT_MS } from "./request-policy.ts";
 import { createClient } from "@supabase/supabase-js";
 import { parseSearch } from "../property-search.ts";
@@ -229,12 +229,12 @@ export async function getPropertyHistory(
     SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
   },
   fetchRequest: typeof fetch = fetch,
-): Promise<Result<Snapshot[]>> {
+): Promise<Result<Snapshot[]> & { protests?: ProtestObservation[]; protestsUnavailable?: boolean }> {
   if (!/^\d{1,12}$/.test(id)) return { status: "invalid" };
-  const snapshots = parseHistory(
-    await rpc("property_history", { p_id: id }, config, fetchRequest),
-  );
+  const payload = await rpc("property_history", { p_id: id }, config, fetchRequest);
+  const snapshots = parseHistory(payload);
+  const protests = parseProtestObservations(payload);
   return snapshots === null
     ? { status: "unavailable" }
-    : { status: "ok", data: snapshots };
+    : { status: "ok", data: snapshots, protests: protests ?? [], protestsUnavailable: protests === null };
 }

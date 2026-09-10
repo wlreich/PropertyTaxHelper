@@ -100,6 +100,10 @@ try {
   assert.equal(cards(await page("/?q=505")),1);
   const profile = await page("/property/100?q=Oak&page=1");
   assert.match(profile, /Assessment history/);
+  assert.match(profile, /Protest recorded · 2026/);
+  assert.match(profile, /2026 tax year · Apr 29, 2026/);
+  assert.match(profile, /TCAD status code: EF/);
+  assert.match(profile, /ARB correspondence agent linked/);
   assert.match(profile, /\$420,000/);
   assert.match(profile, /Separately valued features/);
   assert.match(profile, /Not listed/);
