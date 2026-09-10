@@ -17,6 +17,9 @@ from chronology import read_receipt, utc_now, reported_filename, PUBLISHER_REFER
 from download_tcad import download
 
 
+PROTEST_MODES = {'validate_protests_uploaded': 'validate_uploaded', 'import_protests': 'import'}
+
+
 class JobError(Exception):
     pass
 
@@ -76,8 +79,11 @@ def official_source(value):
 
 def settings():
     mode=os.environ.get('INPUT_MODE','validate')
+    requested_mode = mode
+    scope = 'protests' if mode in PROTEST_MODES else 'full'
+    mode = PROTEST_MODES.get(mode, mode)
     if mode not in ('validate','validate_uploaded','import'):
-        raise JobError('Choose validate, validate_uploaded or import')
+        raise JobError('Choose a supported full or protest validation/import mode')
     year=int(os.environ.get('INPUT_TAX_YEAR','2026'))
     stage=os.environ.get('INPUT_ROLL_STAGE','certified')
     encoding=os.environ.get('INPUT_ENCODING','ascii')
@@ -85,7 +91,7 @@ def settings():
         raise JobError('Invalid year or roll stage')
     if encoding not in ('ascii','utf-8','cp1252'):
         raise JobError('Invalid encoding')
-    result={'mode':mode,'year':year,'stage':stage,'encoding':encoding}
+    result={'mode':requested_mode,'year':year,'stage':stage,'encoding':encoding,'import_scope':scope}
     if mode in ('validate','validate_uploaded'):
         source = os.environ.get('INPUT_SOURCE_URL','').strip()
         filename = os.environ.get('INPUT_ORIGINAL_FILENAME','').strip() or None
@@ -160,6 +166,9 @@ def private_bucket(connection,archive_bytes=None):
 
 
 def execute(config,report,storage,work):
+    mode = PROTEST_MODES.get(config['mode'], config['mode'])
+    scope = 'protests' if config['mode'] in PROTEST_MODES else 'full'
+    report['import_scope'] = scope
     # Preflight is read-only apart from creating the private archive bucket.
     report['phase']='database_preflight'
     with database_connection() as connection:
@@ -169,11 +178,11 @@ def execute(config,report,storage,work):
         private_bucket(connection)
     archive=work/'source.zip'
     receipt=work/'source.zip.receipt.json'
-    if config['mode']=='validate':
+    if mode=='validate':
         report['phase']='source_download'
         receipt=download(config['source_url'],archive,config['published_on'],config['publication_evidence'])
         sha=ingest.digest(archive);receipt_sha=ingest.digest(receipt)
-    elif config['mode'] == 'validate_uploaded':
+    elif mode == 'validate_uploaded':
         report['phase'] = 'uploaded_archive_retrieval'
         evidence = storage.retrieve_upload(config['uploaded_key'], archive, config.get('expected_upload_sha'))
         evidence.update(version=2, acquisition_method='manual_upload', source_url=config['source_url'],
@@ -216,16 +225,17 @@ def execute(config,report,storage,work):
     report['receipt_location']=storage.retain(receipt,receipt_key(sha,receipt_sha),receipt_sha,'application/json')
     args=SimpleNamespace(archive=archive,year=config['year'],roll_stage=config['stage'],source_url=source_url,
                          encoding=config['encoding'],expected_sha256=sha,receipt=receipt,
-                         archive_store=None,archive_backend=storage,load=False)
+                         archive_store=None,archive_backend=storage,load=False,import_scope=scope)
     args.progress = lambda summary: print(json.dumps({'phase': 'archive_validation', **summary}), flush=True)
-    # Validate the complete archive before any record inserts, including on import.
+    # Validate every selected member before any record inserts, including on import.
+    # Skipped members stay in the retained ZIP and are explicitly not validated.
     report['phase']='archive_validation'
     validation=ingest.run(args)
     report['validation']=validation
     report['row_count']=sum(f['rows'] for f in validation['files'].values())
     report['uncompressed_bytes']=sum(f['uncompressed_bytes'] for f in validation['files'].values())
     report['serialized_fields_bytes']=sum(f.get('serialized_fields_bytes',0) for f in validation['files'].values())
-    if config['mode']=='import':
+    if mode=='import':
         report['phase']='database_import'
         args.load=True
         result=ingest.run(args)
@@ -238,7 +248,7 @@ def execute(config,report,storage,work):
                 raise JobError('Post-load row count differs from the validated archive')
             report['database_row_count']=actual
     report['phase']='complete'
-    report['status']='imported' if config['mode']=='import' else 'validated_and_archived'
+    report['status']='imported' if mode=='import' else 'validated_and_archived'
 
 
 def main():

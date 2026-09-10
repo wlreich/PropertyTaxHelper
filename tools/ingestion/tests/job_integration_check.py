@@ -97,6 +97,74 @@ def main():
             assert c.execute("select count(*) from tcad_ingest.import_history where outcome='succeeded'").fetchone()[0]==4
             assert c.execute("select relrowsecurity from pg_class where oid='tcad_ingest.acquisitions'::regclass").fetchone()[0]
             assert 'security_invoker=true' in c.execute("select reloptions from pg_class where oid='tcad_ingest.release_chronology'::regclass").fetchone()[0]
+        # The same archive gets independent full and protest dataset identities.
+        config.update(mode='validate_protests_uploaded')
+        work=root/'protest-validate';work.mkdir();protest_validation={}
+        with patch.object(run_job,'database_connection',connection):
+            run_job.execute(config,protest_validation,ArchiveStorage(client),work)
+        assert protest_validation['row_count']==4
+        assert protest_validation['validation']['members_checked']==4
+        assert len(protest_validation['validation']['skipped_members'])==17
+        with psycopg.connect(dsn,autocommit=True) as c:
+            assert c.execute('select count(*) from tcad_ingest.datasets').fetchone()[0]==1
+            full_id=c.execute("select id from tcad_ingest.datasets where import_scope='full'").fetchone()[0]
+        config.update(mode='import_protests',archive_sha=protest_validation['archive_sha256'],
+                      receipt_sha=protest_validation['receipt_sha256'])
+        # Fail after an Agent row is inserted, so that file must roll back while
+        # earlier files stay committed and the full dataset remains untouched.
+        original_scan=run_job.ingest.scan_member
+        def fail_agent(archive,item,spec,year,encoding,consume=None):
+            result=original_scan(archive,item,spec,year,encoding,consume)
+            if consume is not None and spec['worksheet']=='Agent':
+                raise RuntimeError('Synthetic protest import interruption')
+            return result
+        work=root/'protest-fail';work.mkdir()
+        with patch.object(run_job,'database_connection',connection), patch.object(run_job.ingest,'scan_member',fail_agent):
+            try:
+                run_job.execute(config,{},ArchiveStorage(client),work)
+                raise AssertionError('Expected interrupted file')
+            except RuntimeError as error:
+                assert str(error)=='Synthetic protest import interruption'
+        with psycopg.connect(dsn,autocommit=True) as c:
+            protest_id,status=c.execute("select id,status from tcad_ingest.datasets where import_scope='protests'").fetchone()
+            assert status=='failed' and protest_id!=full_id
+            assert c.execute('select count(*) from tcad_ingest.files where dataset_id=%s',(protest_id,)).fetchone()[0]==3
+            assert c.execute("select count(*) from tcad_ingest.files where dataset_id=%s and record_type='Agent'",(protest_id,)).fetchone()[0]==0
+            assert c.execute('select status from tcad_ingest.datasets where id=%s',(full_id,)).fetchone()[0]=='ready'
+        for attempt in range(2):
+            work=root/f'protest-import-{attempt}';work.mkdir();loaded={}
+            with patch.object(run_job,'database_connection',connection):
+                run_job.execute(config,loaded,ArchiveStorage(client),work)
+            assert loaded['database_row_count']==4 and loaded['import_scope']=='protests'
+            assert loaded['import']['dataset_id']==str(protest_id)
+        with psycopg.connect(dsn,autocommit=True) as c:
+            assert c.execute('select count(*) from tcad_ingest.datasets').fetchone()[0]==2
+            assert c.execute('select count(*) from tcad_ingest.records').fetchone()[0]==24
+            assert c.execute("select count(*) from tcad_ingest.import_attempts where import_scope='protests'").fetchone()[0]==3
+            types={row[0] for row in c.execute('select record_type from tcad_ingest.files where dataset_id=%s',(protest_id,))}
+            assert types==ingest.PROTEST_RECORD_TYPES
+            # Both public publishers must refuse a selective observation dataset.
+            for function in ('publish_property_search','publish_property_snapshots'):
+                try:
+                    c.execute('select tcad_ingest.'+function+'(%s)',(protest_id,))
+                    raise AssertionError('Selective data published as valuations')
+                except psycopg.errors.RaiseException:
+                    pass
+            for role in ('anon','authenticated','service_role'):
+                c.execute('set role '+role)
+                try:
+                    c.execute('select * from tcad_ingest.records where dataset_id=%s',(protest_id,))
+                    raise AssertionError('Raw protest data became public')
+                except psycopg.errors.InsufficientPrivilege:
+                    pass
+                c.execute('reset role')
+        # The original full mode still selects its original dataset after a
+        # protest load. Neither order of imports can duplicate/corrupt the other.
+        config.update(mode='import')
+        work=root/'full-after-protests';work.mkdir();loaded={}
+        with patch.object(run_job,'database_connection',connection):
+            run_job.execute(config,loaded,ArchiveStorage(client),work)
+        assert loaded['import']['dataset_id']==str(full_id) and loaded['database_row_count']==20
     print('PASS: private archive + receipt, validation without inserts, full import, retry, durable URI and audit history')
 
 
