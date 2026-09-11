@@ -1,3 +1,4 @@
+import { AssessmentExplanation, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { TermDefinition } from "./term-definition";
 import { currency } from "@/lib/property-search";
 import {
@@ -125,26 +126,12 @@ export function PropertyOverview({
     current?.entities.find((e) => /\bISD\b|SCHOOL/i.test(e.name)) ??
     current?.entities[0];
   const priorEntity = previous?.entities.find((e) => e.code === entity?.code);
-  const initialEntity = initial?.entities.find((e) => e.code === entity?.code);
   const marketChange = comparison(previous?.market_value, p.market_value);
   const capChange = comparison(previous?.assessed_value, p.assessed_value);
   const taxChange = comparison(
     priorEntity?.taxable_value,
     entity?.taxable_value,
   );
-  const withinMarket = comparison(initial?.market_value, current?.market_value);
-  const withinTax = comparison(
-    initialEntity?.taxable_value,
-    entity?.taxable_value,
-  );
-  const highlight = withinMarket?.significant
-    ? { change: withinMarket, label: "Market value" }
-    : withinTax?.significant
-      ? {
-          change: withinTax,
-          label: `${entity ? entityDisplayName(entity) : ""} taxable value`,
-        }
-      : null;
   const evidence = protestEvidence(snapshots, protests);
   const yearsWithProtest = [...new Set(evidence.filter(s => s.protest_flag || s.arb_case_listed).map(s => s.tax_year))];
   const dated = snapshots.filter((s) => s.export_date);
@@ -172,7 +159,6 @@ export function PropertyOverview({
       ...(current?.entities.flatMap((e) => Object.keys(e.exemptions)) ?? []),
     ]),
   ];
-  const hasSources = current !== undefined;
   return (
     <>
       <div className="profile-heading overview-heading">
@@ -180,6 +166,7 @@ export function PropertyOverview({
           <p className="eyebrow">TCAD PROPERTY {p.property_id}</p>
           <h1>{p.address}</h1>
           <p>{[p.city, p.postal_code].filter(Boolean).join(", ")}</p>
+          <p className="homeowner-intro">Your TCAD records, connected across time—with changes and useful next steps explained.</p>
         </div>
         <div className="overview-release">
           <span className="release-badge">
@@ -229,17 +216,13 @@ export function PropertyOverview({
             <p className="overview-code">
               {current?.neighborhood ?? "Not reported"}
             </p>
-            <p>
-              TCAD studies value patterns within neighborhood groups.
-              Neighborhood market adjustments affect improvement values.
-            </p>
-            <p>
-              Start comparisons here, then match the size, age and construction
-              of the homes.
-            </p>
+            <p>TCAD groups properties here to study value patterns. Start here when looking for similar homes, then check size, age and construction.</p>
+            <details className="homeowner-details"><summary>Why this group matters</summary>
+              <p>Neighborhood adjustments can affect improvement values. Sharing a code is a useful starting point, not proof that two homes should have the same value.</p>
             <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf">
               TCAD appraisal methodology ↗
             </a>
+            </details>
           </section>
           <section>
             <h3>Construction class</h3>
@@ -247,52 +230,16 @@ export function PropertyOverview({
             {facts.classCode && constructionClasses[facts.classCode] && (
               <p>{constructionClasses[facts.classCode]}</p>
             )}
-            <p>
-              Construction quality is separate from current condition. Multiple
-              structures may have different classes.
-            </p>
+            <details className="homeowner-details"><summary>About construction class</summary><p>This describes construction quality, not the home’s current condition. Separate buildings may have different classes.</p>
             <a href="https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf">
               TCAD class definitions ↗
             </a>
+            </details>
           </section>
-          <section aria-labelledby="protest-heading">
-            <h3 id="protest-heading">Protest evidence</h3>
-            <p className="overview-evidence">
-              {yearsWithProtest.length
-                ? `Protest recorded · ${yearsWithProtest.join(", ")}`
-                : protestsUnavailable || !hasSources
-                  ? "Protest information unavailable."
-                  : "No protest indication in the available records."}
-            </p>
-            <p>
-              A dated flag or ARB case records protest evidence for that tax year.
-              It does not establish a current case status or outcome. A later
-              missing entry does not erase an earlier protest.
-            </p>
-            {evidence.length > 0 && (
-              <ul className="overview-protest-observations">
-                {evidence.map(s => (
-                  <li key={`${s.dataset_id}:${s.tax_year}`}>
-                    <strong>{s.tax_year} tax year · {dateLabel(s.export_date)}</strong>
-                    <span>
-                      {s.protest_flag && s.arb_case_listed ? "Protest flag and ARB case listed"
-                        : s.arb_case_listed ? "ARB case listed"
-                          : s.protest_flag ? "Protest flag recorded" : "Agent assignment recorded"}
-                    </span>
-                    {s.arb_status_codes.length > 0 && <span>TCAD status code: {s.arb_status_codes.join(", ")}</span>}
-                    <span>{s.arb_agent_listed ? "ARB correspondence agent linked" : "No ARB correspondence agent linked in this record"}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {evidence.some(s => s.arb_status_codes.length > 0) && (
-              <p>Status codes are shown as supplied; their definitions have not been verified.</p>
-            )}
-            {evidence.some(s => s.arb_agent_listed) && (
-              <p>An agent link records a correspondence assignment, not proof of who filed the protest.</p>
-            )}
-            {protestsUnavailable && <p>Additional protest history is temporarily unavailable. Try again in a few minutes.</p>}
-            {!yearsWithProtest.length && <p>Missing evidence does not establish that no protest was filed.</p>}
+          <section>
+            <h3>Protest history</h3>
+            <p className="overview-evidence">{yearsWithProtest.length ? `Protest recorded · ${yearsWithProtest.join(", ")}` : "Review the available protest records."}</p>
+            <a href="#representation-heading">Protests & representation ↓</a>
           </section>
           <p className="overview-sidebar-source">
             {snapshots.length} available{" "}
@@ -329,42 +276,7 @@ export function PropertyOverview({
               />
             </dl>
           </section>
-          {highlight && initial && current && (
-            <section
-              className="overview-insight"
-              aria-labelledby="change-heading"
-            >
-              <h2 id="change-heading">
-                A substantial change within {current.tax_year}
-              </h2>
-              <p className="overview-insight-lead">
-                {highlight.label}{" "}
-                {highlight.change.dollars < 0 ? "fell" : "rose"}{" "}
-                {currency(Math.abs(highlight.change.dollars))}
-                {highlight.change.percent !== null
-                  ? ` (${Math.abs(highlight.change.percent).toFixed(1)}%)`
-                  : ""}{" "}
-                from {dateLabel(initial.export_date)} to{" "}
-                {dateLabel(current.export_date)}.
-              </p>
-              {withinTax && withinMarket?.significant && entity && (
-                <p>
-                  {entityDisplayName(entity)} taxable value changed{" "}
-                  <ChangeLabel change={withinTax} /> over the same period.
-                </p>
-              )}
-              <p>
-                The exports show the changes but do not establish their cause.
-              </p>
-            </section>
-          )}
-          <p className="overview-attention-key">
-            <TermDefinition term="About highlighted changes">
-              A change is highlighted at $25,000 or more, or at least 10% and
-              $10,000. This is a review threshold, not a finding of an appraisal
-              error. Percentages are unavailable when the earlier value is zero.
-            </TermDefinition>
-          </p>
+          <AssessmentExplanation current={current} previous={previous} initial={initial} entity={entity} evidence={evidence} />
           {!current && (
             <div className="notice">
               <h2>
@@ -386,7 +298,9 @@ export function PropertyOverview({
             <div className="section-heading">
               <h2 id="history-heading">Assessment history</h2>
             </div>
+            <AssessmentSequence current={current} previous={previous} initial={initial} />
             {snapshots.length ? (
+              <details className="homeowner-details"><summary>View all assessment values</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
                   <caption>Values as recorded in each TCAD export</caption>
@@ -457,10 +371,13 @@ export function PropertyOverview({
                   </tbody>
                 </table>
               </div>
+              <p className="overview-note">Highlighted changes are at least $25,000, or at least 10% and $10,000. This is a review threshold, not proof of an error.</p>
+              </details>
             ) : (
               <p>No comparable snapshots available.</p>
             )}
           </section>
+          <Representation evidence={evidence} year={p.tax_year} unavailable={protestsUnavailable} />
           <section
             className="overview-section"
             aria-labelledby="features-heading"
@@ -469,8 +386,9 @@ export function PropertyOverview({
             <p className="overview-muted">
               Pool, spa and other improvement details recorded by TCAD.
             </p>
+            <FeatureHighlights current={current} previous={previous} initial={initial} />
             {features.length ? (
-              <>
+              <details className="homeowner-details"><summary>View all separately valued features</summary>
                 <div className="overview-table-wrap">
                   <table className="overview-table overview-components">
                     <caption>
@@ -554,7 +472,7 @@ export function PropertyOverview({
                   improvement total; amounts are shown as recorded. Changed
                   areas or quantities appear separately.
                 </p>
-              </>
+              </details>
             ) : (
               <p>No comparable feature details available.</p>
             )}
@@ -593,6 +511,7 @@ export function PropertyOverview({
               </p>
             )}
             {current && current.entities.length > 0 && (
+              <details className="homeowner-details"><summary>See exemptions by taxing authority</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
                   <caption>
@@ -634,14 +553,16 @@ export function PropertyOverview({
                   </tbody>
                 </table>
               </div>
+              </details>
             )}
             <p className="overview-note">
               Each entity has its own taxable value. These are tax bases, not
               tax bills. Exemptions and amounts reflect the dated exports.
             </p>
           </section>
+          <HomeownerNextSteps address={p.address} />
           <section className="overview-source">
-            <h2>A record with a date</h2>
+            <details className="homeowner-details"><summary>About these records</summary>
             <p>
               Later corrections may appear in TCAD’s live records. Export times
               are shown as supplied without an assumed timezone. Only available,
@@ -653,6 +574,7 @@ export function PropertyOverview({
             </a>
             <span> · </span>
             <a href={p.source_url}>TCAD source ↗</a>
+            </details>
           </section>
         </div>
       </div>

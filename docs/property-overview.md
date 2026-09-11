@@ -50,7 +50,7 @@ searchable properties. A new active release requires rebuilding its profiles.
 Historical records must independently have all three confidentiality flags set to F,
 full ownership, no shared group, and exactly one property source row. Layout 8.0.0.30 has no ownership percentage; only for that verified version, the explicit non-partial-owner flag and other checks provide the ownership gate. Missing percentages in later formats remain withheld. Ambiguous
 records are withheld, including duplicate owner records. Public access is read-only.
-No owner names, contact details, agent names/contact records, legal descriptions or
+No owner names, contact details, agent contact records, legal descriptions or
 raw JSON reach the page. Agent status requires an ARB agent ID linked to the same
 snapshot's agent directory. ARB cases must match the property and tax year.
 
@@ -87,3 +87,44 @@ Run `npm run verify --prefix web`, `npm test --prefix tools/property-search`,
 `npm run test:brand-browser --prefix web` after installing Chromium.
 The GitHub check runs responsive/accessibility tests at 375, 768 and 1440 pixels and
 retains screenshots for review. All committed browser fixtures are synthetic.
+
+## Homeowner iteration and named agents
+
+The overview now leads with a year-over-year explanation and separates the proposed-to-certified
+period. A promising protest-season result requires a substantial negative change (existing
+attention threshold), same-year preliminary and certified records with known ordered dates,
+and a positive protest observation dated within that period. Agent assignment alone, another
+year, an unknown observation date or a protest first observed after certification cannot trigger
+that message. The visible qualification distinguishes a valuation change from tax savings and
+does not attribute the change to the protest or agent.
+
+Annual explanations name the taxing authority. An explanation that larger exemptions softened
+an increase is used only when both years' exemption totals reconcile to assessed minus taxable
+value. Otherwise the explanation stays general. The timeline bars share a zero baseline and
+show market value only. Missing amounts are not plotted as zero. Certified is not labeled final.
+
+The default view summarizes pool/spa features, distinguishes a changed detail from a detail no
+longer listed, and leaves ambiguous matches uncombined. Complete history, feature tables,
+entity exemption amounts and source status codes remain in keyboard-accessible details elements.
+Homeowner review actions link to facts, features, exemptions and a street-name search. Street
+browsing is not presented as a matched comparable set. Similar-property matching and agent
+leaderboards remain separate later work. No personal notes, fees calculator or inferred savings.
+
+Wendy explicitly authorized displaying recorded agent names. The separate
+`tcad_ingest.publish_property_agent_names(dataset_uuid, after_property_id, batch_size)` publisher
+adds only `agent_name` from a unique same-source directory ID. Run it after ordinary snapshot or
+protest publication, for each ready full/protest dataset. It processes only previously eligible
+agent assignments (and prior names needing revalidation); save `next` and `anchor` and continue
+until `processed=0`. Batches are repeatable, bounded at 50,000 and do not modify valuations.
+Start over if the active anchor changes. Analyze `public.property_agent_names` after completion.
+
+The publisher independently rechecks same-year Property uniqueness, source confidentiality,
+ownership, current eligibility and the published agent assignment. Unknown names stay null;
+duplicate directory IDs cannot supply a name. RLS also requires that the corresponding published
+snapshot/observation still allows the assignment, so withdrawn/withheld projection rows hide
+names immediately. Raw contacts and addresses remain private. Public website calls are still
+security-invoker reads with publishable credentials; no raw-table access was added.
+
+Names appear with their observation year/date, not as a claim of current representation or case
+handling. If multiple names occur in a year they remain visible with source details. Absence is
+"Agent not identified in the available records," not a claim the owner had no agent.

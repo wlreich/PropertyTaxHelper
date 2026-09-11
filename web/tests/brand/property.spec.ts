@@ -11,8 +11,10 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     page.getByRole("heading", { name: "Separately valued features" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "A substantial change within 2026" }),
+    page.getByRole("heading", { name: "A promising protest-season result" }),
   ).toBeVisible();
+  await expect(page.getByText("No longer separately listed", {exact:true})).toBeVisible();
+  await page.getByText("View all separately valued features", {exact:true}).click();
   await expect(page.getByText("Not listed", { exact: true })).toBeVisible();
   await expect(
     page.getByText("Not listed / not comparable", { exact: true }),
@@ -21,9 +23,18 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     page.getByRole("heading", { name: "Exemptions & taxable values" }),
   ).toBeVisible();
   await expect(page.getByText("Protest recorded · 2026", {exact:true})).toBeVisible();
+  await expect(page.getByText("FIXTURE TAX PARTNERS", {exact:true}).first()).toBeVisible();
+  await page.getByText("View source records", {exact:true}).click();
   await expect(page.getByText("2026 tax year · Apr 29, 2026", {exact:true})).toBeVisible();
   await expect(page.getByText("TCAD status code: EF", {exact:true})).toBeVisible();
-  await expect(page.getByText("ARB correspondence agent linked", {exact:true})).toBeVisible();
+  await page.getByText("View source records", {exact:true}).click();
+  await page.getByText("View all separately valued features", {exact:true}).click();
+  const historyDetails=page.locator("details").filter({has:page.locator("summary",{hasText:"View all assessment values"})});
+  await historyDetails.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(historyDetails).toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
     name: "TCAD market value",
     exact: false,
@@ -45,7 +56,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     ),
   ).toBe(true);
   if (info.project.use.viewport!.width <= 800) {
-    for (const caption of await page.locator(".overview-table caption").all()) {
+    for (const caption of await page.locator(".overview-table caption:visible").all()) {
       const captionBounds = await caption.boundingBox();
       const tableBounds = await caption.locator("..").boundingBox();
       expect(captionBounds!.width).toBeGreaterThan(tableBounds!.width * 0.9);
@@ -64,6 +75,9 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     path: capture,
     contentType: "image/png",
   });
+  await page.getByRole("link", { name: "Browse my street" }).click();
+  await expect(page).toHaveURL(/q=N\+OAK\+ST/);
+  await page.goto("/property/100?q=Oak&page=0&all=1");
   await page.getByRole("link", { name: "Back to search results" }).click();
   await expect(page).toHaveURL(/q=Oak.*all=1/);
   await page.goto("/property/102");

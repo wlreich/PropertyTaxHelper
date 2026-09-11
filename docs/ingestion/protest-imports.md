@@ -108,8 +108,11 @@ we never attach the archive year's agent to an older case or relabel its apprais
 The overview combines their positive evidence with the existing full snapshots and
 shows each observation's tax year and export date. Later absence never means no protest,
 withdrawal or resolution. Status codes remain untranslated pending verified definitions.
-An agent assignment alone is not labeled a protest. No owner/agent names, contacts,
-raw fields or privileged database access are added to website requests. Public RLS
+An agent assignment alone is not labeled a protest. No owner names or owner/agent contacts,
+raw fields or privileged database access are added to website requests.
+After this publication, run the separate `publish_property_agent_names` batches described
+in `docs/property-overview.md` to include the expressly approved recorded agent name.
+It rechecks source eligibility and publishes no directory address or contact fields. Public RLS
 requires the same active search anchor and current property eligibility on every read.
 
 After every new protest import, run this reviewed publication step; ingestion alone
