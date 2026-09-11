@@ -21,3 +21,6 @@
 .admin-preview-banner { padding: var(--space-4); background: var(--color-surface-info); border-left: var(--space-1) solid var(--color-action); }
 .admin-section .overview-note { color: var(--color-text-muted); font-size: var(--text-small); }
 @media (max-width: 700px) { .admin-fields { grid-template-columns: 1fr; } .admin-preview { padding: var(--space-4); } }
+.admin-shell p a:not(.action-button), .admin-shell li a:not(.action-button) { color: var(--color-action); text-decoration: underline; }
+.admin-shell button:not(.action-button) { padding: var(--space-2) var(--space-4); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); color: var(--color-action); background: var(--color-surface); }
+.admin-shell button[aria-pressed="true"]:not(.action-button) { color: var(--color-surface); background: var(--color-brand-primary); }
