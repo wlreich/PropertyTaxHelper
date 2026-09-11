@@ -1,27 +1,45 @@
 import Link from "next/link";
 import { TermDefinition } from "./term-definition";
 import { currency, resultsUrl } from "@/lib/property-search";
-import { annualExplanation, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
+import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
 import { dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
 
 type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[]};
-export function AssessmentExplanation({current,previous,initial,entity,evidence}:Context) {
-  const annual=annualExplanation(current,previous,entity);
+function SummaryChange({change}:{change:NonNullable<ReturnType<typeof assessmentSummary>>["annual"]}) {
+  if (!change) return <>Comparison unavailable</>;
+  if (change.dollars === 0) return <strong>Unchanged</strong>;
+  return <><strong>{currency(Math.abs(change.dollars))} {change.dollars < 0 ? "lower" : "higher"}</strong>{change.percent !== null && <span> ({Math.abs(change.percent).toFixed(1)}%)</span>}</>;
+}
+export function AssessmentSummary({current,initial,previous}:Omit<Context,"entity"|"evidence">) {
+  const summary=assessmentSummary(current,initial,previous);
+  if (!summary || !current) return null;
+  return <section className="homeowner-summary" aria-labelledby="assessment-summary-heading">
+    <p className="eyebrow">Your assessment at a glance</p>
+    <h2 id="assessment-summary-heading">Your {current.roll_stage === "certified" ? "certified" : current.roll_stage === "preliminary" ? "preliminary" : "recorded"} market value</h2>
+    <p className="homeowner-summary-value">{currency(summary.value)}</p>
+    <p className="overview-note">{current.tax_year} {current.roll_stage} record · {dateLabel(current.export_date)}</p>
+    <dl className="homeowner-summary-comparisons">
+      {current.roll_stage === "certified" && <div><dt>Since the {current.tax_year} preliminary value</dt><dd><SummaryChange change={summary.proposed} /></dd></div>}
+      <div><dt>Compared with {current.tax_year - 1} certified value</dt><dd><SummaryChange change={summary.annual} /></dd></div>
+    </dl>
+  </section>;
+}
+export function ProtestResult({current,initial,entity,evidence}:Context) {
   const season=seasonOutcome(current,initial,evidence,entity);
+  const agents=current ? agentsForYear(evidence,current.tax_year) : [];
   return <>
-    {annual && <section className="homeowner-explanation" aria-labelledby="explanation-heading">
-      <p className="eyebrow">Your assessment, explained</p>
-      <h2 id="explanation-heading">{annual.headline}</h2>
-      <p>{annual.summary}</p>
-      {annual.explanation && <p>{annual.explanation}</p>}
-    </section>}
     {season && <section className={`overview-insight${season.observedProtest ? " homeowner-positive" : ""}`} aria-labelledby="change-heading">
       <p className="eyebrow">{current!.tax_year} · Proposed to certified</p>
       <h2 id="change-heading">{season.headline}</h2>
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
       <p>{season.label} fell between {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
-      <p className="overview-note">{season.observedProtest ? "Encouraging evidence, though these records do not confirm what caused the reduction. " : "The records do not establish what caused the reduction. "}This is a change in value, not tax savings.</p>
-      {season.observedProtest && <a className="homeowner-text-link" href="#representation-heading">Review the protest record</a>}
+      {season.observedProtest && <div className="homeowner-result-agent">
+        <h3>{agents.length ? `${agents.length > 1 ? "Agents" : "Agent"} listed` : "Agent information"} for {current!.tax_year}</h3>
+        {agents.length ? <ul>{agents.map(agent=><li key={agent.name}><strong>{agent.name}</strong><span>Recorded: {agent.dates.map(dateLabel).join(" · ")}</span></li>)}</ul> : <p>Agent not identified in the available records.</p>}
+        {agents.length > 1 && <p className="overview-note">Different agents appear in the dated records; they do not establish who handled the protest.</p>}
+      </div>}
+      <p className="overview-note">{season.observedProtest ? "The records suggest a successful protest, but do not confirm what caused the reduction or who handled the case. " : "The records do not establish what caused the reduction. "}This is a change in value, not tax savings.</p>
+      {season.observedProtest && <a className="homeowner-text-link" href="#representation-heading">View protest and agent records</a>}
     </section>}
   </>;
 }

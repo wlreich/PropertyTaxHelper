@@ -1,10 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {seasonOutcome,annualExplanation,featureHighlights,streetSearch,historySequence} from '../src/lib/homeowner-insights.ts';
+import {assessmentSummary,agentsForYear,seasonOutcome,annualExplanation,featureHighlights,streetSearch,historySequence} from '../src/lib/homeowner-insights.ts';
 import {parseHistory,parseProtestObservations} from '../src/lib/property-history.ts';
 import {fixtureHistory} from '../../tools/property-search/history-fixture.mjs';
 const [previous,initial,current]=parseHistory(fixtureHistory);
 const evidence=parseProtestObservations(fixtureHistory);
+test('opening summary distinguishes a seasonal decrease from an annual increase without treating unavailable values as zero',()=>{
+ const result=assessmentSummary(current,initial,previous);
+ assert.equal(result.value,450000);
+ assert.equal(result.proposed.dollars,-100000);
+ assert.equal(result.annual.dollars,50000);
+ assert.equal(assessmentSummary({...current,market_value:null},initial,previous),null);
+ assert.equal(assessmentSummary(undefined,initial,previous),null);
+ assert.equal(assessmentSummary({...current,market_value:0},initial,previous).value,0);
+ assert.equal(assessmentSummary(current,undefined,undefined).proposed,null);
+ assert.equal(assessmentSummary(current,undefined,undefined).annual,null);
+ assert.equal(assessmentSummary(current,{...initial,tax_year:2025},previous).proposed,null);
+ assert.equal(assessmentSummary(current,{...initial,export_date:null},previous).proposed,null);
+ assert.equal(assessmentSummary(current,{...initial,export_date:current.export_date},previous).proposed,null);
+ assert.equal(assessmentSummary(initial,initial,previous).proposed,null);
+ assert.equal(assessmentSummary(current,initial,{...previous,tax_year:2024}).annual,null);
+ assert.equal(assessmentSummary(current,initial,{...previous,market_value:0}).annual.percent,null);
+});
+test('result card names only assigned agents for the relevant year, retaining distinct dates and names',()=>{
+ const record=evidence[0];
+ const agents=agentsForYear([
+  record,record,{...record,export_date:'2026-04-02'},
+  {...record,arb_agent_name:'SECOND FIRM',export_date:null},
+  {...record,arb_agent_name:'PAST FIRM',tax_year:2025},
+  {...record,arb_agent_name:'UNLINKED FIRM',arb_agent_listed:false},
+  {...record,arb_agent_name:null},
+ ],2026);
+ assert.deepEqual(agents,[
+  {name:'FIXTURE TAX PARTNERS',dates:['2026-04-02','2026-04-29']},
+  {name:'SECOND FIRM',dates:[null]},
+ ]);
+ assert.deepEqual(agentsForYear([],2026),[]);
+});
 test('promising outcome requires substantial reduction, certified comparison and a protest in the same period/year',()=>{
  assert.equal(seasonOutcome(current,initial,evidence).observedProtest,true);
  for(const change of [{tax_year:2025},{export_date:'2026-03-01'},{export_date:'2026-08-01'},{export_date:null},{protest_flag:false,arb_case_listed:false}]) {

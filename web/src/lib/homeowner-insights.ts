@@ -7,6 +7,25 @@ export function changeWords(before: number | null | undefined, after: number | n
   if (!c.dollars) return "unchanged";
   return `${c.dollars < 0 ? "down" : "up"} ${currency(Math.abs(c.dollars))}${c.percent !== null && Math.abs(c.percent) >= 0.1 ? ` (${Math.abs(c.percent).toFixed(1)}%)` : ""}`;
 }
+export function assessmentSummary(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
+  if (!current || current.market_value === null) return null;
+  const proposed = current.roll_stage === "certified" && initial?.roll_stage === "preliminary" && initial.tax_year === current.tax_year && initial.export_date && current.export_date && initial.export_date < current.export_date
+    ? comparison(initial.market_value, current.market_value) : null;
+  const annual = previous?.roll_stage === "certified" && previous.tax_year === current.tax_year - 1
+    ? comparison(previous.market_value, current.market_value) : null;
+  return {value:current.market_value, proposed, annual};
+}
+// An agent listed for a tax year is not necessarily the agent who handled its protest.
+export function agentsForYear(evidence: ProtestObservation[], year: number) {
+  const agents = new Map<string, Set<string | null>>();
+  for (const record of evidence) {
+    if (record.tax_year !== year || !record.arb_agent_listed || !record.arb_agent_name) continue;
+    const dates = agents.get(record.arb_agent_name) ?? new Set<string | null>();
+    dates.add(record.export_date);
+    agents.set(record.arb_agent_name, dates);
+  }
+  return [...agents].sort(([a],[b])=>a.localeCompare(b)).map(([name,dates])=>({name,dates:[...dates].sort((a,b)=>(a ?? "9999").localeCompare(b ?? "9999"))}));
+}
 export function annualExplanation(current: Snapshot | undefined, previous: Snapshot | undefined, entity: Entity | undefined) {
   if (!current || !previous) return null;
   const market = comparison(previous.market_value, current.market_value);
@@ -42,7 +61,7 @@ export function seasonOutcome(current: Snapshot | undefined, initial: Snapshot |
   const observedProtest = evidence.some(s=>s.tax_year===current.tax_year && (s.protest_flag || s.arb_case_listed) && s.export_date && s.export_date >= initial.export_date! && s.export_date <= current.export_date!);
   if (!reduction) return null;
   return {...reduction, observedProtest,
-    headline:observedProtest ? "A promising protest-season result" : "Your proposed value came down",
+    headline:observedProtest ? "Looks like a successful protest!" : "Your proposed value came down",
     period:`${dateLabel(initial.export_date)} to ${dateLabel(current.export_date)}`};
 }
 export function historySequence(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
