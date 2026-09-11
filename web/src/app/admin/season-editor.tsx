@@ -19,13 +19,14 @@ export function SeasonEditor({ seasons }: { seasons: Season[] }) {
   const errors = seasonProblems({ ...config, published: true });
   return <section className="admin-section">
     <h2>Season calendar</h2>
+    <p><strong>{config.published ? "Published settings" : "Draft settings"} · {config.tax_year}</strong></p>
     <p>Dates use Travis County time. The filing deadline remains part of the open window; the hearing phase begins the following day. Saving a draft leaves public guidance unchanged.</p>
     <form action={action} className="admin-form">
       <input type="hidden" name="revision" value={config.revision} />
       <div className="admin-fields">
         <label>County<input value="Travis County, Texas" readOnly /></label>
         <label>Tax year<input name="tax_year" type="number" min={1900} max={2200} value={config.tax_year} onChange={e => { const year = Number(e.target.value); setConfig(seasons.find(s => s.tax_year === year) ?? blank(year)); }} required /></label>
-        <label>Assessment release / season start<input name="starts_on" type="date" value={config.starts_on ?? ""} onChange={e => update("starts_on", e.target.value)} /></label>
+        <label>Season start / override effective date<input name="starts_on" type="date" value={config.starts_on ?? ""} onChange={e => update("starts_on", e.target.value)} /></label>
         <label>General filing deadline<input name="filing_deadline" type="date" value={config.filing_deadline ?? ""} onChange={e => update("filing_deadline", e.target.value)} /></label>
         <label>Post-season starts<input name="post_starts_on" type="date" value={config.post_starts_on ?? ""} onChange={e => update("post_starts_on", e.target.value)} /></label>
         <label>Deadline verified on<input name="verified_on" type="date" max={countyToday()} value={config.verified_on ?? ""} onChange={e => update("verified_on", e.target.value)} /></label>
@@ -33,7 +34,7 @@ export function SeasonEditor({ seasons }: { seasons: Season[] }) {
         <label>Transitions<select name="mode" value={config.mode} onChange={e => update("mode", e.target.value)}><option value="automatic">Automatic by date</option><option value="manual">Manual override</option></select></label>
         <label>Manual phase<select name="manual_phase" value={config.manual_phase ?? ""} onChange={e => update("manual_phase", e.target.value)}><option value="">Choose a phase</option>{phases.map(p => <option key={p} value={p}>{phaseNames[p]}</option>)}</select></label>
       </div>
-      <p className="overview-note">Automatic mode needs all phase dates and a verified official deadline. A future year starts on its configured release date. Publishing a season does not publish assessment data.</p>
+      <p className="overview-note">Automatic mode needs all phase dates and a verified official deadline. In automatic mode, use the assessment release date as the season start. In manual mode, it is the date the override takes effect. Publishing a season does not publish assessment data.</p>
       {errors.length > 0 && <div aria-label="Before publishing"><strong>Before publishing</strong><ul>{errors.map((error, i) => <li key={i}>{error}</li>)}</ul></div>}
       <div className="admin-actions">
         <button name="publish" value="no" disabled={pending}>Save draft</button>

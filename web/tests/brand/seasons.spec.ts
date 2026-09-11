@@ -13,7 +13,7 @@ test('admin access, saved drafts, phase previews and public isolation',async({pa
  // Use a distinct supported year for each viewport because the fixture server is shared.
  const testYear=info.project.name==='width-375'?2027:info.project.name==='width-768'?2028:2029;
  await page.getByLabel('Tax year',{exact:true}).fill(String(testYear));
- await page.getByLabel('Assessment release / season start').fill(`${testYear}-04-02`);
+ await page.getByLabel('Season start / override effective date').fill(`${testYear}-04-02`);
  await page.getByLabel('General filing deadline').fill(`${testYear}-05-15`);
  await page.getByLabel('Post-season starts').fill(`${testYear}-08-01`);
  await page.getByLabel('Deadline verified on').fill('2026-09-11');

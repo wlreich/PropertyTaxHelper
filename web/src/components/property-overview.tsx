@@ -1,4 +1,4 @@
-import { AssessmentSummary, ProtestResult, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
 import { annualExplanation, priorSeasonResult } from "@/lib/homeowner-insights";
 import { SeasonNotice } from "./season-notice";
@@ -264,6 +264,7 @@ export function PropertyOverview({
         <div className="overview-content">
           <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <AssessmentSummary current={current} previous={previous} initial={initial} />
+          <InterimChange current={current} initial={initial} />
           <ProtestResult current={current} initial={initial} entity={entity} evidence={evidence} />
           <section className="overview-values" aria-labelledby="assessment-values-heading">
             <h2 id="assessment-values-heading">How the values fit together</h2>

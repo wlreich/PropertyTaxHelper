@@ -2,7 +2,7 @@ import Link from "next/link";
 import { TermDefinition } from "./term-definition";
 import { currency, resultsUrl } from "@/lib/property-search";
 import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
-import { dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
+import { comparison, dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
 
 type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[];historical?:boolean};
 function SummaryChange({change}:{change:NonNullable<ReturnType<typeof assessmentSummary>>["annual"]}) {
@@ -42,6 +42,17 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
       {season.observedProtest && <a className="homeowner-text-link" href="#representation-heading">View protest and agent records</a>}
     </section>}
   </>;
+}
+export function InterimChange({ current, initial }: Pick<Context, "current" | "initial">) {
+  if (!current || !initial || current.roll_stage === "certified" || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
+  const change = comparison(initial.market_value, current.market_value);
+  if (!change?.dollars) return null;
+  return <section className="overview-insight" aria-labelledby="interim-change-heading">
+    <p className="eyebrow">{current.tax_year} · Updated record</p>
+    <h2 id="interim-change-heading">Your recorded value has changed</h2>
+    <p><SummaryChange change={change} /> than the first preliminary value, between {dateLabel(initial.export_date)} and {dateLabel(current.export_date)}.</p>
+    <p className="overview-note">This is an observed change in market value. The records do not establish the cause or a final protest outcome.</p>
+  </section>;
 }
 export function AssessmentSequence({current,initial,previous}:Omit<Context,"entity"|"evidence">) {
   const stages=historySequence(current,initial,previous);
