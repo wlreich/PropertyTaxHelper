@@ -525,7 +525,7 @@ export function PropertyOverview({
               </p>
             )}
             {current && current.entities.length > 0 && (
-              <details className="homeowner-details" id="taxing-authorities"><summary>See exemptions by taxing authority</summary>
+              <details className="homeowner-details" id="taxing-authorities"><summary id="taxing-authorities-heading">See exemptions by taxing authority</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
                   <caption>
