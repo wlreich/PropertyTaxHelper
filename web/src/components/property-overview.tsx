@@ -1,4 +1,5 @@
 import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { PropertySectionLink } from "./property-section-link";
 import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
 import { annualExplanation, priorSeasonResult } from "@/lib/homeowner-insights";
 import { SeasonNotice } from "./season-notice";
@@ -35,17 +36,17 @@ function ChangeLabel({
 }) {
   if (!change)
     return <span className="overview-muted">Comparison unavailable</span>;
-  const sign = change.dollars > 0 ? "+" : change.dollars < 0 ? "−" : "";
+  if (change.dollars === 0) return <span className="overview-muted">Unchanged{suffix}</span>;
   return (
     <span
       className={
-        change.significant ? "overview-change-attention" : "overview-muted"
+        change.significant ? "overview-change-strong" : "overview-muted"
       }
     >
-      {sign}
+      {change.dollars < 0 ? "Decrease " : "Increase "}
       {currency(Math.abs(change.dollars))}
       {change.percent !== null
-        ? ` (${change.percent > 0 ? "+" : ""}${change.percent.toFixed(1)}%)`
+        ? ` (${Math.abs(change.percent).toFixed(1)}%)`
         : ""}
       {suffix}
     </span>
@@ -74,7 +75,7 @@ function Metric({
 }) {
   return (
     <div
-      className={`overview-metric${change?.significant ? " overview-metric-attention" : ""}`}
+      className="overview-metric"
     >
       <dt>
         <TermDefinition term={title}>{help}</TermDefinition>
@@ -203,13 +204,18 @@ export function PropertyOverview({
           </p>
         </div>
       )}
-      <div className="overview-layout">
-        <aside
-          className="overview-sidebar"
-          aria-labelledby="property-facts-heading"
-        >
-          <h2 id="property-facts-heading">Your property</h2>
-          <p className="eyebrow">RECORDED FACTS</p>
+      <dl className="overview-quick-facts" aria-label="Key property facts">
+        {[
+          ["Living area", amount(facts.livingArea, " sq ft")],
+          ["Lot size", amount(p.land_acres, " acres")],
+          ["Year built", facts.yearBuilt ?? "Not reported"],
+        ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+      </dl>
+        <details className="homeowner-details overview-property-details" id="property-details">
+          <summary id="property-facts-heading">View all property details</summary>
+          <div className="overview-sidebar">
+          <section className="overview-recorded-facts">
+          <h2>Recorded property facts</h2>
           <dl className="overview-facts">
             {[
               ["Living area", amount(facts.livingArea, " sq ft")],
@@ -226,6 +232,7 @@ export function PropertyOverview({
               </div>
             ))}
           </dl>
+          </section>
           <section>
             <h3>Neighborhood</h3>
             <p className="overview-code">
@@ -254,13 +261,21 @@ export function PropertyOverview({
           <section>
             <h3>Protest history</h3>
             <p className="overview-evidence">{yearsWithProtest.length ? `Protest recorded · ${yearsWithProtest.join(", ")}` : "Review the available protest records."}</p>
-            <a href="#representation-heading">Protests & representation ↓</a>
+            <PropertySectionLink target="representation-heading">Protests & representation ↓</PropertySectionLink>
           </section>
           <p className="overview-sidebar-source">
             {snapshots.length} available{" "}
             {snapshots.length === 1 ? "snapshot" : "snapshots"}
           </p>
-        </aside>
+          </div>
+        </details>
+      <nav className="overview-section-nav" aria-label="Property sections">
+        <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
+        <PropertySectionLink target="history-heading">Value history</PropertySectionLink>
+        <PropertySectionLink target="representation-heading">Protest &amp; agent</PropertySectionLink>
+        <PropertySectionLink target="exemptions-heading">Exemptions</PropertySectionLink>
+      </nav>
+      <div className="overview-layout">
         <div className="overview-content">
           <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <AssessmentSummary current={current} previous={previous} initial={initial} />
@@ -317,7 +332,7 @@ export function PropertyOverview({
             aria-labelledby="history-heading"
           >
             <div className="section-heading">
-              <h2 id="history-heading">Assessment history</h2>
+              <h2 id="history-heading" tabIndex={-1}>Assessment history</h2>
             </div>
             <AssessmentSequence current={current} previous={previous} initial={initial} />
             {snapshots.length ? (
@@ -392,7 +407,6 @@ export function PropertyOverview({
                   </tbody>
                 </table>
               </div>
-              <p className="overview-note">Highlighted changes are at least $25,000, or at least 10% and $10,000. This is a review threshold, not proof of an error.</p>
               </details>
             ) : (
               <p>No comparable snapshots available.</p>
@@ -404,7 +418,7 @@ export function PropertyOverview({
             className="overview-section"
             aria-labelledby="features-heading"
           >
-            <h2 id="features-heading">Separately valued features</h2>
+            <h2 id="features-heading" tabIndex={-1}>Separately valued features</h2>
             <p className="overview-muted">
               Pool, spa and other improvement details recorded by TCAD.
             </p>
@@ -490,9 +504,7 @@ export function PropertyOverview({
                 </div>
                 <p className="overview-note">
                   A missing detail is not a zero-dollar valuation or proof of
-                  physical removal. Detail values may not reconcile to the main
-                  improvement total; amounts are shown as recorded. Changed
-                  areas or quantities appear separately.
+                  physical removal. Changed areas or quantities appear separately.
                 </p>
               </details>
             ) : (
@@ -504,7 +516,7 @@ export function PropertyOverview({
             aria-labelledby="exemptions-heading"
           >
             <div className="section-heading">
-              <h2 id="exemptions-heading">Exemptions & taxable values</h2>
+              <h2 id="exemptions-heading" tabIndex={-1}>Exemptions & taxable values</h2>
               {current && (
                 <span className="release-badge">
                   {exemptionCodes.length}{" "}
@@ -579,18 +591,21 @@ export function PropertyOverview({
             )}
             <p className="overview-note">
               Each entity has its own taxable value. These are tax bases, not
-              tax bills. Exemptions and amounts reflect the dated exports.
+              tax bills.
             </p>
           </section>
           <HomeownerNextSteps address={p.address} />
           <section className="overview-source">
-            <details className="homeowner-details"><summary>About these records</summary>
+            <details className="homeowner-details"><summary id="about-records-heading">About these records</summary>
+            <p>These dated TCAD records may not reflect today’s property or protest status. Preliminary values can change; a missing protest entry does not establish whether a protest was filed, and an agent assignment does not confirm who handled the case.</p>
             <p>
               Later corrections may appear in TCAD’s live records. Export times
               are shown as supplied without an assumed timezone. Only available,
               comparable snapshots are shown; missing records are not treated as
               zero.
             </p>
+            <p>Feature values are shown as recorded and may not add up to the main improvement total. A later missing record does not erase earlier evidence.</p>
+            <p>Bold changes are at least $25,000, or at least 10% and $10,000. Size alone does not establish an error. Positive emphasis is reserved for a qualified preliminary-to-certified reduction with recorded protest evidence.</p>
             <a href="https://traviscad.org/propertysearch/">
               Check TCAD’s current records ↗
             </a>

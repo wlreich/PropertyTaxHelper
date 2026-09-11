@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PropertySectionLink } from "./property-section-link";
 import { TermDefinition } from "./term-definition";
 import { currency, resultsUrl } from "@/lib/property-search";
 import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
@@ -39,7 +40,7 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
         {agents.length > 1 && <p className="overview-note">Different agents appear in the dated records; they do not establish who handled the protest.</p>}
       </div>}
       <p className="overview-note">{season.observedProtest ? "The records suggest a successful protest, but do not confirm what caused the reduction or who handled the case. " : "The records do not establish what caused the reduction. "}This is a change in value, not tax savings.</p>
-      {season.observedProtest && <a className="homeowner-text-link" href="#representation-heading">View protest and agent records</a>}
+      {season.observedProtest && <PropertySectionLink target="representation-heading">View protest and agent records</PropertySectionLink>}
     </section>}
   </>;
 }
@@ -69,7 +70,6 @@ export function AssessmentSequence({current,initial,previous}:Omit<Context,"enti
       </li>)}
     </ol>
     {landUnchanged && <p className="overview-note">Land value stayed the same from the first proposed value to this {current?.roll_stage} record.{improvementDrop ? " The market-value decrease came from the improvement value." : ""}</p>}
-    <p className="overview-note">{current?.roll_stage === "preliminary" ? "Preliminary values can change. These dated records do not establish a final protest outcome." : "These are dated records; later corrections may still occur."}</p>
   </>;
 }
 export function FeatureHighlights({current,initial,previous}:Omit<Context,"entity"|"evidence">) {
@@ -80,7 +80,7 @@ export function Representation({evidence,year,unavailable}:{evidence:ProtestObse
   const years=[...new Set(evidence.map(s=>s.tax_year))].sort((a,b)=>b-a);
   if (!years.includes(year)) years.unshift(year);
   return <section className="overview-section" aria-labelledby="representation-heading">
-    <h2 id="representation-heading">Protests & representation</h2>
+    <h2 id="representation-heading" tabIndex={-1}>Protests & representation</h2>
     <ul className="homeowner-representation">{years.map(y=>{
       const records=evidence.filter(s=>s.tax_year===y);
       const positive=records.some(s=>s.protest_flag||s.arb_case_listed);
@@ -93,7 +93,7 @@ export function Representation({evidence,year,unavailable}:{evidence:ProtestObse
           : <p>{assignment ? "Agent assignment recorded; name unavailable." : "Agent not identified in the available records."}</p>}
       </li>;
     })}</ul>
-    <p className="overview-note">Historical records may not reflect today’s status. A missing entry does not mean no protest was filed; an agent assignment does not confirm who handled the case.</p>
+    <p className="overview-note">A missing entry does not rule out a protest. Agent names reflect the dated records.</p>
     {unavailable && <p className="overview-note">Some protest records are temporarily unavailable. Try again in a few minutes.</p>}
     {evidence.length>0 && <details className="homeowner-details"><summary>View source records</summary>
       <ul className="overview-protest-observations">{evidence.map(s=><li key={`${s.dataset_id}:${s.tax_year}`}>
@@ -101,25 +101,27 @@ export function Representation({evidence,year,unavailable}:{evidence:ProtestObse
         <span>{s.protest_flag && s.arb_case_listed ? "Protest flag and ARB case listed" : s.arb_case_listed ? "ARB case listed" : s.protest_flag ? "Protest flag recorded" : "Agent assignment recorded"}</span>
         {s.arb_status_codes.length>0 && <span>TCAD status code: {s.arb_status_codes.join(", ")}</span>}
         <span>{s.arb_agent_name ?? (s.arb_agent_listed ? "Agent assignment recorded; name unavailable" : "Agent not identified")}</span>
-      </li>)}</ul><p className="overview-note">Status codes are shown as supplied; their definitions have not been verified. A later missing entry does not erase earlier evidence.</p>
+      </li>)}</ul><p className="overview-note">Status codes are shown as supplied; their definitions have not been verified.</p>
     </details>}
-    <details className="homeowner-details"><summary>Questions worth asking your agent</summary>
-      <ul className="homeowner-checklist"><li>Which property facts or comparable properties supported the case?</li><li>What value was agreed to or ordered? Can I see that document?</li><li>How was my fee calculated, and how does it relate to actual tax savings?</li><li>Is there anything I should document before next year?</li></ul>
+    <h3 className="homeowner-agent-questions">Questions worth asking your agent</h3>
+    <ul className="homeowner-checklist"><li>Which property facts or comparable properties support this year’s case?</li><li>What is the latest status, and can I see any agreement or decision?</li></ul>
+    <details className="homeowner-details"><summary>More questions for your agent</summary>
+      <ul className="homeowner-checklist"><li>How was my fee calculated, and how does it relate to actual tax savings?</li><li>Is there anything I should document before next year?</li></ul>
     </details>
   </section>;
 }
 export function HomeownerNextSteps({address}:{address:string}) {
   const street=streetSearch(address);
   return <section className="overview-section homeowner-next" aria-labelledby="next-heading">
-    <h2 id="next-heading">What would you check next?</h2>
+    <h2 id="next-heading" tabIndex={-1}>What would you check next?</h2>
     <p>Start with your own property, then look around. These are useful checks whether you work with an agent or prepare your own case.</p>
     <ol className="homeowner-checklist">
-      <li><a href="#property-facts-heading">Check the basics</a><span>Living area, land size and construction class: does the record describe your home?</span></li>
-      <li><a href="#features-heading">Review separately valued features</a><span>Look for an incorrect pool, spa or other detail. Gather dated photos or documents for anything you question.</span></li>
-      <li><a href="#exemptions-heading">Check your exemptions</a><span>Review what is recorded and the taxable value for each taxing authority.</span></li>
+      <li><PropertySectionLink target="property-facts-heading">Check the basics</PropertySectionLink><span>Living area, land size and construction class: does the record describe your home?</span></li>
+      <li><PropertySectionLink target="features-heading">Review separately valued features</PropertySectionLink><span>Look for an incorrect pool, spa or other detail. Gather dated photos or documents for anything you question.</span></li>
+      <li><PropertySectionLink target="exemptions-heading">Check your exemptions</PropertySectionLink><span>Review what is recorded and the taxable value for each taxing authority.</span></li>
       <li><strong>Look for a fair comparison</strong><span>Start with the same TCAD neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
     </ol>
-    {street && <Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link>}
+    {street && <><Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link><p className="overview-note">Searches addresses on your street. Use the results as a starting point, then compare the property details.</p></>}
     <details className="homeowner-details"><summary>Could I prepare my own protest?</summary>
       <p>Start by identifying a specific issue you can support: an incorrect property detail, documented condition, or a well-chosen comparison. Organize the evidence and the value you believe it supports.</p>
       <p><TermDefinition term="Sales and assessment comparisons">Sales help evaluate market value. Assessment comparisons examine how similar properties are appraised. They support different questions; keep the evidence separate.</TermDefinition></p>
