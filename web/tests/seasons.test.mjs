@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {activeSeason,countyToday,phaseOn,seasonProblems,parseSeasons} from '../src/lib/seasons.ts';
+import {annualBaseline,preliminaryBaseline,parseHistory} from '../src/lib/property-history.ts';
+import {assessmentSummary,seasonOutcome,priorSeasonResult} from '../src/lib/homeowner-insights.ts';
+import {fixtureHistory} from '../../tools/property-search/history-fixture.mjs';
+const season={county:'travis',tax_year:2027,starts_on:'2027-04-02',filing_deadline:'2027-05-15',post_starts_on:'2027-08-01',deadline_source:'https://traviscad.org/protests',verified_on:'2026-09-11',mode:'automatic',manual_phase:null,published:true,revision:1}; // Synthetic calendar, not official 2027 dates.
+test('three phases include the deadline day and transition in county time without an import',()=>{
+ assert.equal(phaseOn(season,'2027-04-01'),null);
+ assert.equal(phaseOn(season,'2027-04-02'),'preliminary');
+ assert.equal(phaseOn(season,'2027-05-15'),'preliminary');
+ assert.equal(phaseOn(season,'2027-05-16'),'protest');
+ assert.equal(phaseOn(season,'2027-08-01'),'post');
+ assert.equal(countyToday(new Date('2027-05-16T04:59:59Z')),'2027-05-15');
+ assert.equal(countyToday(new Date('2027-05-16T05:00:00Z')),'2027-05-16');
+ assert.equal(phaseOn({...season,mode:'manual',manual_phase:'preliminary'},'2027-09-01'),'preliminary');
+ assert.equal(phaseOn({...season,published:false},'2027-09-01'),null);
+ const old={...season,tax_year:2026,starts_on:'2026-09-11',mode:'manual',manual_phase:'post',filing_deadline:null,post_starts_on:null};
+ assert.equal(activeSeason([old,season],'2027-03-01').config.tax_year,2026);
+ assert.equal(activeSeason([old,season],'2027-04-02').config.tax_year,2027);
+ assert.ok(seasonProblems({...season,deadline_source:'https://evil.test'}).length);
+ assert.ok(seasonProblems({...season,filing_deadline:null}).length);
+ assert.equal(parseSeasons([{...season,starts_on:'2027-02-30'}]),null);
+});
+test('1.4M rollover, an in-season decrease, and certification retain the right baselines and past result',()=>{
+ const raw=structuredClone(fixtureHistory);raw.snapshots.at(-1).market_value=1285275;
+ const proposed={...raw.snapshots.at(-1),dataset_id:'2027-proposed',tax_year:2027,roll_stage:'preliminary',export_date:'2027-04-02',export_time_raw:'04/02/2027 12:00',market_value:1400000};
+ raw.snapshots.push(proposed);
+ let snapshots=parseHistory(raw);
+ const previous=annualBaseline(snapshots,proposed);
+ const initial=preliminaryBaseline(snapshots,proposed);
+ const summary=assessmentSummary(proposed,initial,previous);
+ assert.equal(summary.annual.dollars,114725);assert.equal(summary.annual.percent.toFixed(1),'8.9');assert.equal(summary.proposed,null);
+ assert.equal(seasonOutcome(proposed,initial,raw.protest_observations),null);
+ assert.equal(priorSeasonResult(snapshots,2027).current.tax_year,2026);
+ const update={...proposed,dataset_id:'2027-update',export_date:'2027-06-01',market_value:1350000};
+ raw.snapshots.push(update); snapshots=parseHistory(raw);
+ assert.equal(preliminaryBaseline(snapshots,update).dataset_id,proposed.dataset_id);
+ assert.equal(seasonOutcome(update,proposed,raw.protest_observations),null);
+ const certified={...update,dataset_id:'2027-certified',roll_stage:'certified',export_date:'2027-07-20',market_value:1300000};
+ assert.equal(seasonOutcome(certified,proposed,raw.protest_observations).observedProtest,false);
+ assert.equal(seasonOutcome(certified,proposed,[{...raw.protest_observations[0],tax_year:2027,export_date:'2027-05-01'}]).observedProtest,true);
+ assert.equal(assessmentSummary(certified,proposed,previous).proposed.dollars,-100000);
+});

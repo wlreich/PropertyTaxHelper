@@ -65,7 +65,13 @@ export function seasonOutcome(current: Snapshot | undefined, initial: Snapshot |
     period:`${dateLabel(initial.export_date)} to ${dateLabel(current.export_date)}`};
 }
 export function historySequence(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
-  return [previous && {snapshot:previous,label:"Last year"},initial && {snapshot:initial,label:"This year’s proposed value"},current && {snapshot:current,label:current.roll_stage === "certified" ? "Certified record" : "Latest record"}].filter((s):s is {snapshot:Snapshot;label:string}=>Boolean(s));
+  return [previous && {snapshot:previous,label:`${previous.tax_year} certified`},initial && {snapshot:initial,label:"First proposed value"},current && {snapshot:current,label:current.roll_stage === "certified" ? "Certified record" : current.roll_stage === "preliminary" ? (initial ? "Updated preliminary value" : "Proposed value") : "Updated record"}].filter((s):s is {snapshot:Snapshot;label:string}=>Boolean(s));
+}
+
+export function priorSeasonResult(snapshots: Snapshot[], year: number) {
+  const current = snapshots.filter(s => s.tax_year < year && s.roll_stage === "certified" && s.export_date).at(-1);
+  const initial = current ? snapshots.find(s => s.tax_year === current.tax_year && s.roll_stage === "preliminary" && s.export_date && s.export_date < current.export_date!) : undefined;
+  return { current, initial };
 }
 export function featureHighlights(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
   if (!current) return [];

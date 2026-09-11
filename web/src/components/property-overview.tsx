@@ -1,6 +1,8 @@
-import { AssessmentSummary, ProtestResult, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
-import { annualExplanation } from "@/lib/homeowner-insights";
+import { annualExplanation, priorSeasonResult } from "@/lib/homeowner-insights";
+import { SeasonNotice } from "./season-notice";
+import type { SeasonContext } from "@/lib/seasons";
 import { TermDefinition } from "./term-definition";
 import { currency } from "@/lib/property-search";
 import {
@@ -114,12 +116,14 @@ export function PropertyOverview({
   historyUnavailable,
   protests = [],
   protestsUnavailable = false,
+  season = null,
 }: {
   property: Property;
   snapshots: Snapshot[];
   historyUnavailable: boolean;
   protests?: ProtestObservation[];
   protestsUnavailable?: boolean;
+  season?: SeasonContext | null;
 }) {
   // Never substitute a different release for the active property profile.
   const current = snapshots.find(
@@ -143,6 +147,7 @@ export function PropertyOverview({
     entity?.taxable_value,
   );
   const evidence = protestEvidence(snapshots, protests);
+  const historical = priorSeasonResult(snapshots, season?.config.tax_year ?? p.tax_year);
   const yearsWithProtest = [...new Set(evidence.filter(s => s.protest_flag || s.arb_case_listed).map(s => s.tax_year))];
   const dated = snapshots.filter((s) => s.export_date);
   const featureSnapshots = current
@@ -257,7 +262,9 @@ export function PropertyOverview({
           </p>
         </aside>
         <div className="overview-content">
+          <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <AssessmentSummary current={current} previous={previous} initial={initial} />
+          <InterimChange current={current} initial={initial} />
           <ProtestResult current={current} initial={initial} entity={entity} evidence={evidence} />
           <section className="overview-values" aria-labelledby="assessment-values-heading">
             <h2 id="assessment-values-heading">How the values fit together</h2>
@@ -391,7 +398,8 @@ export function PropertyOverview({
               <p>No comparable snapshots available.</p>
             )}
           </section>
-          <Representation evidence={evidence} year={p.tax_year} unavailable={protestsUnavailable} />
+          {historical.current && historical.current.dataset_id !== current?.dataset_id && <ProtestResult current={historical.current} initial={historical.initial} evidence={evidence} historical />}
+          <Representation evidence={evidence} year={season?.config.tax_year ?? p.tax_year} unavailable={protestsUnavailable} />
           <section
             className="overview-section"
             aria-labelledby="features-heading"

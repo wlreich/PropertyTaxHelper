@@ -2,9 +2,9 @@ import Link from "next/link";
 import { TermDefinition } from "./term-definition";
 import { currency, resultsUrl } from "@/lib/property-search";
 import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
-import { dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
+import { comparison, dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
 
-type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[]};
+type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[];historical?:boolean};
 function SummaryChange({change}:{change:NonNullable<ReturnType<typeof assessmentSummary>>["annual"]}) {
   if (!change) return <>Comparison unavailable</>;
   if (change.dollars === 0) return <strong>Unchanged</strong>;
@@ -24,13 +24,13 @@ export function AssessmentSummary({current,initial,previous}:Omit<Context,"entit
     </dl>
   </section>;
 }
-export function ProtestResult({current,initial,entity,evidence}:Context) {
+export function ProtestResult({current,initial,entity,evidence,historical=false}:Context) {
   const season=seasonOutcome(current,initial,evidence,entity);
   const agents=current ? agentsForYear(evidence,current.tax_year) : [];
   return <>
-    {season && <section className={`overview-insight${season.observedProtest ? " homeowner-positive" : ""}`} aria-labelledby="change-heading">
-      <p className="eyebrow">{current!.tax_year} · Proposed to certified</p>
-      <h2 id="change-heading">{season.headline}</h2>
+    {season && <section className={`overview-insight${season.observedProtest ? " homeowner-positive" : ""}`} aria-labelledby={historical ? "historical-result-heading" : "change-heading"}>
+      <p className="eyebrow">{historical ? "Earlier season’s result · " : ""}{current!.tax_year} · Proposed to certified</p>
+      <h2 id={historical ? "historical-result-heading" : "change-heading"}>{season.headline}</h2>
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
       <p>{season.label} fell between {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
       {season.observedProtest && <div className="homeowner-result-agent">
@@ -42,6 +42,17 @@ export function ProtestResult({current,initial,entity,evidence}:Context) {
       {season.observedProtest && <a className="homeowner-text-link" href="#representation-heading">View protest and agent records</a>}
     </section>}
   </>;
+}
+export function InterimChange({ current, initial }: Pick<Context, "current" | "initial">) {
+  if (!current || !initial || current.roll_stage === "certified" || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
+  const change = comparison(initial.market_value, current.market_value);
+  if (!change?.dollars) return null;
+  return <section className="overview-insight" aria-labelledby="interim-change-heading">
+    <p className="eyebrow">{current.tax_year} · Updated record</p>
+    <h2 id="interim-change-heading">Your recorded value has changed</h2>
+    <p><SummaryChange change={change} /> than the first preliminary value, between {dateLabel(initial.export_date)} and {dateLabel(current.export_date)}.</p>
+    <p className="overview-note">This is an observed change in market value. The records do not establish the cause or a final protest outcome.</p>
+  </section>;
 }
 export function AssessmentSequence({current,initial,previous}:Omit<Context,"entity"|"evidence">) {
   const stages=historySequence(current,initial,previous);
@@ -57,8 +68,8 @@ export function AssessmentSequence({current,initial,previous}:Omit<Context,"enti
         {s.market_value !== null && <span className="homeowner-bar-track" aria-hidden="true"><span style={{width:`${maximum>0 ? ((s.market_value ?? 0)/maximum)*100 : 0}%`}} /></span>}
       </li>)}
     </ol>
-    {landUnchanged && <p className="overview-note">Land value stayed the same from proposed to certified.{improvementDrop ? " The market-value decrease came from the improvement value." : ""}</p>}
-    <p className="overview-note">Certified is the dated record shown here; later corrections may still occur.</p>
+    {landUnchanged && <p className="overview-note">Land value stayed the same from the first proposed value to this {current?.roll_stage} record.{improvementDrop ? " The market-value decrease came from the improvement value." : ""}</p>}
+    <p className="overview-note">{current?.roll_stage === "preliminary" ? "Preliminary values can change. These dated records do not establish a final protest outcome." : "These are dated records; later corrections may still occur."}</p>
   </>;
 }
 export function FeatureHighlights({current,initial,previous}:Omit<Context,"entity"|"evidence">) {

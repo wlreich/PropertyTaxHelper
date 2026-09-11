@@ -671,3 +671,9 @@ button, input, select, textarea { font-family: var(--font-body); }
 .definition-content { position: absolute; right: 0; top: 100%; z-index: 10; width: min(300px, 75vw); padding: var(--space-4); margin-top: var(--space-2); background: var(--color-surface); color: var(--color-text); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); box-shadow: var(--shadow-card); font-size: var(--text-small); font-weight: var(--weight-normal); line-height: var(--line-body); text-align: left; }
 
 @media (max-width: 700px) { .brand-logo { width: 210px; } }
+
+.season-notice { padding: var(--space-6); margin-bottom: var(--space-6); border-left: var(--space-1) solid var(--color-action); background: var(--color-surface-info); }
+.season-notice .eyebrow { font-size: var(--text-small); margin-bottom: var(--space-3); }
+.season-notice h2 { font-size: var(--text-h3); line-height: var(--line-h3); }
+.season-notice p { font-size: var(--text-body); }
+.season-notice a { color: var(--color-action); text-decoration: underline; }

@@ -172,6 +172,9 @@ export async function getProperty(
 ): Promise<Result<Property>> {
   if (!/^\d{1,12}$/.test(id)) return { status: "not_found" };
   const v = await rpc("property_profile", { p_id: id }, config, fetchRequest);
+  return parseProperty(v, id);
+}
+export function parseProperty(v: unknown, id: string): Result<Property> {
   if (!object(v) || v.available !== true) return { status: "unavailable" };
   if (v.property === null) return { status: "not_found" };
   const p = v.property;
@@ -237,4 +240,16 @@ export async function getPropertyHistory(
   return snapshots === null
     ? { status: "unavailable" }
     : { status: "ok", data: snapshots, protests: protests ?? [], protestsUnavailable: protests === null };
+}
+
+export async function getPropertyOverview(id: string) {
+  if (!/^\d{1,12}$/.test(id)) return { property: { status: "invalid" as const }, snapshots: [], protests: [], historyUnavailable: true, protestsUnavailable: true };
+  const value = await rpc("property_overview_bundle", { p_id: id }, { SUPABASE_URL: process.env.SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY }, fetch);
+  return parseOverview(value, id);
+}
+export function parseOverview(value: unknown, id: string) {
+  const v = object(value) ? value : {};
+  const snapshots = parseHistory(v.history);
+  const protests = parseProtestObservations(v.history);
+  return { property: parseProperty(v.profile, id), snapshots: snapshots ?? [], protests: protests ?? [], historyUnavailable: snapshots === null, protestsUnavailable: protests === null };
 }
