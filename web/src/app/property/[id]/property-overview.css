@@ -12,13 +12,51 @@
 .overview-release p {
   margin-top: var(--space-3);
 }
-.overview-layout {
+.overview-quick-facts {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: var(--space-6);
-  align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+  padding: var(--space-4) 0;
+  border-block: var(--border-width) solid var(--color-border);
+}
+.overview-quick-facts dt {
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+}
+.overview-quick-facts dd {
+  margin-top: var(--space-1);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.overview-property-details {
+  margin-top: 0;
+}
+.overview-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: var(--space-4) 0 var(--space-6);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  font-size: var(--text-small);
+}
+.overview-layout {
+  display: block;
+}
+.combined-profile [id] {
+  scroll-margin-top: var(--space-6);
+}
+.combined-profile h2[tabindex="-1"]:focus {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 .overview-sidebar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-3);
   background: var(--color-brand-primary);
   color: var(--color-surface);
   border-radius: var(--radius-card);
@@ -30,7 +68,7 @@
 }
 .overview-sidebar h2 {
   font-size: var(--text-h3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-3);
 }
 .overview-sidebar .eyebrow,
 .overview-sidebar h3 {
@@ -56,8 +94,8 @@
 }
 .overview-sidebar section {
   border-top: 1px solid var(--color-border-strong);
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
+  margin-top: 0;
+  padding-top: var(--space-4);
 }
 .overview-sidebar section p {
   margin-top: var(--space-4);
@@ -81,7 +119,7 @@
   outline-color: var(--color-focus-on-dark);
 }
 .overview-sidebar-source {
-  margin-top: var(--space-8);
+  margin-top: 0;
   font-size: var(--text-small);
 }
 .overview-evidence {
@@ -211,17 +249,8 @@
   margin-top: var(--space-4);
   font-size: var(--text-small);
 }
-.overview-metric-attention::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: var(--space-4);
-  right: var(--space-4);
-  height: var(--space-1);
-  background: var(--color-brand-accent);
-}
-.overview-change-attention {
-  color: var(--color-warning);
+.overview-change-strong {
+  color: var(--color-text);
   font-weight: var(--weight-semibold);
 }
 .overview-muted {
@@ -230,7 +259,7 @@
 .overview-insight {
   margin-top: var(--space-6);
   padding: var(--space-6);
-  border-left: var(--space-1) solid var(--color-brand-accent);
+  border-left: var(--space-1) solid var(--color-information);
   border-radius: var(--radius-card);
   background: var(--color-surface-info);
 }
@@ -351,10 +380,6 @@
   text-decoration: underline;
 }
 @media (max-width: 1050px) {
-  .overview-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: var(--space-4);
-  }
   .overview-metrics {
     grid-template-columns: 1fr;
   }
@@ -366,16 +391,12 @@
   }
 }
 @media (max-width: 800px) {
-  .overview-layout {
-    display: flex;
-    flex-direction: column;
-  }
   .overview-content {
     width: 100%;
   }
   .overview-sidebar {
     width: 100%;
-    order: 2;
+    grid-template-columns: 1fr;
   }
   .overview-release {
     text-align: left;
@@ -434,6 +455,7 @@
     display: block;
   }
   .overview-sidebar {
+    display: block;
     background: var(--color-surface);
     color: var(--color-text);
   }
@@ -454,9 +476,6 @@
   left: 0;
   right: auto;
   width: min(300px, calc(100vw - 64px));
-}
-.overview-insight .overview-change-attention {
-  color: var(--color-text);
 }
 
 .overview-protest-observations {
@@ -502,7 +521,17 @@
   display: inline-block;
 }
 .homeowner-positive {
-  border-left-color: var(--color-action);
+  border-left-color: var(--color-success);
+  background: var(--color-surface);
+  border-block: var(--border-width) solid var(--color-border);
+  border-right: var(--border-width) solid var(--color-border);
+}
+.homeowner-positive .homeowner-result {
+  color: var(--color-success);
+}
+.homeowner-agent-questions {
+  font-size: var(--text-body);
+  margin-top: var(--space-6);
 }
 .homeowner-details {
   margin-top: var(--space-4);
