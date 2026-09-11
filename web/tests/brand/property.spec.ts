@@ -59,9 +59,10 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     name: "TCAD market value",
     exact: false,
   });
+  await page.mouse.move(0, 0);
   await term.focus();
   await expect(term).toHaveAttribute("aria-expanded", "true");
-  const tooltip = page.getByRole("tooltip");
+  const tooltip = page.locator(`[id="${await term.getAttribute("aria-describedby")}"]`);
   await expect(tooltip).toBeVisible();
   const bounds = await tooltip.boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
