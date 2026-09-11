@@ -11,8 +11,28 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     page.getByRole("heading", { name: "Separately valued features" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "A promising protest-season result" }),
+    page.getByRole("heading", { name: "Looks like a successful protest!" }),
   ).toBeVisible();
+  const assessmentSummary = page.getByRole("region", {name:"Your certified market value"});
+  await expect(assessmentSummary).toContainText("$450,000");
+  await expect(assessmentSummary).toContainText("$100,000 lower");
+  await expect(assessmentSummary).toContainText("$50,000 higher");
+  const protestResult = page.getByRole("region", {name:"Looks like a successful protest!"});
+  await expect(protestResult).toContainText("Agent listed for 2026");
+  await expect(protestResult).toContainText("FIXTURE TAX PARTNERS");
+  await expect(protestResult).toContainText("Recorded: Apr 29, 2026");
+  await expect(protestResult).toContainText("do not confirm what caused the reduction");
+  const values = page.getByRole("region", {name:"How the values fit together"});
+  await expect(values).toContainText("Leander ISD");
+  await expect(values).toContainText("before exemptions");
+  expect((await assessmentSummary.boundingBox())!.y).toBeLessThan((await protestResult.boundingBox())!.y);
+  expect((await protestResult.boundingBox())!.y).toBeLessThan((await values.boundingBox())!.y);
+  await page.getByRole("link", {name:"See all taxing authorities"}).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#taxing-authorities")).toHaveAttribute("open", "");
+  await expect(page.locator("#taxing-authorities summary")).toBeFocused();
+  await expect(page.locator("#taxing-authorities table")).toBeVisible();
+  await page.locator("#taxing-authorities summary").click();
   await expect(page.getByText("No longer separately listed", {exact:true})).toBeVisible();
   await page.getByText("View all separately valued features", {exact:true}).click();
   await expect(page.getByText("Not listed", { exact: true })).toBeVisible();
@@ -87,4 +107,5 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(
     page.getByRole("heading", { name: "More comparison data needed" }),
   ).toBeVisible();
+  await expect(page.getByRole("region", {name:"Your certified market value"})).toHaveCount(0);
 });

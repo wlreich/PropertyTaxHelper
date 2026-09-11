@@ -90,13 +90,22 @@ retains screenshots for review. All committed browser fixtures are synthetic.
 
 ## Homeowner iteration and named agents
 
-The overview now leads with a year-over-year explanation and separates the proposed-to-certified
-period. A promising protest-season result requires a substantial negative change (existing
+The overview leads with the dated market value and separate preliminary-to-certified and
+prior-certified-year comparisons. Missing comparisons remain unavailable and zero remains a
+valid value. Preliminary or supplemental records are never labeled certified. The adjacent
+“Looks like a successful protest!” result requires a substantial negative change (existing
 attention threshold), same-year preliminary and certified records with known ordered dates,
 and a positive protest observation dated within that period. Agent assignment alone, another
 year, an unknown observation date or a protest first observed after certification cannot trigger
 that message. The visible qualification distinguishes a valuation change from tax savings and
 does not attribute the change to the protest or agent.
+
+The result card explicitly names assigned agents from the same tax year, retaining all distinct
+names and observation dates. Prior-year agents are not credited to the current year. Missing
+names are stated explicitly, and multiple agents are not collapsed into an inferred case handler.
+The value cards explain market, capped and taxable values in visible copy, identify the selected
+authority, and link to its full authority table. That link opens the details and moves keyboard
+focus to its summary. Other page sections and mobile sidebar ordering are unchanged in this pass.
 
 Annual explanations name the taxing authority. An explanation that larger exemptions softened
 an increase is used only when both years' exemption totals reconcile to assessed minus taxable

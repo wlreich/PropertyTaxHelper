@@ -1,4 +1,6 @@
-import { AssessmentExplanation, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { AssessmentSummary, ProtestResult, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
+import { annualExplanation } from "@/lib/homeowner-insights";
 import { TermDefinition } from "./term-definition";
 import { currency } from "@/lib/property-search";
 import {
@@ -54,12 +56,16 @@ const amount = (n: number | null | undefined, unit = "") =>
 function Metric({
   title,
   help,
+  description,
+  authority,
   value,
   change,
   year,
 }: {
   title: string;
   help: string;
+  description: string;
+  authority?: string;
   value: number | null;
   change: Change;
   year?: number;
@@ -70,11 +76,14 @@ function Metric({
     >
       <dt>
         <TermDefinition term={title}>{help}</TermDefinition>
+        {authority && <span className="overview-metric-authority">{authority}</span>}
       </dt>
       <dd className="overview-number">{currency(value)}</dd>
       <dd className="overview-metric-change">
         <ChangeLabel change={change} suffix={year ? ` vs. ${year}` : ""} />
       </dd>
+      <dd className="overview-metric-description">{description}</dd>
+      {authority && <dd><TaxingAuthoritiesLink /></dd>}
     </div>
   );
 }
@@ -126,6 +135,7 @@ export function PropertyOverview({
     current?.entities.find((e) => /\bISD\b|SCHOOL/i.test(e.name)) ??
     current?.entities[0];
   const priorEntity = previous?.entities.find((e) => e.code === entity?.code);
+  const annual = annualExplanation(current, previous, entity);
   const marketChange = comparison(previous?.market_value, p.market_value);
   const capChange = comparison(previous?.assessed_value, p.assessed_value);
   const taxChange = comparison(
@@ -247,11 +257,16 @@ export function PropertyOverview({
           </p>
         </aside>
         <div className="overview-content">
-          <section aria-label="Primary assessment values">
+          <AssessmentSummary current={current} previous={previous} initial={initial} />
+          <ProtestResult current={current} initial={initial} entity={entity} evidence={evidence} />
+          <section className="overview-values" aria-labelledby="assessment-values-heading">
+            <h2 id="assessment-values-heading">How the values fit together</h2>
+            <p className="overview-muted">Start with market value, then account for any appraisal cap and the exemptions for each taxing authority.</p>
             <dl className="overview-metrics">
               <Metric
                 title="TCAD market value"
                 help={fieldHelp.market}
+                description="TCAD’s estimate of your property’s market value."
                 value={p.market_value}
                 change={marketChange}
                 year={previous?.tax_year}
@@ -259,24 +274,23 @@ export function PropertyOverview({
               <Metric
                 title="Value after appraisal cap"
                 help={fieldHelp.cap}
+                description="The value after any applicable appraisal cap, before exemptions."
                 value={p.assessed_value}
                 change={capChange}
                 year={previous?.tax_year}
               />
               <Metric
-                title={
-                  entity
-                    ? `Taxable value · ${entityDisplayName(entity)}`
-                    : "Taxable value"
-                }
+                title="Taxable value"
+                authority={entity ? entityDisplayName(entity) : undefined}
                 help={fieldHelp.taxable}
+                description="The value used to calculate taxes for this authority, after applicable reductions and exemptions. It is not your tax bill."
                 value={entity?.taxable_value ?? null}
                 change={taxChange}
                 year={previous?.tax_year}
               />
             </dl>
+            {annual?.explanation && <p className="overview-note homeowner-value-context"><strong>{annual.headline}.</strong> {annual.explanation}</p>}
           </section>
-          <AssessmentExplanation current={current} previous={previous} initial={initial} entity={entity} evidence={evidence} />
           {!current && (
             <div className="notice">
               <h2>
@@ -511,7 +525,7 @@ export function PropertyOverview({
               </p>
             )}
             {current && current.entities.length > 0 && (
-              <details className="homeowner-details"><summary>See exemptions by taxing authority</summary>
+              <details className="homeowner-details" id="taxing-authorities"><summary>See exemptions by taxing authority</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
                   <caption>

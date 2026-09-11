@@ -104,7 +104,11 @@ try {
   assert.match(profile, /2026 tax year · Apr 29, 2026/);
   assert.match(profile, /TCAD status code: EF/);
   assert.match(profile, /FIXTURE TAX PARTNERS/);
-  assert.match(profile, /A promising protest-season result/);
+  assert.match(profile, /Looks like a successful protest!/);
+  assert.match(profile, /Your certified market value/);
+  assert.match(profile, /Agent listed for 2026/);
+  assert.match(profile, /How the values fit together/);
+  assert.match(profile, /See all taxing authorities/);
   assert.match(profile, /Browse my street/);
   assert.match(profile, /View all assessment values/);
   assert.match(profile, /\$420,000/);

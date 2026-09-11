@@ -90,6 +90,94 @@
 .overview-content {
   min-width: 0;
 }
+.homeowner-summary {
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.homeowner-summary h2 {
+  font-size: var(--text-h3);
+  margin-top: var(--space-2);
+}
+.homeowner-summary-value {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-brand-primary);
+  overflow-wrap: anywhere;
+  margin: var(--space-2) 0;
+}
+.homeowner-summary-comparisons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+.homeowner-summary-comparisons dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+.homeowner-summary-comparisons dd {
+  margin-top: var(--space-2);
+  font-size: var(--text-body);
+  font-variant-numeric: tabular-nums;
+}
+.overview-values {
+  margin-top: var(--space-8);
+}
+.overview-values h2 {
+  font-size: var(--text-h3);
+}
+.overview-values > p {
+  margin-top: var(--space-3);
+}
+.overview-values .overview-metrics {
+  margin-top: var(--space-4);
+}
+.overview-metric-authority {
+  display: block;
+  color: var(--color-brand-primary);
+  font-weight: var(--weight-semibold);
+  margin-top: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.overview-metric-description {
+  font-size: var(--text-small);
+  line-height: var(--line-body);
+  margin-top: var(--space-3);
+}
+.overview-metric .homeowner-text-link {
+  font-size: var(--text-small);
+  margin-top: var(--space-2);
+}
+.homeowner-result-agent {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border-strong);
+  overflow-wrap: anywhere;
+}
+.homeowner-result-agent h3 {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+}
+.homeowner-result-agent ul {
+  list-style: none;
+  padding: 0;
+}
+.homeowner-result-agent li {
+  margin-top: var(--space-2);
+}
+.homeowner-result-agent li span {
+  display: block;
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
 .overview-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -564,6 +652,9 @@
   margin-top: var(--space-3);
 }
 @media (max-width: 600px) {
+  .homeowner-summary-comparisons {
+    grid-template-columns: 1fr;
+  }
   .homeowner-timeline,
   .homeowner-feature-highlights {
     grid-template-columns: 1fr;
