@@ -9,7 +9,7 @@ const dataset = "11111111-1111-4111-8111-111111111111";
 export async function fixtureDatabase({ beforeAcreageFix = false, beforeParkland = false, parklandFixtures = false } = {}) {
   const db = new PGlite({ extensions: { pg_trgm } });
   await db.exec(
-    "create role anon; create role authenticated; create role service_role; grant usage on schema public to anon,authenticated;",
+    "create role anon; create role authenticated; create role service_role; grant usage on schema public to anon,authenticated; create schema auth; grant usage on schema auth to anon,authenticated; create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false); create table auth.sessions(id uuid primary key,user_id uuid); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;",
   );
   const directory = fileURLToPath(
     new URL("../../supabase/migrations/", import.meta.url),

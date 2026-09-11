@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, Unavailable } from "@/components/site-shell";
 import { PropertyOverview } from "@/components/property-overview";
 import { parseSearch, resultsUrl } from "@/lib/property-search";
-import { getProperty, getPropertyHistory } from "@/lib/supabase/properties";
+import { getPropertyOverview } from "@/lib/supabase/properties";
 import "./property-overview.css";
+import { getSeasonCalendar } from "@/lib/supabase/admin";
+import { activeSeason } from "@/lib/seasons";
 export const maxDuration = 30;
 export default async function PropertyPage({
   params,
@@ -19,10 +21,8 @@ export default async function PropertyPage({
     typeof search.q === "string" ? search.q : "",
     typeof search.page === "string" ? search.page : "0",
   );
-  const [result, history] = await Promise.all([
-    getProperty(id),
-    getPropertyHistory(id),
-  ]);
+  const [overview, calendar] = await Promise.all([getPropertyOverview(id), getSeasonCalendar()]);
+  const result = overview.property;
   if (result.status === "not_found" || result.status === "invalid") notFound();
   return (
     <>
@@ -40,10 +40,11 @@ export default async function PropertyPage({
         {result.status === "ok" ? (
           <PropertyOverview
             property={result.data}
-            snapshots={history.status === "ok" ? history.data : []}
-            historyUnavailable={history.status !== "ok"}
-            protests={history.protests ?? []}
-            protestsUnavailable={history.status !== "ok" || history.protestsUnavailable === true}
+            snapshots={overview.snapshots}
+            historyUnavailable={overview.historyUnavailable}
+            protests={overview.protests}
+            protestsUnavailable={overview.protestsUnavailable}
+            season={calendar ? activeSeason(calendar) : null}
           />
         ) : (
           <Unavailable />

@@ -1,0 +1,23 @@
+.admin-shell { padding-block: var(--space-8); }
+.admin-shell h1 { font-size: var(--text-h1); }
+.admin-section { padding-block: var(--space-8); border-bottom: var(--border-width) solid var(--color-border); }
+.admin-login { max-width: 36rem; }
+.admin-form { display: grid; gap: var(--space-4); }
+.admin-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.admin-form label { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-body); }
+.admin-form input, .admin-form select { width: 100%; min-height: var(--target-min); padding: var(--space-3); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); background: var(--color-surface); color: var(--color-text); font: inherit; box-sizing: border-box; }
+.admin-form select:focus-visible, .admin-form input:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.admin-form .admin-check { flex-direction: row; align-items: center; }
+.admin-check input { width: var(--space-6); min-height: var(--space-6); }
+.admin-actions { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
+.admin-actions button, .admin-shell button { min-height: var(--target-min); cursor: pointer; }
+.admin-shell button:disabled { opacity: var(--opacity-disabled); cursor: wait; }
+.admin-preview { margin-block: var(--space-6); padding: var(--space-6); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); }
+.admin-error { color: var(--color-error); }
+.admin-list { padding: 0; list-style: none; }
+.admin-list > li { padding-block: var(--space-4); border-bottom: var(--border-width) solid var(--color-border); overflow-wrap: anywhere; }
+.admin-list dl { display: flex; gap: var(--space-6); flex-wrap: wrap; }
+.admin-list dd { margin: 0; font-weight: var(--weight-semibold); }
+.admin-preview-banner { padding: var(--space-4); background: var(--color-surface-info); border-left: var(--space-1) solid var(--color-action); }
+.admin-section .overview-note { color: var(--color-text-muted); font-size: var(--text-small); }
+@media (max-width: 700px) { .admin-fields { grid-template-columns: 1fr; } .admin-preview { padding: var(--space-4); } }
