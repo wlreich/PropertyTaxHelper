@@ -34,7 +34,7 @@ export function ProtestResult({current,initial,entity,evidence}:Context) {
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
       <p>{season.label} fell between {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
       {season.observedProtest && <div className="homeowner-result-agent">
-        <h3>{agents.length > 1 ? "Agents" : "Agent"} listed for {current!.tax_year}</h3>
+        <h3>{agents.length ? `${agents.length > 1 ? "Agents" : "Agent"} listed` : "Agent information"} for {current!.tax_year}</h3>
         {agents.length ? <ul>{agents.map(agent=><li key={agent.name}><strong>{agent.name}</strong><span>Recorded: {agent.dates.map(dateLabel).join(" · ")}</span></li>)}</ul> : <p>Agent not identified in the available records.</p>}
         {agents.length > 1 && <p className="overview-note">Different agents appear in the dated records; they do not establish who handled the protest.</p>}
       </div>}
