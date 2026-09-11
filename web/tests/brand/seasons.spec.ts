@@ -30,10 +30,10 @@ test('admin access, saved drafts, phase previews and public isolation',async({pa
  await page.goto('/admin/preview?release=11111111-1111-4111-8111-111111111111&property=100&phase=preliminary');
  await expect(page.getByRole('heading',{name:'Property preview',exact:true})).toBeVisible();
  await expect(page.locator('#season-heading')).toContainText('Understand the proposed value');
- await page.getByLabel('Phase',{exact:true}).selectOption('protest');
+ await page.getByRole('combobox',{name:'Phase',exact:true}).selectOption('protest');
  await page.getByRole('button',{name:'Update preview'}).click();
  await expect(page.locator('#season-heading')).toContainText('Follow the available records');
- await page.getByLabel('Phase',{exact:true}).selectOption('post');
+ await page.getByRole('combobox',{name:'Phase',exact:true}).selectOption('post');
  await page.getByRole('button',{name:'Update preview'}).click();
  await expect(page.locator('#season-heading')).toContainText('Review the result');
  await page.goto('/property/100');
