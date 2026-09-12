@@ -30,5 +30,7 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await page.reload();await expect(page.getByLabel('Assessment release')).toHaveValue('33333333-3333-4333-8333-333333333333');
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page.locator('.neighborhood-season-badge')).toContainText('2025');
+ await page.getByText('How recorded protests fit into the picture',{exact:true}).click();
+ await expect(page.getByRole('row').filter({hasText:'Initially above the cap — verified'})).toContainText('Not available');
  await page.goto('/property/103/neighborhood');await expect(page.getByRole('heading',{name:'Let’s try another address'})).toBeVisible();
 });
