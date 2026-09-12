@@ -18,7 +18,7 @@
 .neighborhood-snapshot>div:last-child {border:0;}
 .neighborhood-snapshot dt,.neighborhood-snapshot span {font-size:var(--text-small);}
 .neighborhood-snapshot dd {font-family:var(--font-heading);font-size:var(--text-h3);font-weight:var(--weight-heavy);margin:var(--space-1) 0;color:var(--color-brand-primary);overflow-wrap:anywhere;}
-.neighborhood-snapshot span {color:var(--color-text-muted);}
+.neighborhood-snapshot span {display:block;color:var(--color-text-muted);font-family:var(--font-body);font-weight:var(--weight-normal);line-height:var(--line-small);letter-spacing:normal;}
 .neighborhood-panel {padding:var(--space-4);border:var(--border-width) solid var(--color-border);border-radius:var(--radius-input);background:var(--color-surface);display:grid;gap:var(--space-3);min-width:0;}
 .neighborhood-toggle {display:flex;border:var(--border-width) solid var(--color-action);border-radius:var(--radius-input);overflow:hidden;}
 .neighborhood-toggle button {border:0;border-radius:0;background:var(--color-surface);color:var(--color-action);}

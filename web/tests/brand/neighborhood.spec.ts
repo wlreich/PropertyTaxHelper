@@ -14,12 +14,12 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.locator('.neighborhood-chart-data')).toContainText('homes');
  await page.getByText('View distribution counts',{exact:true}).click();
  await page.getByRole('button',{name:'Market value',exact:true}).click();
+ const capture=info.outputPath('neighborhood-page.png');await page.screenshot({path:capture,fullPage:true});await info.attach('Neighborhood page',{path:capture,contentType:'image/png'});
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.evaluate(()=>{document.documentElement.style.fontSize='';window.scrollTo(0,0);});
- const capture=info.outputPath('neighborhood-page.png');await page.screenshot({path:capture,fullPage:true});await info.attach('Neighborhood page',{path:capture,contentType:'image/png'});
  await page.getByLabel('Assessment release').selectOption('33333333-3333-4333-8333-333333333333');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page).toHaveURL(/release=33333333/);await expect(page.locator('.neighborhood-season-badge')).toContainText('Comparison incomplete');
  await expect(page.locator('.neighborhood-own-result')).toHaveCount(0);

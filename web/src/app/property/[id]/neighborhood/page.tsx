@@ -34,8 +34,8 @@ export default async function NeighborhoodPage({params,searchParams}:{params:Pro
   <dl className="neighborhood-snapshot">
    <div><dt>Homes in this release</dt><dd>{count(s.all.count)}</dd></div>
    <div><dt>Median market value</dt><dd>{money(s.median)}</dd></div>
-   <div><dt>Your home vs. median</dt><dd>{s.difference===null?'Not available':s.difference===0?'At the median':`${money(Math.abs(s.difference))} ${s.difference>0?'above':'below'}`}</dd><span>{s.differencePercent===null?'':`${pct(Math.abs(s.differencePercent))} ${s.differencePercent>=0?'higher':'lower'}`}</span></div>
-   <div><dt>Median value per sq. ft.</dt><dd>{money(s.medianPerFoot)}</dd><span>Market assessment, including land</span></div>
+   <div><dt>Your home vs. median</dt><dd>{s.difference===null?'Not available':s.difference===0?'At the median':`${money(Math.abs(s.difference))} ${s.difference>0?'above':'below'}`}<span>{s.differencePercent===null?'':`${pct(Math.abs(s.differencePercent))} ${s.differencePercent>=0?'higher':'lower'}`}</span></dd></div>
+   <div><dt>Median value per sq. ft.</dt><dd>{money(s.medianPerFoot)}<span>Market assessment, including land</span></dd></div>
   </dl>
   {s.annual&&<p className="neighborhood-note">{pct(Math.abs(s.annual.percent))} {s.annual.percent>=0?'higher':'lower'} median market value than {r.tax_year-1} certified, using the same {count(s.annual.count)} homes in both releases.</p>}
   {!s.subjectIncluded&&<p className="notice">Your property is outside the residential-home population used for these neighborhood metrics.</p>}
