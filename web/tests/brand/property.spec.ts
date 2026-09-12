@@ -12,7 +12,26 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(quickFacts).toContainText("Living area");
   await expect(quickFacts).toContainText("Year built");
   expect((await quickFacts.boundingBox())!.y).toBeLessThan((await page.locator("#season-heading").boundingBox())!.y);
+  const tools = page.getByRole("navigation", {name:"Property tools"});
+  await expect(tools.locator('[aria-current="page"]')).toHaveText("Overview");
+  await expect(tools.locator('[aria-disabled="true"]')).toHaveCount(3);
+  for (const label of ["Compare properties", "Neighborhood", "Protest guide"]) {
+    await expect(tools.locator('[aria-disabled="true"]').filter({hasText:label})).toContainText("Coming soon");
+  }
+  // Planned destinations must not navigate to missing routes or enter the tab order.
+  await expect(tools.locator('a, button, [tabindex]')).toHaveCount(0);
+  const items = tools.locator(".property-navigation-item");
+  const overviewBox = (await items.nth(0).boundingBox())!;
+  const neighborhoodBox = (await items.nth(2).boundingBox())!;
+  if (info.project.use.viewport!.width <= 700) {
+    expect(neighborhoodBox.y).toBeGreaterThan(overviewBox.y);
+  } else {
+    expect(neighborhoodBox.y).toBe(overviewBox.y);
+  }
   const navigation = page.getByRole("navigation", {name:"Property sections"});
+  await expect(navigation).toContainText("On this page");
+  expect((await tools.boundingBox())!.y).toBeGreaterThan((await quickFacts.boundingBox())!.y);
+  expect((await tools.boundingBox())!.y).toBeLessThan((await navigation.boundingBox())!.y);
   for (const [label, target] of [["Property details", "property-facts-heading"], ["Value history", "history-heading"], ["Protest & agent", "representation-heading"], ["Exemptions", "exemptions-heading"]]) {
     const link = navigation.getByRole("link", {name:label, exact:true});
     await link.focus();
