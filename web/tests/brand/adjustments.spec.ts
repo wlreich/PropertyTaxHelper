@@ -1,18 +1,21 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('adjustment breakdowns, partial medians, selection and release continuity',async({page},info)=>{
+test('estimated adjustment breakdowns, mixed medians, selection and release continuity',async({page},info)=>{
  await page.goto('/property/100/compare?view=adjusted');
  const adjusted=page.getByRole('region',{name:'Your comparison at a glance'});
  await expect(page.getByRole('button',{name:'Adjusted to your property',exact:true})).toHaveAttribute('aria-pressed','true');
- await expect(adjusted).toContainText('0 of 3 selected properties have complete adjustments');
+ await expect(adjusted).toContainText('1 of 3 selected properties have estimated adjusted values');
  await expect(adjusted).toContainText('$460,000');
  await expect(adjusted).toContainText('Your property: $10,000 below (2.2% lower)');
- await expect(adjusted.locator('.comparison-summary').getByText('Not available',{exact:true})).toHaveCount(2);
+ await expect(adjusted.locator('.comparison-summary').getByText('Not available',{exact:true})).toHaveCount(0);
  const first=page.getByRole('button',{name:'Adjustment breakdown · 120 CYPRESS ST',exact:true});
  await expect(first).toHaveAttribute('aria-expanded','true');
  await expect(page.locator('#adjustment-120')).toContainText('$400,000 + $0 = $400,000');
- await expect(page.locator('#adjustment-120')).toContainText('Inputs needed');
+ await expect(page.locator('#adjustment-120')).toContainText('Same reported class; assume no class adjustment.');
+ await expect(page.locator('#adjustment-120')).toContainText('Your living area (sq ft)2,000');
+ await expect(adjusted).toContainText('$50,000 above');
+ await expect(adjusted).toContainText('1 estimate');
  await first.focus();await page.keyboard.press('Enter');
  await expect(page.locator('#adjustment-120')).toBeHidden();
  await page.keyboard.press('Enter');
@@ -33,11 +36,11 @@ test('adjustment breakdowns, partial medians, selection and release continuity',
  await page.getByRole('button',{name:'Reported values',exact:true}).click();
  await page.getByRole('checkbox',{name:'Select 120 CYPRESS ST (120)',exact:true}).check();
  await page.getByRole('button',{name:'Adjusted to your property',exact:true}).click();
- await expect(adjusted).toContainText('0 of 1 selected properties');
- await page.reload();await expect(adjusted).toContainText('0 of 1 selected properties');
+ await expect(adjusted).toContainText('1 of 1 selected properties');
+ await page.reload();await expect(adjusted).toContainText('1 of 1 selected properties');
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(adjusted).toContainText('$390,000');
  await expect(adjusted).toContainText('2025 certified');
- await expect(adjusted).toContainText('applicability to 2025 has not been verified');
+ await expect(adjusted).toContainText('Estimate method: ParcelSavvy v1');
  await expect(page.getByRole('button',{name:'Adjusted to your property',exact:true})).toHaveAttribute('aria-pressed','true');
 });
