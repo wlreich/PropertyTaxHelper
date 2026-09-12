@@ -1,3 +1,4 @@
+import type { CostRecord } from "./tcad-costs.ts";
 // Source: TCAD’s 2026 Sale and Equity Grids methodology.
 // Missing condition/state/eligibility inputs must never become confirmed tier matches.
 export const comparisonMethod = {
@@ -15,6 +16,7 @@ export const comparisonMethod = {
   ],
 };
 export type ComparisonProperty = {
+  costs?: CostRecord;
   property_id: string; address: string; city: string; property_type: string;
   market_value: number | null; land_value: number | null; land_acres: number | null;
   neighborhood: string | null; living_area: number | null; class_code: string | null;

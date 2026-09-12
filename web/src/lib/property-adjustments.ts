@@ -1,8 +1,10 @@
+import { primaryBuilding } from "./tcad-costs.ts";
+import { estimatePercentGood,calculateTcadAdjustments,type TcadInputs } from "./tcad-method.ts";
 import type { ComparisonProperty } from "./property-comparisons.ts";
 import { comparisonSummary } from "./property-comparisons.ts";
 
 export const adjustmentFactors = [
-  "Land", "Living area", "Construction class", "Year built",
+  "Land", "Living area", "Construction class", "Percent good",
   "Non-living details", "Additional improvements", "Neighborhood",
 ] as const;
 export type AdjustmentFactor = typeof adjustmentFactors[number];
@@ -28,87 +30,47 @@ export function totalAdjustments(reported: number | null, lines: AdjustmentLine[
   return { total: adjustedValue === null ? null : total, adjustedValue };
 }
 
-// ParcelSavvy estimate v1. Rates come only from independent public peers in the
-// selected release, never from the subject's improvement assessment or selected set.
-const median = (values: number[]) => {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted.length ? (sorted[Math.floor((sorted.length - 1) / 2)] + sorted[Math.floor(sorted.length / 2)]) / 2 : null;
-};
-const unitValue = (p: ComparisonProperty) => validValue(p.market_value) && validValue(p.land_value)
-  && validValue(p.living_area) && p.living_area > 0 && p.market_value > p.land_value && p.main_buildings === 1
-  ? (p.market_value - p.land_value) / p.living_area : null;
-const known = (value: string | null) => typeof value === "string" && value.trim() !== "" && value !== "XX";
-const validYear = (year: number | null) => validValue(year) && Number.isInteger(year) && year >= 1800 && year <= 2200;
-
-function localRates(subject: ComparisonProperty, comparable: ComparisonProperty, peers: ComparisonProperty[]) {
-  const pool = [...new Map(peers.map(p => [p.property_id, p])).values()].filter(p =>
-    p.property_id !== subject.property_id && p.property_id !== comparable.property_id
-    && known(subject.neighborhood) && p.neighborhood === subject.neighborhood
-    && p.property_type === subject.property_type && unitValue(p) !== null && validYear(p.year_built)
-    && subject.living_area && Math.abs(p.living_area! / subject.living_area - 1) <= 0.15);
-  const agePeers = pool.filter(p => p.class_code === subject.class_code && known(p.class_code))
-    .sort((a, b) => Math.abs(a.living_area! - subject.living_area!) - Math.abs(b.living_area! - subject.living_area!) || a.property_id.localeCompare(b.property_id)).slice(0, 80);
-  const slopes: number[] = [];
-  const used = new Set<string>();
-  for (let i = 0; i < agePeers.length; i++) for (let j = i + 1; j < agePeers.length; j++) {
-    const a = agePeers[i], b = agePeers[j], years = a.year_built! - b.year_built!;
-    if (Math.abs(years) < 3 || Math.abs(years) > 30 || Math.abs(a.living_area! - b.living_area!) / Math.min(a.living_area!, b.living_area!) > 0.05) continue;
-    slopes.push(Math.log(unitValue(a)! / unitValue(b)!) / years);
-    used.add(a.property_id); used.add(b.property_id);
-  }
-  const slope = used.size >= 8 && slopes.length >= 6 ? median(slopes) : null;
-  // Guardrails are model limits, not TCAD depreciation schedules. Never clamp a rate.
-  const ageRate = slope !== null && Number.isFinite(slope) && Math.abs(slope) <= 0.05 ? slope : null;
-  const classPeers = pool.filter(p => validYear(comparable.year_built) && Math.abs(p.year_built! - comparable.year_built!) <= 3);
-  const from = classPeers.filter(p => p.class_code === comparable.class_code).map(p => unitValue(p)!);
-  const to = classPeers.filter(p => p.class_code === subject.class_code).map(p => unitValue(p)!);
-  const ratio = from.length >= 5 && to.length >= 5 ? median(to)! / median(from)! : null;
-  return { ageRate, ageCount: used.size, classRatio: ratio !== null && ratio >= 0.5 && ratio <= 2 ? ratio : null, classCount: from.length + to.length };
+const amount = (n:number|null|undefined):n is number => typeof n === "number" && Number.isFinite(n) && n>=0;
+function model(property:ComparisonProperty, taxYear:number) {
+  const costs=property.costs?.tax_year===taxYear?property.costs:undefined;
+  const main=primaryBuilding(costs);
+  const complete=!!main?.complete;
+  const good=main?estimatePercentGood(main.class_code,taxYear,main.depreciation_year,main.year_built):null;
+  const mainRcn=main && amount(main.main_value) && good ? main.main_value/(good.value/100):null;
+  const ratio=main && amount(main.reported_value) && amount(main.detail_value) && main.detail_value>0 ? main.reported_value/main.detail_value:null;
+  const mass=ratio!==null&&ratio>0&&ratio<=10?Math.round(ratio*10000)/10000:null;
+  const secondary=complete?costs!.improvements.filter(b=>b.id!==main!.id).reduce((sum,b)=>sum+(b.reported_value??0),0):null;
+  const inputs:TcadInputs={market:amount(property.market_value)?property.market_value:null,land:amount(property.land_value)?property.land_value:null,area:main?.main_area??null,
+    classCode:main?.class_code??property.class_code,mainRcn:complete?mainRcn:null,mainRcnld:complete?main!.main_value:null,
+    percentGood:good?.value??null,nonliving:complete&&amount(main!.detail_value)&&amount(main!.main_value)?main!.detail_value!-main!.main_value!:null,
+    secondary,mass};
+  return {inputs,good,main,complete};
 }
-
-export function propertyAdjustments(subject: ComparisonProperty, comparable: ComparisonProperty, peers: ComparisonProperty[] = []) {
-  const land = validValue(subject.land_value) && validValue(comparable.land_value)
-    ? money(subject.land_value - comparable.land_value) : null;
-  const rate = unitValue(comparable);
-  const usableArea = validValue(subject.living_area) && subject.living_area > 0 && subject.main_buildings === 1;
-  const size = rate !== null && usableArea ? money((subject.living_area! - comparable.living_area!) * rate) : null;
-  const base = rate !== null && usableArea ? rate * subject.living_area! : null;
-  const local = localRates(subject, comparable, peers);
-  const sameClass = known(subject.class_code) && subject.class_code === comparable.class_code;
-  const sameYear = validYear(subject.year_built) && subject.year_built === comparable.year_built;
-  const sameNeighborhood = known(subject.neighborhood) && subject.neighborhood === comparable.neighborhood;
-  const classRatio = sameClass ? 1 : known(subject.class_code) && known(comparable.class_code) ? local.classRatio : null;
-  const classAmount = classRatio !== null && base !== null ? money(base * (classRatio - 1)) : null;
-  const yearRatio = sameYear ? 1 : validYear(subject.year_built) && validYear(comparable.year_built) && local.ageRate !== null
-    && Math.abs(subject.year_built! - comparable.year_built!) <= 30 ? Math.exp(local.ageRate * (subject.year_built! - comparable.year_built!)) : null;
-  const yearAmount = yearRatio !== null && yearRatio >= 0.5 && yearRatio <= 2 && classRatio !== null && base !== null
-    ? money(base * classRatio * (yearRatio - 1)) : null;
-  const lines: AdjustmentLine[] = [
-    { factor: "Land", amount: land,
-      explanation: land === null ? "A reported land value is needed for both properties." : "Your land value minus the comparable’s land value.",
-      inputs: [{ label: "Your land value", value: subject.land_value }, { label: "Comparable land value", value: comparable.land_value }] },
-    { factor: "Living area", amount: size,
-      explanation: "Living-area difference × the comparable’s assessed non-land value per square foot. This blended rate includes buildings and other improvements.",
-      inputs: [{ label: "Your living area (sq ft)", value: subject.living_area, unit: "number" }, { label: "Comparable living area (sq ft)", value: comparable.living_area, unit: "number" }, { label: "Estimated value per sq ft", value: rate === null ? null : `$${rate.toFixed(2)}` }] },
-    { factor: "Construction class", amount: classAmount,
-      explanation: sameClass ? "Same reported class; assume no class adjustment." : classRatio !== null ? "Size-normalized improvement value × the class-rate difference, estimated from similar-size local homes built within three years of the comparable." : "The class difference needs at least five similar local homes in each class to estimate a rate.",
-      inputs: [{ label: "Your class", value: subject.class_code }, { label: "Comparable class", value: comparable.class_code }, ...(!sameClass && classRatio !== null ? [{ label: "Peer properties", value: local.classCount, unit: "number" as const }, { label: "Class multiplier", value: classRatio.toFixed(3) }] : [])] },
-    { factor: "Year built", amount: yearAmount,
-      explanation: sameYear ? "Same reported year built; assume no age adjustment." : yearAmount !== null ? "Apply the local year-built trend to the size- and class-adjusted improvement value. The trend uses same-class homes of similar size; it is an age proxy, not a condition inspection." : "Not enough comparable local age data to price this difference. A year-built trend requires at least eight independent homes.",
-      inputs: [{ label: "Your year built", value: subject.year_built, unit: "year" }, { label: "Comparable year built", value: comparable.year_built, unit: "year" }, ...(!sameYear && yearAmount !== null ? [{ label: "Peer properties", value: local.ageCount, unit: "number" as const }, { label: "Estimated change per newer year", value: `${((Math.exp(local.ageRate!) - 1) * 100).toFixed(2)}%` }] : [])] },
-    { factor: "Non-living details", amount: 0, explanation: "No separate adjustment assumed. Garages and other non-living space remain in the blended improvement value; their individual differences are not priced.", inputs: [] },
-    { factor: "Additional improvements", amount: 0, explanation: "No separate adjustment assumed. Pools, outbuildings, renovations, and condition differences are not separately priced; unreported features are not treated as absent.", inputs: [] },
-    { factor: "Neighborhood", amount: sameNeighborhood ? 0 : null, explanation: sameNeighborhood ? "Same reported market area; assume no separate neighborhood adjustment. Lot and location differences may remain." : "Different or unreported market areas need a supported location factor. Select a property in the same market area for an estimate.", inputs: [{ label: "Your market area", value: subject.neighborhood }, { label: "Comparable market area", value: comparable.neighborhood }] },
+export function propertyAdjustments(subject:ComparisonProperty,comparable:ComparisonProperty,taxYear=2026) {
+  const s=model(subject,taxYear),c=model(comparable,taxYear);
+  const sameArea=!!subject.neighborhood && subject.neighborhood===comparable.neighborhood;
+  const assumedEqualMass=sameArea&&(s.inputs.mass===null||c.inputs.mass===null);
+  const si={...s.inputs,mass:assumedEqualMass?1:s.inputs.mass};
+  const ci={...c.inputs,mass:assumedEqualMass?1:c.inputs.mass};
+  const calculation=calculateTcadAdjustments(si,ci);
+  const input=(label:string,value:number|string|null|undefined,unit?:"money"|"number"|"year")=>({label,value:value??null,unit});
+  const lines:AdjustmentLine[]=[
+    {factor:"Land",amount:calculation.amounts.Land,explanation:"Your reported land value minus the comparable’s land value.",inputs:[input("Your land value",subject.land_value),input("Comparable land value",comparable.land_value)]},
+    {factor:"Living area",amount:calculation.amounts["Living area"],explanation:"Difference in the primary buildings’ living areas × your replacement-cost rate per square foot. The rate is reconstructed from main-area depreciated cost and estimated percent good; the main-area factor is 100%.",inputs:[input("Your living area (sq ft)",si.area,"number"),input("Comparable living area (sq ft)",ci.area,"number"),input("Your replacement cost per sq ft",calculation.subjectRate===null?null:`$${calculation.subjectRate.toFixed(2)}`)]},
+    {factor:"Construction class",amount:calculation.amounts["Construction class"],explanation:si.classCode&&si.classCode===ci.classCode?"Same reported class; $0 follows TCAD’s worked same-class comparisons. Different building configurations may need individual review.":"(Your replacement-cost rate ÷ comparable rate − 1) × comparable main-area replacement cost. Reconstructed rates use estimated percent good.",inputs:[input("Your class",si.classCode),input("Comparable class",ci.classCode),input("Comparable replacement cost per sq ft",calculation.compRate===null?null:`$${calculation.compRate.toFixed(2)}`),input("Comparable main-area replacement cost",ci.mainRcn)]},
+    {factor:"Percent good",amount:calculation.amounts["Percent good"],explanation:"Difference in percent good ÷ 100 × the comparable’s main-area depreciated cost. Percent good is the portion of building cost remaining after depreciation.",inputs:[input("Your percent good",si.percentGood===null?null:`${si.percentGood}%`),input("Comparable percent good",ci.percentGood===null?null:`${ci.percentGood}%`),input("Your depreciation year",s.good?.year,"year"),input("Comparable depreciation year",c.good?.year,"year"),input("Comparable main-area depreciated cost",ci.mainRcnld),input("Your estimate basis",s.good?.basis),input("Comparable estimate basis",c.good?.basis)]},
+    {factor:"Non-living details",amount:calculation.amounts["Non-living details"],explanation:"Your primary building’s non-living detail costs minus the comparable’s, before neighborhood multipliers. Garages, porches, pools and other features attached to that improvement are counted here, once.",inputs:[input("Your non-living details",si.nonliving),input("Comparable non-living details",ci.nonliving),input("Your recorded non-living features",s.main?.complete ? s.main.features.filter(f=>!["1ST","2ND","3RD"].includes(f.code)).map(f=>f.description||f.code).join(", ")||"None recorded" : null),input("Comparable recorded non-living features",c.main?.complete ? c.main.features.filter(f=>!["1ST","2ND","3RD"].includes(f.code)).map(f=>f.description||f.code).join(", ")||"None recorded" : null)]},
+    {factor:"Additional improvements",amount:calculation.amounts["Additional improvements"],explanation:"Difference in the reported values of improvements other than the highest-valued improvement. These values already include their neighborhood multipliers. $0 for an empty secondary inventory means none are recorded in this release.",inputs:[input("Your secondary improvements",si.secondary),input("Comparable secondary improvements",ci.secondary)]},
+    {factor:"Neighborhood",amount:calculation.amounts.Neighborhood,explanation:assumedEqualMass?"Same reported market area; equal neighborhood factors are assumed because a multiplier could not be recovered.":"(Your multiplier − comparable multiplier) ÷ comparable multiplier × comparable non-land market value. Multipliers are recovered from improvement totals divided by summed depreciated detail costs; equal factors give $0.",inputs:[input("Your market area",subject.neighborhood),input("Comparable market area",comparable.neighborhood),input("Your multiplier",si.mass===null?null:si.mass.toFixed(4)),input("Comparable multiplier",ci.mass===null?null:ci.mass.toFixed(4))]},
   ];
-  const totals = totalAdjustments(comparable.market_value, lines);
-  const compatible = subject.property_type === comparable.property_type && sameNeighborhood;
-  const knownTotal = money(lines.reduce((sum, line) => sum + (line.amount ?? 0), 0));
-  const subtotal = validValue(comparable.market_value) ? money(comparable.market_value + knownTotal) : null;
-  return {
-    property: comparable, lines, ...(compatible ? totals : {total: null, adjustedValue: null}),
-    partialSubtotal: subtotal !== null && subtotal >= 0 && Number.isFinite(subtotal) ? subtotal : null,
-    landSubtotal: validValue(comparable.market_value) && land !== null && comparable.market_value + land >= 0 ? money(comparable.market_value + land) : null,
-  };
+  const supportedClass=(code:string|null)=>!!code&&/^R[1-6]$/.test(code);
+  const eligibleTypes=new Set(["01","02","03","04","15","16","22","39","59"]);
+  const compatible=subject.property_type===comparable.property_type&&supportedClass(si.classCode)&&supportedClass(ci.classCode)
+    &&!!s.main?.state_code&&s.main.state_code===c.main?.state_code&&eligibleTypes.has(s.main.type_code??"")&&eligibleTypes.has(c.main?.type_code??"");
+  const totals=compatible?totalAdjustments(comparable.market_value,lines):{total:null,adjustedValue:null};
+  const subtotal=amount(comparable.market_value)?money(comparable.market_value+lines.reduce((sum,l)=>sum+(l.amount??0),0)):null;
+  return {property:comparable,lines,...totals,partialSubtotal:subtotal!==null&&subtotal>=0?subtotal:null,
+    landSubtotal:amount(comparable.market_value)&&lines[0].amount!==null&&comparable.market_value+lines[0].amount>=0?money(comparable.market_value+lines[0].amount):null};
 }
 export type PropertyAdjustments = ReturnType<typeof propertyAdjustments>;
 
