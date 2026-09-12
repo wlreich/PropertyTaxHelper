@@ -6,6 +6,7 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page).toHaveURL(/\/property\/100\/compare/);
  await expect(page.getByRole('heading',{name:'Compare your assessment',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Compare properties');
+ await expect(page.getByRole('link',{name:'Compare selected properties',exact:true})).toHaveCSS('color','rgb(255, 255, 255)');
  const results=page.getByRole('region',{name:'Your selected properties, side by side'});
  await expect(results).toContainText('$460,000');
  await expect(results).toContainText('$10,000 below');

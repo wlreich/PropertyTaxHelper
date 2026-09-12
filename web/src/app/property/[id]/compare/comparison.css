@@ -45,6 +45,7 @@
 .comparison-selection li strong { font-size: var(--text-small); }
 .comparison-primary-link, .comparison-search button:not(.comparison-text-button) { display: inline-flex; justify-content: center; align-items: center; min-height: var(--target-min); padding: var(--space-3); border-radius: var(--radius-input); color: var(--color-surface); background: var(--color-action); text-decoration: none; font-weight: var(--weight-semibold); cursor: pointer; }
 .comparison-primary-link { width: 100%; }
+.profile-shell.comparison-page .comparison-selection a.comparison-primary-link { color: var(--color-surface); }
 .comparison-primary-link:hover, .comparison-search button:hover { background: var(--color-action-hover); }
 .comparison-search button:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 .comparison-selection-tip { background: var(--color-surface-info); border-radius: var(--radius-card); padding: var(--space-4); margin-top: var(--space-4); font-size: var(--text-small); }
