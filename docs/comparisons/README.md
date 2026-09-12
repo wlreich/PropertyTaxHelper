@@ -4,7 +4,7 @@ Route: `/property/:id/compare`. Current-source suggestions and manual address/ID
 
 ## Method and source
 
-TCAD's 2026 Sale and Equity Grids methodology was supplied in a public-information response and reproduced in the owner's verified July 15, 2026 protest packet, Appendix D, pages 29–31. The private evidence packet is not copied to this repository. The tier criteria are transcribed in `web/src/lib/property-comparisons.ts`. The owner already verified the method during protest preparation.
+Comparison rules are based on TCAD's 2026 Sale and Equity Grids methodology. The tier criteria are transcribed in `web/src/lib/property-comparisons.ts`. Attribute the rules to TCAD and their applicable year; keep individual records requests and personal protest materials out of product copy.
 
 Selection criteria and monetary adjustments are distinct. The published ingestion fields do not provide condition codes, state classification in the public snapshot, completion/eligibility checks, full replacement costs/depreciation, or neighborhood mass-adjustment inputs. This version does not infer them or calculate adjusted values.
 

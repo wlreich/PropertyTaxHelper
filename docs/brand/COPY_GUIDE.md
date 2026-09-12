@@ -8,6 +8,8 @@ Product: ParcelSavvy. Tagline: “Know your property. Understand your assessment
 
 ## Writing principles
 
+Write for all homeowners. Attribute methods and records to the originating organization and applicable year; do not reference the founder’s personal records requests, evidence packets, or protest history in general product explanations.
+
 Use sentence case, active voice, specific nouns and short labels. Define technical terms where they first become useful. Prefer “review,” “evidence,” “context,” “appraised value,” “assessment,” and “comparable property.” Explain a term before explaining its significance. Keep material limitations visible; a hover explanation cannot carry a qualification necessary to interpret the number.
 
 Distinguish market value, appraised value, assessed value and the actual tax bill. Verify jurisdiction-specific definitions before adding legal guidance. Do not call a difference an error or label a property overassessed unless supporting evidence warrants it. Never infer trends from one imported year. Do not call land segments homes, bedrooms or living area. Preserve units, including decimal acreage, and distinguish unknown from zero.
