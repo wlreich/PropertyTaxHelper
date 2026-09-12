@@ -27,3 +27,7 @@ Recomputed median market value: $1,341,357. Median neighborhood value per square
 The eight unresolved cap combinations are outside this population change; their special homestead/non-homestead loss treatment still needs reconciliation. They remain included in the neighborhood population and explicitly unverified for cap outcomes.
 
 Tests cover release-specific classifications, land-only and other-type exclusion, mixed land-code retention, multiple buildings, zero-valued floors, missing area, duplicate protests, common headline denominators, malformed responses, and private-source access. No private fields or raw-table grants are added.
+
+## Production query bounds
+
+Migration 20260912223634 fetches selected/certified profiles by the bounded neighborhood ID array before joining the JSON results. The initial direct JSON-to-profile joins caused millions of buffer accesses under production RLS and approximately 15.25-second query time. The bounded query measured 1.44 seconds under anon with the same population and calculations. Live current, preliminary, and prior-year routes are checked after this change. No timeout or access-control settings were weakened.
