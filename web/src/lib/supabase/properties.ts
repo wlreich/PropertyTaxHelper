@@ -82,9 +82,9 @@ function sourceUrl(v: unknown): v is string {
     return false;
   }
 }
-async function rpc(
+export async function rpc(
   name: string,
-  args: Record<string, string | number | boolean>,
+  args: Record<string, string | number | boolean | string[] | null>,
   config: Config,
   fetchRequest: typeof fetch,
 ): Promise<unknown> {

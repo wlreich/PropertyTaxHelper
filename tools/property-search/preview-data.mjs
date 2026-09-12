@@ -1,10 +1,12 @@
 // Local browser verification only. Synthetic records and authentication, loopback only.
+import {seedComparisons} from './comparison-fixture.mjs';
 import {fixtureHistory} from './history-fixture.mjs';
 import {createServer} from 'node:http';
 import {fixtureDatabase} from './projection.test.mjs';
 const db=await fixtureDatabase({parklandFixtures:true});
 const actor='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', session='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
+await seedComparisons(db);
 await db.query('insert into auth.users(id,email_confirmed_at) values($1,now())',[actor]);
 await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,actor]);
 await db.query('insert into parcel_admin.members(user_id) values($1)',[actor]);
@@ -28,7 +30,8 @@ createServer((req,res)=>{
    const call=async(sql,values=[]) => (await db.query(sql,values)).rows[0].result;
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
-   if(route==='search_property_parcels')result=await call('select public.search_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
+   if(route==='property_comparisons')result=await call('select public.property_comparisons($1,$2,$3,$4,$5) result',[args.p_id,args.p_source??null,typeof args.p_selected==='string'?args.p_selected.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_selected??[],args.p_query??'',Number(args.p_page??0)]);
+   else if(route==='search_property_parcels')result=await call('select public.search_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='property_profile')result=await call('select public.property_profile($1) result',[args.p_id]);
    else if(route==='property_history')result=args.p_id==='100'?fixtureHistory:{snapshots:[]};
    else if(route==='property_overview_bundle')result={profile:await call('select public.property_profile($1) result',[args.p_id]),history:args.p_id==='100'?fixtureHistory:{snapshots:[]}};

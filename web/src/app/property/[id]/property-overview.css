@@ -741,3 +741,5 @@
     font-size: var(--text-h3);
   }
 }
+.property-navigation a.property-navigation-item { text-decoration: none; }
+.property-navigation a.property-navigation-item:hover { background: var(--color-brand-primary); color: var(--color-surface); }
