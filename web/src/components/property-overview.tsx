@@ -212,7 +212,7 @@ export function PropertyOverview({
           ["Year built", facts.yearBuilt ?? "Not reported"],
         ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
-      <PropertyNavigation />
+      <PropertyNavigation propertyId={p.property_id} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
         <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
