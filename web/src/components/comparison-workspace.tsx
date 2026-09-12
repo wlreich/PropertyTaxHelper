@@ -63,7 +63,7 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
     const checked=selected.some(x=>x.property_id===p.property_id),match=matchProperty(data.subject,p);
     return <tr key={p.property_id}>
       <td><label className="comparison-checkbox"><input type="checkbox" aria-label={`Select ${p.address} (${p.property_id})`} checked={checked} disabled={!checked&&selected.length>=10} onChange={()=>toggle(p)}/></label></td>
-      <th scope="row"><Link href={`/property/${p.property_id}`}>{p.address}</Link><span className="comparison-small">{number(p.living_area," sq ft")} · {number(p.year_built)} · {p.class_code??"Class not reported"}</span></th>
+      <th scope="row"><Link href={`/property/${p.property_id}`}>{p.address}</Link><span className="comparison-small">{number(p.living_area," sq ft")} · {p.year_built??"Not reported"} · {p.class_code??"Class not reported"}</span></th>
       <td><Match subject={data.subject} property={p}/></td><td className="comparison-money">{currency(p.market_value)}</td>
       <td><span>{match.reasons.slice(0,2).join(" · ")}</span><span className="comparison-small">{match.reasons.slice(2).join(" · ")}</span></td>
     </tr>;
@@ -79,6 +79,7 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
         <div className="comparison-card-heading"><h3 id="suggestions-heading">Suggested properties</h3><p>Showing {visible.length} of {filtered.length} suggestions · Market area {data.subject.neighborhood??"not reported"}</p></div>
         <div className="comparison-controls"><label>Possible match tier<select value={tier} onChange={e=>{setTier(e.target.value);setShowAll(false);}}><option value="all">All possible tiers</option>{comparisonMethod.tiers.map(t=><option key={t.tier} value={t.tier}>Possible Tier {t.tier}</option>)}</select></label><label>Sort by<select value={sort} onChange={e=>setSort(e.target.value)}><option value="match">Closest recorded match</option><option value="value">Lowest reported value</option></select></label><PropertySectionLink target="comparison-search-heading" className="comparison-add-link">+ Add by address or ID</PropertySectionLink></div>
         {data.candidate_limit_reached&&<p className="comparison-inline-note">This market area has more than 2,000 records. Suggestions use a limited set; use address search to explore beyond it.</p>}
+        {visible.length>0&&<p className="comparison-small comparison-mobile-hint">Scroll the table sideways for values and match details.</p>}
         {visible.length?<div className="comparison-table-scroll" role="region" aria-label="Suggested property table" tabIndex={0}><table className="comparison-candidates"><thead><tr><th scope="col"><span className="comparison-sr-only">Select</span></th><th scope="col">Property</th><th scope="col">Match</th><th scope="col">TCAD market value</th><th scope="col">Why it matches</th></tr></thead><tbody>{visible.map(candidateRow)}</tbody></table></div>:<p className="comparison-inline-note">No suggestions match the available criteria{tier!=="all"?" and selected filter":""}. Add a property by address or ID to explore your own comparisons.</p>}
         {filtered.length>4&&<button className="comparison-text-button" onClick={()=>setShowAll(!showAll)}>{showAll?"Show fewer suggestions":`Show all ${filtered.length} suggestions`}</button>}
         <p className="comparison-inline-note">Suggestions favor similar recorded characteristics. They are not TCAD’s confirmed comparable list.</p>
@@ -86,13 +87,14 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
           <form onSubmit={search}><label htmlFor="comparison-query">Property address or ID</label><div className="comparison-search-fields"><input id="comparison-query" value={query} maxLength={120} onChange={e=>setQuery(e.target.value)} placeholder="Street name, address, or property ID"/><button type="submit" disabled={busy}>{busy?"Searching…":"Search properties"}</button></div></form>
           <p className="comparison-small">Search uses current addresses and only includes properties with records in the selected release. Your property is excluded.</p>
           <div role="status" aria-live="polite">{searchError || (busy?"Finding properties…":searched?`${matches.length} properties found for ${submitted}.`:"")}</div>
+          {matches.length>0&&<p className="comparison-small comparison-mobile-hint">Scroll the table sideways for values and match details.</p>}
           {matches.length>0&&<div className="comparison-table-scroll" role="region" aria-label="Property search results" tabIndex={0}><table className="comparison-candidates"><thead><tr><th scope="col"><span className="comparison-sr-only">Select</span></th><th scope="col">Property</th><th scope="col">Match</th><th scope="col">TCAD market value</th><th scope="col">Differences</th></tr></thead><tbody>{matches.map(candidateRow)}</tbody></table></div>}
           {searched&&!matches.length&&<p>No matching comparison records on this page. Try another address or the next page if available.</p>}
           {searched&&(searchPage>0||hasMore)&&<div className="comparison-pagination"><button disabled={busy||searchPage===0} onClick={()=>search(undefined,searchPage-1)}>Previous results</button><span>Page {searchPage+1}</span><button disabled={busy||!hasMore} onClick={()=>search(undefined,searchPage+1)}>Next results</button></div>}
         </details>
       </section>
       <aside className="comparison-selection" aria-labelledby="selection-heading"><div className="comparison-card"><h3 id="selection-heading">Your comparison set</h3><p>{selected.length} of 10 properties selected</p>
-        <ul>{selected.map(p=><li key={p.property_id}><div><strong>{p.address}</strong><span className="comparison-small">{number(p.living_area," sq ft")} · {number(p.year_built)}</span><Match subject={data.subject} property={p}/></div><button aria-label={`Remove ${p.address} (${p.property_id})`} onClick={()=>toggle(p)}>×</button></li>)}</ul>
+        <ul>{selected.map(p=><li key={p.property_id}><div><strong>{p.address}</strong><span className="comparison-small">{number(p.living_area," sq ft")} · {p.year_built??"Not reported"}</span><Match subject={data.subject} property={p}/></div><button aria-label={`Remove ${p.address} (${p.property_id})`} onClick={()=>toggle(p)}>×</button></li>)}</ul>
         {!selected.length&&<p>Select properties to see your comparison and median.</p>}
         <PropertySectionLink target="selected-comparison-heading" className="comparison-primary-link">Compare selected properties</PropertySectionLink>
         <button className="comparison-text-button" onClick={()=>updateSelection(recommended.slice(0,3),"Suggested set restored.")}>Restore suggested set</button>
@@ -109,7 +111,7 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
         {([
           ["TCAD market value",(p:ComparisonProperty)=>currency(p.market_value)],
           ["Living area",(p:ComparisonProperty)=>number(p.living_area," sq ft")],
-          ["Year built",(p:ComparisonProperty)=>number(p.year_built)],
+          ["Year built",(p:ComparisonProperty)=>p.year_built??"Not reported"],
           ["Construction class",(p:ComparisonProperty)=>p.class_code??"Not reported"],
           ["Market area",(p:ComparisonProperty)=>p.neighborhood??"Not reported"],
           ["Land value",(p:ComparisonProperty)=>currency(p.land_value)],
