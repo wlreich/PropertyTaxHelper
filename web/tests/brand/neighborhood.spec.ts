@@ -6,7 +6,10 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.getByRole('heading',{name:'Your neighborhood',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
  await expect(page.locator('.neighborhood-own-result')).toContainText('$50,000');
- await expect(page.locator('.neighborhood-outcomes')).toContainText('50.0%');
+ await expect(page.locator('.neighborhood-outcomes')).toContainText('20.0%');
+ await expect(page.locator('.neighborhood-outcomes')).toContainText('of 5 included homes');
+ await page.locator('.neighborhood-population summary').click();
+ await expect(page.locator('.neighborhood-population')).toContainText('Property 123');
  await page.getByRole('button',{name:'Value per sq. ft.',exact:true}).focus();await page.keyboard.press('Enter');
  await expect(page.getByRole('button',{name:'Value per sq. ft.',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('img',{name:/Value per square foot distribution/})).toBeVisible();
