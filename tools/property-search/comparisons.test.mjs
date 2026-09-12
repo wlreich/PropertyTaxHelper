@@ -13,6 +13,7 @@ test('comparisons use one published source, preserve RLS, reject unsafe input an
   assert.equal(r.candidates.some(p=>['100','102','103'].includes(p.property_id)),false);
   assert.equal(r.candidates.find(p=>p.property_id==='120').market_value,400000);
   assert.equal(JSON.stringify(r).includes('PRIVATE'),false);
+  assert.equal((await db.query("select count(*)::int n from public.property_comparison_areas where property_id in ('102','103')")).rows[0].n,0);
   const historic=await call(old,['120','121']);assert.equal(historic.subject.market_value,420000);assert.equal(historic.selected.length,1);assert.equal(historic.selected[0].market_value,390000);
   assert.equal((await call('99999999-9999-4999-8999-999999999999')).status,'missing_snapshot');
   assert.equal((await call(null,[],'PINE')).matches[0].market_value,null);
@@ -28,4 +29,5 @@ test('comparisons use one published source, preserve RLS, reject unsafe input an
  // An inactive release remains inaccessible even when an ID is supplied explicitly.
  await db.exec('delete from public.property_search_state; set role anon');
  assert.equal((await call(anchor,['120'])).available,false);
+ assert.equal((await db.query('select count(*)::int n from public.property_comparison_areas')).rows[0].n,0);
 });

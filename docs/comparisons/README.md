@@ -18,7 +18,7 @@ Deduplicate selections by property ID, exclude the subject, omit missing values,
 
 ## Annual rollover
 
-Every comparison uses one source dataset within the active published anchor. Available releases come from that subject's public history. Default source must match the active year/stage/export, with no fallback to unrelated records. Manual-search results reject a changed publication anchor and ask for reload. Future preparations automatically work through the existing snapshot pipeline; no new backfill or preparation worker is introduced. Years other than 2026 explicitly disclose use of the 2026 criteria.
+Every comparison uses one source dataset within the active published anchor. Available releases come from that subject's public history. Default source must match the active year/stage/export, with no fallback to unrelated records. Manual-search results reject a changed publication anchor and ask for reload. An indexed market-area lookup contains only snapshot keys and the neighborhood code, with the same public visibility policies as snapshots. Its migration seeds existing snapshots; an insert/update trigger and cascading deletion maintain future publications automatically, without a new preparation worker. Years other than 2026 explicitly disclose use of the 2026 criteria.
 
 Future verified method revisions should update the versioned method definition and tests. A year-specific admin editor and adjusted-value calculations are outside this first version. Sales comparisons, Neighborhood, and Protest guide remain visibly unavailable.
 

@@ -742,4 +742,5 @@
   }
 }
 .property-navigation a.property-navigation-item { text-decoration: none; }
-.property-navigation a.property-navigation-item:hover { background: var(--color-brand-primary); color: var(--color-surface); }
+.profile-shell .property-navigation a.property-navigation-item[aria-current="page"],
+.profile-shell .property-navigation a.property-navigation-item:hover { background: var(--color-brand-primary); color: var(--color-surface); }
