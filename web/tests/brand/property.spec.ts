@@ -14,8 +14,8 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   expect((await quickFacts.boundingBox())!.y).toBeLessThan((await page.locator("#season-heading").boundingBox())!.y);
   const tools = page.getByRole("navigation", {name:"Property tools"});
   await expect(tools.locator('[aria-current="page"]')).toHaveText("Overview");
-  await expect(tools.locator('[aria-disabled="true"]')).toHaveCount(2);
-  for (const label of ["Neighborhood", "Protest guide"]) {
+  await expect(tools.locator('[aria-disabled="true"]')).toHaveCount(1);
+  for (const label of ["Protest guide"]) {
     await expect(tools.locator('[aria-disabled="true"]').filter({hasText:label})).toContainText("Coming soon");
   }
   // Planned destinations must not navigate to missing routes or enter the tab order.

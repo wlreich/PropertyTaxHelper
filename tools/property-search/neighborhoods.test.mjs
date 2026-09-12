@@ -1,0 +1,28 @@
+import {fixtureDatabase} from './projection.test.mjs';
+import {seedComparisons} from './comparison-fixture.mjs';
+import {seedNeighborhood} from './neighborhood-fixture.mjs';
+import {parseNeighborhood} from '../../web/src/lib/supabase/neighborhood.ts';
+import {neighborhoodSummary} from '../../web/src/lib/neighborhood.ts';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+test('neighborhood releases, cap outcomes, protest deduplication, and public visibility',async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());await db.query('select tcad_ingest.publish_property_search($1)',['11111111-1111-4111-8111-111111111111']);const {old}=await seedComparisons(db);const {anchor,pre}=await seedNeighborhood(db);
+ await db.exec('set role anon');
+ const call=async(source=null)=>(await db.query('select public.property_neighborhood($1,$2) r',['100',source])).rows[0].r;
+ const raw=await call();const data=parseNeighborhood(raw,'100');assert.ok(data);
+ assert.equal(data.homes.some(h=>h.property_id==='102'||h.property_id==='103'),false);
+ assert.equal(JSON.stringify(raw).includes('PRIVATE'),false);
+ const s=neighborhoodSummary(data);
+ assert.equal(s.all.above.count,2);assert.equal(s.all.above.total,3);
+ assert.equal(s.all.reduced.count,2);assert.equal(s.all.reduced.total,3);
+ assert.equal(s.all.crossed.count,1);assert.equal(s.all.crossed.total,2);
+ assert.equal(s.own.dollars,50000);assert.equal(s.own.percent,10);
+ assert.equal(s.protested.count,1);assert.equal(data.homes.find(h=>h.property_id==='120').protested,false);
+ assert.equal(s.all.averageReduction,125000);
+ assert.ok(s.entities.some(e=>e.code==='70'&&!e.applies));
+ const early=parseNeighborhood(await call(pre),'100');assert.equal(early.certified_id,null);assert.equal(neighborhoodSummary(early).own,null);
+ const historical=parseNeighborhood(await call(old),'100');assert.equal(historical.preliminary_id,null);assert.equal(neighborhoodSummary(historical).protested.count,0);
+ assert.equal((await db.query("select public.property_neighborhood('103') r")).rows[0].r.status,'missing_property');
+ assert.equal((await db.query('select parcel_comparison.cap_inputs($1,$2,$3) r',[old,pre,['100']])).rows[0].r.length,0);
+ await assert.rejects(db.query('select * from tcad_ingest.records limit 1'));
+});
