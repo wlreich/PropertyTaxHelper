@@ -12,5 +12,16 @@ export async function seedComparisons(db) {
  }
  await db.query('insert into public.property_snapshot_profiles values($1,$2,$3,$4)',[anchor,old,'100',snapshot(2000,2014,420000,old)]);
  await db.query('insert into public.property_snapshot_profiles values($1,$2,$3,$4)',[anchor,old,'120',snapshot(2000,2014,390000,old)]);
+ // Synthetic costs remain private; the RPC returns an explicit field allowlist.
+ await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at) select $1,repeat('d',64),layout_sha256,parser_version,source_encoding,2025,roll_stage,source_url,archive_location,header,status,completed_at from tcad_ingest.datasets where id=$2`,[old,anchor]);
+ for(const source of [anchor,old]) {
+  for(const [member,type] of [['cost-buildings.txt','Improvement'],['cost-details.txt','ImprovementDetail']])
+   await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status) values($1,$2,$3,0,repeat('e',64),'complete')`,[source,member,type]);
+  let row=0;
+  for(const [id,area,year] of [['100',2000,2014],['120',2000,2014],['121',2010,2015],['122',2080,2016],['123',2400,2000],['102',2000,2014],['103',2000,2014]]) {
+   const values=[['cost-buildings.txt',{imprv_id:'1',imprv_val:'350000',imprv_type_cd:'01',imprv_state_cd:'A1',owner_name:'PRIVATE MUST NOT LEAK'}],['cost-details.txt',{imprv_id:'1',imprv_det_id:'1',imprv_det_val:'350000',imprv_det_area:String(area),imprv_det_class_cd:'R3',yr_built:String(year),depreciation_yr:String(year),imprv_det_type_cd:'1ST',imprv_det_type_desc:'Main area'}]];
+   for(const [member,fields] of values) await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,$2,$3,$4,$5,$6)`,[source,member,++row,id,source===anchor?'2026':'2025',fields]);
+  }
+ }
  return {anchor,old};
 }

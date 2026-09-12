@@ -4,22 +4,23 @@ import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 import { comparisonSummary, type ComparisonProperty, type ComparisonRelease } from "@/lib/property-comparisons";
 import { adjustmentSummary, propertyAdjustments } from "@/lib/property-adjustments";
+import { tcadMethod } from "@/lib/tcad-method";
 import { currency } from "@/lib/property-search";
 import { PropertySectionLink } from "./property-section-link";
 
 const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${currency(Math.abs(value))}`;
 const difference = (value: number | null) => value === null ? "Not available" : value === 0 ? "Same as median" : `${currency(Math.abs(value))} ${value > 0 ? "above" : "below"}`;
 
-export function AdjustedComparisons({ subject, selected, release, peers }: {
-  subject: ComparisonProperty; selected: ComparisonProperty[]; release: ComparisonRelease; peers: ComparisonProperty[];
+export function AdjustedComparisons({ subject, selected, release }: {
+  subject: ComparisonProperty; selected: ComparisonProperty[]; release: ComparisonRelease;
 }) {
   const [expanded, setExpanded] = useState<string | null>(selected[0]?.property_id ?? null);
-  const results = useMemo(() => selected.map(property => propertyAdjustments(subject, property, peers)), [subject, selected, peers]);
+  const results = useMemo(() => selected.map(property => propertyAdjustments(subject, property, release.tax_year)), [subject, selected, release.tax_year]);
   const reported = comparisonSummary(subject, selected);
   const adjusted = adjustmentSummary(subject, results);
   return <section className="comparison-card comparison-adjusted" aria-labelledby="adjusted-comparison-heading">
     <h3 id="adjusted-comparison-heading" tabIndex={-1}>Your comparison at a glance</h3>
-    <p className="comparison-adjusted-note">ParcelSavvy estimates use reported property facts and local assessment patterns, guided by TCAD’s comparison approach; they may differ from TCAD’s exact adjustments and do not separately price condition or individual features.</p>
+    <p className="comparison-adjusted-note">Estimates follow TCAD’s adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ.</p>
     <p>Your property’s reported market value: <strong>{currency(subject.market_value)}</strong>. Your own value stays unchanged.</p>
     <dl className="comparison-summary comparison-adjusted-summary">
       <div><dt>Reported median</dt><dd>{reported.median === null ? "Not available" : currency(reported.median)}</dd><dd className="comparison-summary-percent">Before adjustments · {reported.count} properties</dd><dd className="comparison-summary-percent">Your property: {difference(reported.difference).toLowerCase()}{reported.percent !== null ? ` (${Math.abs(reported.percent).toFixed(1)}% ${reported.percent > 0 ? "higher" : reported.percent < 0 ? "lower" : "difference"})` : ""}</dd></div>
@@ -42,7 +43,7 @@ export function AdjustedComparisons({ subject, selected, release, peers }: {
             <tr id={`adjustment-${result.property.property_id}`} hidden={expanded !== result.property.property_id}><td colSpan={4} className="comparison-breakdown-cell">
               <div className="comparison-breakdown"><h5>Adjustment breakdown · {result.property.address}</h5>
                 <table><caption className="comparison-sr-only">Adjustments for {result.property.address}</caption><thead><tr><th scope="col">Factor</th><th scope="col">Explanation and inputs</th><th scope="col">Adjustment</th></tr></thead><tbody>{result.lines.map(line => <tr key={line.factor}><th scope="row">{line.factor}</th><td>{line.explanation}{line.inputs.length > 0 && <dl className="comparison-calculation-inputs">{line.inputs.map(input => <div key={input.label}><dt>{input.label}</dt><dd>{input.value === null || input.value === undefined ? "Not reported" : typeof input.value === "string" ? input.value : input.unit === "year" ? String(input.value) : input.unit === "number" ? input.value.toLocaleString("en-US", {maximumFractionDigits: 2}) : currency(input.value)}</dd></div>)}</dl>}</td><td>{line.amount === null ? "Not estimated" : signed(line.amount)}</td></tr>)}</tbody></table>
-                <div className="comparison-partial-result"><div><strong>{result.adjustedValue === null ? "Subtotal of available adjustments" : "Estimated adjusted value"}</strong><p className="comparison-money">{result.adjustedValue === null ? currency(result.partialSubtotal) : `${currency(result.property.market_value)} ${result.total! < 0 ? "−" : "+"} ${currency(Math.abs(result.total!))} = ${currency(result.adjustedValue)}`}</p></div>{result.adjustedValue === null && <p>Excluded from the adjusted median. Review the factors marked “Not estimated” and confirm the properties have the same type and market area.</p>}</div>
+                <div className="comparison-partial-result"><div><strong>{result.adjustedValue === null ? "Subtotal of available adjustments" : "Estimated adjusted value"}</strong><p className="comparison-money">{result.adjustedValue === null ? currency(result.partialSubtotal) : `${currency(result.property.market_value)} ${result.total! < 0 ? "−" : "+"} ${currency(Math.abs(result.total!))} = ${currency(result.adjustedValue)}`}</p></div>{result.adjustedValue === null && <p>Excluded from the adjusted median. Review the factors marked “Not estimated” and review whether their building types and construction classes are comparable.</p>}</div>
                 <Link href={`/property/${result.property.property_id}`}>View property records</Link>
               </div>
             </td></tr>
@@ -51,6 +52,6 @@ export function AdjustedComparisons({ subject, selected, release, peers }: {
         </tbody></table>
       </div>
     </>}
-    <p className="comparison-adjusted-note">Source: TCAD {release.tax_year} {release.roll_stage} records · Exported {release.export_date ?? "date not reported"}. Estimate method: ParcelSavvy v1. Values are not tax savings.</p>
+    <p className="comparison-adjusted-note">Source: TCAD {release.tax_year} {release.roll_stage} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
   </section>;
 }

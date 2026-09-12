@@ -1,7 +1,8 @@
 import "server-only";
 import { rpc } from "./properties.ts";
-import { validPropertyId, validSource, type ComparisonData, type ComparisonProperty, type ComparisonRelease } from "../property-comparisons.ts";
+import { validPropertyId, validSource, suggestions, type ComparisonData, type ComparisonProperty, type ComparisonRelease } from "../property-comparisons.ts";
 import { parseSearch } from "../property-search.ts";
+import { parseCostRecords, withCosts } from "../tcad-costs.ts";
 const object=(v:unknown):v is Record<string,unknown>=>typeof v==="object" && v!==null && !Array.isArray(v);
 const text=(v:unknown):v is string=>typeof v==="string" && v.length<=250;
 const nullableText=(v:unknown)=>v===null||text(v);
@@ -42,5 +43,15 @@ export async function getComparisons(id:string,source:string|null=null,selected:
   const v=await rpc("property_comparisons",{p_id:id,...(source?{p_source:source}:{}),p_selected:selected,p_query:query,p_page:page},config,fetchRequest);
   if(object(v)&&v.available===true&&v.status==="missing_property")return {status:"not_found" as const};
   if(object(v)&&v.available===true&&v.status==="missing_snapshot")return {status:"missing_snapshot" as const};
-  const data=parseComparison(v,id);return data?{status:"ok" as const,data}:{status:"unavailable" as const};
+  const data=parseComparison(v,id);
+  if(!data) return {status:"unavailable" as const};
+  const ids=[...new Set([data.subject,...data.selected,...data.matches,...suggestions(data)].map(p=>p.property_id))].slice(0,32);
+  const costs=await rpc("property_comparison_costs",{p_anchor:data.anchor_id,p_source:data.release.dataset_id,p_ids:ids},config,fetchRequest);
+  const records=parseCostRecords(costs,data.anchor_id,data.release.dataset_id,data.release.tax_year);
+  if(records) {
+    const byId=new Map(records.map(r=>[r.property_id,r]));
+    const enrich=(p:ComparisonProperty)=>withCosts(p,byId.get(p.property_id));
+    data.subject=enrich(data.subject); data.candidates=data.candidates.map(enrich); data.selected=data.selected.map(enrich);data.matches=data.matches.map(enrich);
+  }
+  return {status:"ok" as const,data};
 }
