@@ -12,5 +12,14 @@ export async function seedNeighborhood(db) {
  await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed) values($1,$1,'120',2026,'2026-06-01',false,false,true)`,[anchor]);
  // Authorities can cross neighborhood boundaries; records deduplicate per property.
  await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||jsonb_build_object('entities',jsonb_build_array(jsonb_build_object('code','03','name','Travis County'),jsonb_build_object('code',case when property_id='120' then '70' else '69' end,'name',case when property_id='120' then 'Other ISD' else 'Leander ISD' end))) where anchor_dataset_id=$1`,[anchor]);
+ // Release-specific type sources; intentionally separate from private cap facts.
+ for(const source of [anchor,pre,'22222222-2222-4222-8222-222222222222']) {
+  await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status) values($1,'neighborhood-types.txt','Property',0,repeat('9',64),'complete')`,[source]);
+  let typeRow=0;
+  for(const id of ['100','101','120','121','122','123','102','103'].filter(id=>source!==pre||!['100','120','121','102','103'].includes(id)))
+   await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,'neighborhood-types.txt',$2,$3,$4,$5)`,[source,++typeRow,id,source.startsWith('2222')?'2025':'2026',{imprv_state_cd:'A1',land_state_cd:'A1',owner_name:'PRIVATE TYPE SOURCE'}]);
+ }
+ // All Property rows for a fixture agree on type. Duplicates remain harmless.
+ await db.exec(`update tcad_ingest.records set fields=fields||'{"imprv_state_cd":"A1","land_state_cd":"A1"}'::jsonb where member_name in ('0.txt','PROP.TXT')`);
  return {anchor,pre};
 }

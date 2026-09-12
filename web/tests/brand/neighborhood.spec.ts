@@ -6,7 +6,10 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.getByRole('heading',{name:'Your neighborhood',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
  await expect(page.locator('.neighborhood-own-result')).toContainText('$50,000');
- await expect(page.locator('.neighborhood-outcomes')).toContainText('50.0%');
+ await expect(page.locator('.neighborhood-outcomes')).toContainText('20.0%');
+ await expect(page.locator('.neighborhood-outcomes')).toContainText('of 5 included homes');
+ await page.locator('.neighborhood-population summary').click();
+ await expect(page.locator('.neighborhood-population')).toContainText('Property 123');
  await page.getByRole('button',{name:'Value per sq. ft.',exact:true}).focus();await page.keyboard.press('Enter');
  await expect(page.getByRole('button',{name:'Value per sq. ft.',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('img',{name:/Value per square foot distribution/})).toBeVisible();
@@ -27,5 +30,7 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await page.reload();await expect(page.getByLabel('Assessment release')).toHaveValue('33333333-3333-4333-8333-333333333333');
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page.locator('.neighborhood-season-badge')).toContainText('2025');
+ await page.getByText('How recorded protests fit into the picture',{exact:true}).click();
+ await expect(page.getByRole('row').filter({hasText:'Initially above the cap — verified'})).toContainText('Not available');
  await page.goto('/property/103/neighborhood');await expect(page.getByRole('heading',{name:'Let’s try another address'})).toBeVisible();
 });

@@ -1,7 +1,7 @@
 import 'server-only';
 import {rpc} from './properties.ts';
 import {validPropertyId,validSource} from '../property-comparisons.ts';
-import type {Neighborhood,Home,Cap} from '../neighborhood.ts';
+import {exclusionLabels,type Neighborhood,type Home,type Cap,type Population} from '../neighborhood.ts';
 import type {ComparisonProperty,ComparisonRelease} from '../property-comparisons.ts';
 const object=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
 const amount=(v:unknown)=>v===null||typeof v==='number'&&Number.isFinite(v)&&v>=0;
@@ -26,11 +26,18 @@ export function parseNeighborhood(v:unknown,id:string):Neighborhood|null {
   if(c.threshold!==null&&(c.eligible!==true||c.above!==true||Number(c.threshold)<=0))return null;
   caps.push({property_id:c.property_id,eligible:c.eligible as boolean|null,above:c.above as boolean|null,threshold:c.threshold as number|null});}
  if(new Set(homes.map(h=>h.property_id)).size!==homes.length||new Set(caps.map(c=>c.property_id)).size!==caps.length)return null;
- return {anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps};
+ const p=v.population;
+ if(!object(p)||![p.candidate_count,p.land_code_mismatch,p.multiple_buildings].every(n=>Number.isSafeInteger(n)&&Number(n)>=0&&Number(n)<=10000)||!Array.isArray(p.excluded)||p.excluded.length>10000)return null;
+ const excluded:Population['excluded']=[];
+ for(const e of p.excluded){if(!object(e)||typeof e.property_id!=='string'||!validPropertyId(e.property_id)||typeof e.reason!=='string'||!Object.hasOwn(exclusionLabels,e.reason)||homes.some(h=>h.property_id===e.property_id))return null;
+  excluded.push({property_id:e.property_id,reason:e.reason as keyof typeof exclusionLabels});}
+ if(new Set(excluded.map(e=>e.property_id)).size!==excluded.length||p.candidate_count!==homes.length+excluded.length||Number(p.land_code_mismatch)>homes.length||Number(p.multiple_buildings)>homes.length)return null;
+ const population:Population={candidate_count:p.candidate_count as number,land_code_mismatch:p.land_code_mismatch as number,multiple_buildings:p.multiple_buildings as number,excluded};
+ return {anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps,population};
 }
 export async function getNeighborhood(id:string,source:string|null=null) {
  if(!validPropertyId(id)||source!==null&&!validSource(source))return {status:'invalid' as const};
- const v=await rpc('property_neighborhood',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
+ const v=await rpc('property_neighborhood_v2',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
  if(object(v)&&v.available===true&&['missing_property','missing_snapshot','missing_area','area_too_large'].includes(String(v.status)))return {status:v.status as 'missing_property'|'missing_snapshot'|'missing_area'|'area_too_large'};
  const data=parseNeighborhood(v,id);return data?{status:'ok' as const,data}:{status:'unavailable' as const};
 }

@@ -1,7 +1,9 @@
 import { type ComparisonProperty, type ComparisonRelease } from './property-comparisons.ts';
 export type Home = { property_id:string;market:number|null;area:number|null;preliminary:number|null;certified:number|null;certified_area:number|null;prior:number|null;protested:boolean;entities:{code:string;name:string}[] };
 export type Cap = {property_id:string;eligible:boolean|null;above:boolean|null;threshold:number|null};
-export type Neighborhood = {anchor_id:string;source_id:string;releases:ComparisonRelease[];preliminary_id:string|null;certified_id:string|null;prior_id:string|null;neighborhood:string;subject:ComparisonProperty;homes:Home[];caps:Cap[]};
+export const exclusionLabels = {land_only:'Land-only valuation',unverified_type:'Property type needs verification',other_type:'Other property type',unverified_improvements:'Building value needs verification',unusable_value:'Market value unavailable or anomalous'};
+export type Population = {candidate_count:number;excluded:{property_id:string;reason:keyof typeof exclusionLabels}[];land_code_mismatch:number;multiple_buildings:number};
+export type Neighborhood = {anchor_id:string;source_id:string;releases:ComparisonRelease[];preliminary_id:string|null;certified_id:string|null;prior_id:string|null;neighborhood:string;subject:ComparisonProperty;homes:Home[];caps:Cap[];population:Population};
 export const median=(values:number[])=>{const s=[...values].sort((a,b)=>a-b);return s.length?(s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2:null;};
 export const usable=(n:number|null):n is number=>n!==null&&Number.isFinite(n)&&n>=1000;
 export const perFoot=(value:number|null,area:number|null)=>usable(value)&&area!==null&&area>0?value/area:null;
@@ -17,6 +19,7 @@ export function summarizeGroup(homes:Home[],caps:Cap[]) {
  const crossed=crossingEligible.filter(h=>h.certified!<byId.get(h.property_id)!.threshold!);
  const row=(n:number,d:number)=>({count:n,total:d,percent:percentage(n,d)});
  return {count:homes.length,above:row(above.length,eligible.length),reduced:row(reduced.length,paired.length),crossed:row(crossed.length,crossingEligible.length),
+  shares:{above:row(above.length,homes.length),reduced:row(reduced.length,homes.length),crossed:row(crossed.length,homes.length)},
   missingPair:homes.length-paired.length,unchanged:paired.filter(h=>h.certified===h.preliminary).length,increased:paired.filter(h=>h.certified!>h.preliminary!).length,
   capNotApplicable:homes.filter(h=>byId.get(h.property_id)?.eligible===false).length,capUnknown:homes.length-eligible.length-homes.filter(h=>byId.get(h.property_id)?.eligible===false).length,
   reducedWithoutThreshold:reduced.length-crossingEligible.length,remainedAbove:crossingEligible.length-crossed.length,
