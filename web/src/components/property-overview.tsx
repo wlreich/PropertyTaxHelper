@@ -1,5 +1,6 @@
 import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
+import { PropertyNavigation } from "./property-navigation";
 import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
 import { annualExplanation, priorSeasonResult } from "@/lib/homeowner-insights";
 import { SeasonNotice } from "./season-notice";
@@ -211,6 +212,14 @@ export function PropertyOverview({
           ["Year built", facts.yearBuilt ?? "Not reported"],
         ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
+      <PropertyNavigation />
+      <nav className="overview-section-nav" aria-label="Property sections">
+        <span className="overview-section-nav-label">On this page</span>
+        <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
+        <PropertySectionLink target="history-heading">Value history</PropertySectionLink>
+        <PropertySectionLink target="representation-heading">Protest &amp; agent</PropertySectionLink>
+        <PropertySectionLink target="exemptions-heading">Exemptions</PropertySectionLink>
+      </nav>
         <details className="homeowner-details overview-property-details" id="property-details">
           <summary id="property-facts-heading">View all property details</summary>
           <div className="overview-sidebar">
@@ -269,12 +278,6 @@ export function PropertyOverview({
           </p>
           </div>
         </details>
-      <nav className="overview-section-nav" aria-label="Property sections">
-        <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
-        <PropertySectionLink target="history-heading">Value history</PropertySectionLink>
-        <PropertySectionLink target="representation-heading">Protest &amp; agent</PropertySectionLink>
-        <PropertySectionLink target="exemptions-heading">Exemptions</PropertySectionLink>
-      </nav>
       <div className="overview-layout">
         <div className="overview-content">
           <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
