@@ -112,7 +112,7 @@ test('corrected release estimate does not reintroduce a removed feature',()=>{
  assert.equal(propertyAdjustments({...home,market_value:9000000},other).adjustedValue,propertyAdjustments(home,other).adjustedValue);
 });
 test('highest improvement and secondary values are counted once; incomplete costs remain unknown',()=>{
- const secondary=building({id:'second',reported_value:221996,detail_value:124717,main_value:124717,main_area:920});
+ const secondary=building({id:'second',reported_value:221996,detail_value:null,main_value:null,main_area:null,complete:false});
  const property={...other,costs:{...other.costs,improvements:[secondary,...other.costs.improvements]}};
  assert.equal(primaryBuilding(property.costs).id,'main');
  assert.equal(propertyAdjustments(home,property).lines.find(l=>l.factor==='Additional improvements').amount,-221996);

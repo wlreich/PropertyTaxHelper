@@ -52,6 +52,14 @@ export async function getComparisons(id:string,source:string|null=null,selected:
     const byId=new Map(records.map(r=>[r.property_id,r]));
     const enrich=(p:ComparisonProperty)=>withCosts(p,byId.get(p.property_id));
     data.subject=enrich(data.subject); data.candidates=data.candidates.map(enrich); data.selected=data.selected.map(enrich);data.matches=data.matches.map(enrich);
+    // Primary-building refinement can change suggestion order. Hydrate newly
+    // suggested properties too, so selecting any visible suggestion has costs.
+    const newlySuggested=suggestions(data).filter(p=>!ids.includes(p.property_id)).map(p=>p.property_id);
+    if(newlySuggested.length) {
+      const extra=await rpc("property_comparison_costs",{p_anchor:data.anchor_id,p_source:data.release.dataset_id,p_ids:newlySuggested},config,fetchRequest);
+      const parsed=parseCostRecords(extra,data.anchor_id,data.release.dataset_id,data.release.tax_year);
+      if(parsed) {for(const record of parsed) byId.set(record.property_id,record);data.candidates=data.candidates.map(enrich);}
+    }
   }
   return {status:"ok" as const,data};
 }
