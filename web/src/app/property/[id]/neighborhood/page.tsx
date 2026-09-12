@@ -13,6 +13,7 @@ import './neighborhood.css';
 export const maxDuration=30;
 export const metadata={title:'Your neighborhood | ParcelSavvy'};
 const money=(n:number|null)=>n===null?'Not available':n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+const homes=(n:number)=>`${n.toLocaleString('en-US')} ${n===1?'home':'homes'}`;
 const pct=(n:number|null)=>n===null?'Not available':`${n.toFixed(1)}%`;
 const count=(n:number)=>n.toLocaleString('en-US');
 const rate=(r:{count:number;total:number;percent:number|null})=>`${count(r.count)} of ${count(r.total)} · ${pct(r.percent)}`;
@@ -34,7 +35,7 @@ export default async function NeighborhoodPage({params,searchParams}:{params:Pro
   <dl className="neighborhood-snapshot">
    <div><dt>Homes in this release</dt><dd>{count(s.all.count)}</dd></div>
    <div><dt>Median market value</dt><dd>{money(s.median)}</dd></div>
-   <div><dt>Your home vs. median</dt><dd>{s.difference===null?'Not available':s.difference===0?'At the median':`${money(Math.abs(s.difference))} ${s.difference>0?'above':'below'}`}<span>{s.differencePercent===null?'':`${pct(Math.abs(s.differencePercent))} ${s.differencePercent>=0?'higher':'lower'}`}</span></dd></div>
+   <div><dt>Your home vs. median</dt><dd>{s.difference===null?'Not available':s.difference===0?'At the median':`${money(Math.abs(s.difference))} ${s.difference>0?'above':'below'}`}<span>{s.differencePercent===null?'':s.differencePercent===0?'Same as median':`${pct(Math.abs(s.differencePercent))} ${s.differencePercent>=0?'higher':'lower'}`}</span></dd></div>
    <div><dt>Median value per sq. ft.</dt><dd>{money(s.medianPerFoot)}<span>Market assessment, including land</span></dd></div>
   </dl>
   {s.annual&&<p className="neighborhood-note">{pct(Math.abs(s.annual.percent))} {s.annual.percent>=0?'higher':'lower'} median market value than {r.tax_year-1} certified, using the same {count(s.annual.count)} homes in both releases.</p>}
@@ -44,9 +45,9 @@ export default async function NeighborhoodPage({params,searchParams}:{params:Pro
    <p>How TCAD started, what changed, and which reductions went below the cap.</p>
    <p className="neighborhood-note">{pre?`${dateLabel(pre.export_date)} preliminary`:'Preliminary release not available'} → {cert?`${dateLabel(cert.export_date)} certified`:'Certified comparison not available for this release'}</p>
    <div className="neighborhood-outcomes">
-    <article><h3>1 · Initially above the cap</h3><strong>{pre?`${count(s.all.above.count)} homes`:'Not available'}</strong><b>{pre?pct(s.all.above.percent):'—'}</b><p>of {count(s.all.above.total)} homes with a verified applicable cap and preliminary value</p><p className="neighborhood-outcome-explanation">Proposed market value exceeded the capped assessment.</p></article>
-    <article><h3>2 · Values reduced</h3><strong>{complete?`${count(s.all.reduced.count)} homes`:'Not available'}</strong><b>{complete?pct(s.all.reduced.percent):'—'}</b><p>of {count(s.all.reduced.total)} homes with both values</p><p className="neighborhood-outcome-explanation">Market value decreased between preliminary and certified records.</p></article>
-    <article className="neighborhood-cap-outcome"><h3>3 · Moved below the cap</h3><strong>{complete?`${count(s.all.crossed.count)} homes`:'Not available'}</strong><b>{complete?pct(s.all.crossed.percent):'—'}</b><p>of {count(s.all.crossed.total)} reduced homes that started at or above an identifiable cap threshold</p><p className="neighborhood-outcome-explanation">Final market value went below the protection already provided by the preliminary cap.</p></article>
+    <article><h3>1 · Initially above the cap</h3><strong>{pre?homes(s.all.above.count):'Not available'}</strong><b>{pre?pct(s.all.above.percent):'—'}</b><p>of {count(s.all.above.total)} homes with a verified applicable cap and preliminary value</p><p className="neighborhood-outcome-explanation">Proposed market value exceeded the capped assessment.</p></article>
+    <article><h3>2 · Values reduced</h3><strong>{complete?homes(s.all.reduced.count):'Not available'}</strong><b>{complete?pct(s.all.reduced.percent):'—'}</b><p>of {count(s.all.reduced.total)} homes with both values</p><p className="neighborhood-outcome-explanation">Market value decreased between preliminary and certified records.</p></article>
+    <article className="neighborhood-cap-outcome"><h3>3 · Moved below the cap</h3><strong>{complete?homes(s.all.crossed.count):'Not available'}</strong><b>{complete?pct(s.all.crossed.percent):'—'}</b><p>of {count(s.all.crossed.total)} reduced homes that started at or above an identifiable cap threshold</p><p className="neighborhood-outcome-explanation">Final market value went below the protection already provided by the preliminary cap.</p></article>
    </div>
    {s.own&&<div className="neighborhood-own-result"><p><strong>Your home moved below the cap</strong></p><h3>{money(s.own.dollars)} below your preliminary capped assessment · {pct(s.own.percent)}</h3><p>From {money(s.own.threshold)} capped to {money(s.own.final)} certified. Value reduction before exemptions, not tax-dollar savings.</p></div>}
    <div className="neighborhood-protest-strip"><p>Protests on record: <strong>{count(s.protested.count)} of {count(s.all.count)} homes · {pct(s.participation)}</strong></p><p>Average reduction: <strong>{complete?`${money(s.all.averageReduction)} · ${pct(s.all.averagePercent)}`:'Not available'}</strong><span>among {count(s.all.reduced.count)} homes with reductions</span></p></div>

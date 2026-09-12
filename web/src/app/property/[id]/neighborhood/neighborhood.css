@@ -1,4 +1,6 @@
-.neighborhood-page {display:grid;gap:var(--space-4);}
+.neighborhood-page {display:grid;gap:var(--space-4);overflow-wrap:anywhere;}
+.neighborhood-page>* {min-width:0;}
+.neighborhood-section-heading>* {min-width:0;max-width:100%;}
 .neighborhood-page h1,.neighborhood-page h2,.neighborhood-page h3,.neighborhood-page p {margin:0;}
 .neighborhood-page h2 {font-size:var(--text-h3);line-height:var(--line-h3);}
 .neighborhood-page h3 {font-size:var(--text-body);line-height:var(--line-body);}

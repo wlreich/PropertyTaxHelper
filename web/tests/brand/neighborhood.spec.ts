@@ -18,7 +18,8 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const overflow=await page.evaluate(()=>Array.from(document.querySelectorAll('main *')).filter(e=>e.getBoundingClientRect().right>innerWidth&&!e.closest('.neighborhood-table-scroll')).map(e=>({tag:e.tagName,class:e.className,text:e.textContent?.slice(0,60),right:e.getBoundingClientRect().right})));
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),JSON.stringify(overflow)).toBe(true);
  await page.evaluate(()=>{document.documentElement.style.fontSize='';window.scrollTo(0,0);});
  await page.getByLabel('Assessment release').selectOption('33333333-3333-4333-8333-333333333333');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page).toHaveURL(/release=33333333/);await expect(page.locator('.neighborhood-season-badge')).toContainText('Comparison incomplete');
