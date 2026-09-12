@@ -1,4 +1,4 @@
-// Source: TCAD Sale and Equity Grids, in the owner's verified 2026 packet, Appendix D pp. 29–31.
+// Source: TCAD’s 2026 Sale and Equity Grids methodology.
 // Missing condition/state/eligibility inputs must never become confirmed tier matches.
 export const comparisonMethod = {
   year: 2026,
