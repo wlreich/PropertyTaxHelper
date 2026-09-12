@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test projection.test.mjs snapshots.test.mjs protests.test.mjs seasons.test.mjs comparisons.test.mjs"
+    "test": "node --experimental-strip-types --conditions=react-server --test projection.test.mjs snapshots.test.mjs protests.test.mjs seasons.test.mjs comparisons.test.mjs neighborhoods.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14"

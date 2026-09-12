@@ -1,3 +1,4 @@
+import {seedNeighborhood} from './neighborhood-fixture.mjs';
 // Local browser verification only. Synthetic records and authentication, loopback only.
 import {seedComparisons} from './comparison-fixture.mjs';
 import {fixtureHistory} from './history-fixture.mjs';
@@ -7,6 +8,7 @@ const db=await fixtureDatabase({parklandFixtures:true});
 const actor='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', session='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
 await seedComparisons(db);
+await seedNeighborhood(db);
 await db.query('insert into auth.users(id,email_confirmed_at) values($1,now())',[actor]);
 await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,actor]);
 await db.query('insert into parcel_admin.members(user_id) values($1)',[actor]);
@@ -31,6 +33,7 @@ createServer((req,res)=>{
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
    if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
+   else if(route==='property_neighborhood')result=await call('select public.property_neighborhood($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_comparisons')result=await call('select public.property_comparisons($1,$2,$3,$4,$5) result',[args.p_id,args.p_source??null,typeof args.p_selected==='string'?args.p_selected.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_selected??[],args.p_query??'',Number(args.p_page??0)]);
    else if(route==='search_property_parcels')result=await call('select public.search_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='property_profile')result=await call('select public.property_profile($1) result',[args.p_id]);
