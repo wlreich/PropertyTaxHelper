@@ -6,14 +6,26 @@ import {useRef,useState,type FormEvent} from "react";
 import {comparisonMethod,comparisonSummary,matchProperty,suggestions,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
 import {currency,parseSearch} from "@/lib/property-search";
 import {PropertySectionLink} from "./property-section-link";
+import {AdjustedComparisons} from "./adjusted-comparisons";
 
 const number=(n:number|null,unit="")=>n===null?"Not reported":`${n.toLocaleString("en-US",{maximumFractionDigits:4})}${unit}`;
 function Match({subject,property}:{subject:ComparisonProperty;property:ComparisonProperty}) {
   const match=matchProperty(subject,property);
   return <><span className="comparison-tier">{match.tier===null?"Review differences":`Possible Tier ${match.tier}`}</span><span className="comparison-small">Not fully verified</span></>;
 }
-export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initialIds:string[]|null}) {
+export function ComparisonWorkspace({data,initialIds,initialView="reported"}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted"}) {
   const router=useRouter();
+  const [view,setView]=useState(initialView);
+  const suggestionsHeading=useRef<HTMLHeadingElement>(null);
+  function changeView(next:"reported"|"adjusted",edit=false) {
+    setView(next);
+    const url=new URL(window.location.href);
+    url.searchParams.set("view",next);
+    url.searchParams.set("release",data.release.dataset_id);
+    url.searchParams.set("selected",selected.map(p=>p.property_id).join(","));
+    window.history.replaceState(window.history.state,"",url);
+    if(edit)requestAnimationFrame(()=>{suggestionsHeading.current?.focus();suggestionsHeading.current?.scrollIntoView({block:"start"});});
+  }
   const recommended=suggestions(data);
   const [selected,setSelected]=useState<ComparisonProperty[]>(initialIds===null?recommended.slice(0,3):data.selected);
   const [tier,setTier]=useState("all"),[sort,setSort]=useState("match"),[showAll,setShowAll]=useState(false);
@@ -56,7 +68,7 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
     finally {if(request===requestNumber.current)setBusy(false);}
   }
   function releaseChange(source:string) {
-    const params=new URLSearchParams({release:source,selected:selected.map(p=>p.property_id).join(",")});
+    const params=new URLSearchParams({release:source,selected:selected.map(p=>p.property_id).join(","),view});
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
   function candidateRow(p:ComparisonProperty) {
@@ -69,14 +81,16 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
     </tr>;
   }
   return <>
-    <div className="comparison-title"><div><h2>Compare your assessment</h2><p>Start with similar properties, then build your own comparison set.</p></div>
+    <div className="comparison-title"><div><h2>Compare your assessment</h2><p>{view==="reported"?"Start with similar properties, then build your own comparison set.":"See the available adjustments and the inputs still needed."}</p></div>
       <label className="comparison-release">Assessment release<select value={data.release.dataset_id} onChange={e=>releaseChange(e.target.value)}>{data.releases.map(r=><option key={r.dataset_id} value={r.dataset_id}>{r.tax_year} · {r.roll_stage} · {r.export_date??"Date not reported"}</option>)}</select></label>
     </div>
+    <div className="comparison-view-controls"><div className="comparison-view-switch" role="group" aria-label="Comparison values"><button aria-pressed={view==="reported"} onClick={()=>changeView("reported")}>Reported values</button><button aria-pressed={view==="adjusted"} onClick={()=>changeView("adjusted")}>Adjusted to your property</button></div>{view==="adjusted"&&<button className="comparison-add-link" onClick={()=>changeView("reported",true)}>Edit comparison set ({selected.length})</button>}</div>
     <div className="comparison-modes"><strong>Assessment comparisons</strong><span>Sales comparisons · Coming later</span></div>
     <div className="comparison-guidance"><div><strong>Using TCAD’s documented 2026 comparison criteria</strong><p>Possible tiers use recorded size, age, class, and market area. Condition, state classification, and full eligibility are unverified.</p>{data.release.tax_year!==comparisonMethod.year&&<p><strong>{data.release.tax_year} rules have not been verified. These are the 2026 criteria.</strong></p>}</div><PropertySectionLink target="comparison-rules-heading">How the rules work</PropertySectionLink></div>
+    <div hidden={view!=="reported"}>
     <div className="comparison-workspace">
       <section className="comparison-card comparison-suggestions" aria-labelledby="suggestions-heading">
-        <div className="comparison-card-heading"><h3 id="suggestions-heading">Suggested properties</h3><p>Showing {visible.length} of {filtered.length} suggestions · Market area {data.subject.neighborhood??"not reported"}</p></div>
+        <div className="comparison-card-heading"><h3 id="suggestions-heading" ref={suggestionsHeading} tabIndex={-1}>Suggested properties</h3><p>Showing {visible.length} of {filtered.length} suggestions · Market area {data.subject.neighborhood??"not reported"}</p></div>
         <div className="comparison-controls"><label>Possible match tier<select value={tier} onChange={e=>{setTier(e.target.value);setShowAll(false);}}><option value="all">All possible tiers</option>{comparisonMethod.tiers.map(t=><option key={t.tier} value={t.tier}>Possible Tier {t.tier}</option>)}</select></label><label>Sort by<select value={sort} onChange={e=>setSort(e.target.value)}><option value="match">Closest recorded match</option><option value="value">Lowest reported value</option></select></label><PropertySectionLink target="comparison-search-heading" className="comparison-add-link">+ Add by address or ID</PropertySectionLink></div>
         {data.candidate_limit_reached&&<p className="comparison-inline-note">This market area has more than 2,000 records. Suggestions use a limited set; use address search to explore beyond it.</p>}
         {visible.length>0&&<p className="comparison-small comparison-mobile-hint">Scroll the table sideways for values and match details.</p>}
@@ -122,6 +136,8 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
       </tbody></table></div></>:<p className="comparison-inline-note">Choose properties above to build your comparison table.</p>}
       <p className="comparison-small">Source: TCAD {data.release.tax_year} {data.release.roll_stage} records · Exported {data.release.export_date??"date not reported"}. Differences in reported values alone do not establish overassessment or tax savings.</p>
     </section>
+    </div>
+    {view==="adjusted"&&<AdjustedComparisons subject={data.subject} selected={selected} release={data.release}/>}
     <details className="comparison-card comparison-method"><summary id="comparison-rules-heading">How the rules work</summary><p>These comparison rules are based on TCAD’s 2026 Sale and Equity Grids methodology.</p>
       <p>Equity searches use the same market area and state classification. TCAD scores differences in condition, class, living area, and year built. These tiers describe progressively wider search criteria.</p>
       <div className="comparison-table-scroll" role="region" aria-label="TCAD equity tier criteria" tabIndex={0}><table><thead><tr><th scope="col">Tier</th><th scope="col">Living area</th><th scope="col">Condition</th><th scope="col">Class</th><th scope="col">Year built</th></tr></thead><tbody>{comparisonMethod.tiers.map(t=><tr key={t.tier}><th scope="row">{t.tier}</th><td>Within {t.area}%</td><td>{t.condition?`Within ${t.condition} ${t.condition===1?"step":"steps"}`:"Same"}</td><td>{t.classSteps?`Within ${t.classSteps} ${t.classSteps===1?"step":"steps"}`:"Same"}</td><td>Within {t.years} years</td></tr>)}</tbody></table></div>
@@ -129,6 +145,6 @@ export function ComparisonWorkspace({data,initialIds}:{data:ComparisonData;initi
       <p><strong>What ParcelSavvy can check today:</strong> same market area, same recorded construction class, size and age tolerances. Suggestions are ordered by possible tier, then size difference, age difference, and property ID. This is a partial similarity check, not TCAD’s full score. We cannot verify condition, state classification, all exclusions, or class-step differences from these published records. Multiple living-area buildings are left out of suggestions when the primary improvement cannot be established.</p>
       <p>2026 rules remain explicitly labeled when you view another year. A property outside these suggestions may still be useful to explore; this page does not determine what an appraiser or hearing panel will accept.</p>
     </details>
-    <details className="comparison-card comparison-method"><summary>Understand the adjustments</summary><p>A match tier helps select properties. An adjusted value asks what each comparable’s value would look like with your property’s characteristics.</p><p>TCAD’s documented formulas address land, construction class, depreciation, living area, non-living details, additional improvements, and neighborhood adjustments. For example, the land adjustment is the subject’s land value minus the comparable’s land value.</p><p>This version shows reported market values and their median before adjustments. It does not calculate adjusted values because the published records lack the complete replacement-cost, depreciation, condition, and neighborhood-factor inputs. A dollar difference here is a difference in property value, not a tax saving.</p></details>
+    <details className="comparison-card comparison-method"><summary>Understand the adjustments</summary><p>A match tier helps select properties. An adjusted value asks what each comparable’s value would look like with your property’s characteristics.</p><p>TCAD’s documented formulas address land, construction class, depreciation, living area, non-living details, additional improvements, and neighborhood adjustments. For example, the land adjustment is the subject’s land value minus the comparable’s land value.</p><p>Switch to Adjusted to your property to see the land adjustment and its calculation inputs for each comparable. The land-adjusted subtotal is a partial calculation, not a complete adjusted value. The published records lack the remaining replacement-cost, depreciation, improvement, and neighborhood-factor inputs. Missing inputs never count as zero; only complete estimates enter the adjusted median. A dollar difference here is a difference in property value, not a tax saving.</p></details>
   </>;
 }
