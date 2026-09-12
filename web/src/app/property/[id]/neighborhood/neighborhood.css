@@ -86,3 +86,4 @@
  .neighborhood-chart-labels {font-size:var(--text-small);}
  .neighborhood-outcomes article {padding:var(--space-3);}
 }
+.neighborhood-population a {text-decoration:underline;text-underline-offset:.15em;}
