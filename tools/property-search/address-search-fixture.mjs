@@ -1,0 +1,9 @@
+export async function seedAddressSearch(db) {
+  const addresses = ['1800 W 36 ST', '1800 E 36 ST', '1801 W 36 ST', '1800 W 37 ST', '1800 W 136 ST', '1800 W 36 AVE', '1800 W 36', '1800 36 ST', '300 TESTING', '300 TESTING AVE', '700 PAW PRINT DR UNIT 2', '700 PAW PRINT DR UNIT 3', '701 PAW PRINT DR UNIT 2', '36 W SAMPLE ST'];
+  for (const [i,address] of addresses.entries()) {
+    await db.query(`insert into public.property_search_documents
+      select (jsonb_populate_record(null::public.property_search_documents,to_jsonb(d)||jsonb_build_object(
+       'property_id',$1::text,'address',$2::text,'search_text',public.normalize_property_address($2::text||' FIXTURE CITY 78700')))).*
+      from public.property_search_documents d where property_id='100'`, [String(990000+i),address]);
+  }
+}

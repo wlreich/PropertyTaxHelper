@@ -115,3 +115,15 @@ The rendered-page check starts the production Next.js build and synthetic RPC se
 TCAD Legacy 8.0.33 stores land acreage with four implied decimal places: the raw integer `14309` represents `1.4309` acres. The layout labels LandDetail.size_acres as four decimals and Property.land_acres as its sum; source segment square footage confirms the scale. Dollar amounts and ownership percentages use their existing conversions.
 
 The private `search_acres` converter applies this acreage-specific scale to integer strings and preserves explicit decimal strings with up to four places. Missing, malformed, or negative acreage remains unknown. The acreage repair recomputes existing non-null website values from the original Property fields, so rerunning it cannot divide a corrected value again. Raw ingestion records, other website fields, confidentiality filtering, and public permissions are unchanged.
+
+## Address matching, second pass
+
+The website calls `search_property_parcels_v2`. The earlier RPC stays available during deployment. Both read the same published projection and retain its confidentiality, release and parkland rules; raw source records and displayed addresses are unchanged.
+
+Search parses house number, street words, direction, suffix and unit. Numbered street ordinals (36th/36) are equivalent. A supplied house or unit must match exactly. An omitted stored suffix or direction is tolerated and ranked below a complete match; a conflicting supplied suffix or direction is rejected. Street-name prefixes still support partial input. City and ZIP can be supplied at the end when those fields are recorded.
+
+Only when the entire normal search has no results, the first page can return up to five **Possible matches**. Exactly one street word of at least five letters may differ by one insertion, deletion, substitution or adjacent transposition. Digits and short words are never corrected. Suggestions retain exact house and unit requirements and direction/suffix checks. Exhausted later pages never turn into suggestions.
+
+The existing GIN trigram index selects candidates; component checks determine eligibility. A low trigram candidate threshold accommodates a central transposition in a five-letter word; it is not the acceptance criterion. Queries with a house number use that exact prefix to constrain spelling candidates. No county-wide similarity score is shown to homeowners.
+
+Checks cover ordinal variants, omitted versus conflicting components, numbered streets, house/unit boundaries, one versus multiple typos, suggestion limits, later pages, ID lookup, privacy, keyboard navigation and responsive layouts.

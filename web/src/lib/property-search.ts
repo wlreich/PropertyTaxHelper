@@ -23,6 +23,7 @@ const abbreviations: Record<string, string> = {
 };
 export function normalizeAddress(query: string) {
   return query
+    .replace(/#/g, " UNIT ")
     .toUpperCase()
     .replace(/['.]/g, "")
     .replace(/[^A-Z0-9]+/g, " ")
@@ -34,10 +35,11 @@ export function normalizeAddress(query: string) {
 export function parseSearch(query: string, page = "0") {
   const q = query.trim().replace(/\s+/g, " ");
   const parts = normalizeAddress(q).split(" ");
+  const numberedStreet = parts.length > 1 && /^(?:(?:N|S|E|W|NE|NW|SE|SW) )?\d{2,}(?: (?:ST|RD|AVE|BLVD|DR|LN|CT|CIR|TRL|PKWY|HWY|PL|TER|WAY|LOOP|CV))?$/.test(parts.join(" "));
   const error =
     q.length > 120 || parts.length > 8
       ? "Use a shorter address: up to 120 characters and eight address parts."
-      : !parts.some((part) => part.length >= 3)
+      : !parts.some((part) => part.length >= 3) && !numberedStreet
         ? "Enter at least three letters or digits together, such as part of a street name."
         : null;
   const parsedPage = /^\d{1,3}$/.test(page) ? Number(page) : 0;
