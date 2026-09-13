@@ -17,7 +17,10 @@ test('neighborhood releases, cap outcomes, protest deduplication, and public vis
  assert.equal(s.all.reduced.count,2);assert.equal(s.all.reduced.total,3);
  assert.equal(s.all.crossed.count,1);assert.equal(s.all.crossed.total,2);
  assert.equal(s.own.dollars,50000);assert.equal(s.own.percent,10);
- assert.equal(s.protested.count,1);assert.equal(data.homes.find(h=>h.property_id==='120').protested,false);
+ assert.equal(s.protested.count,2);
+ assert.equal(data.homes.find(h=>h.property_id==='120').protested,true); // Flag-only informal evidence counts despite a clean certified snapshot.
+ assert.equal(data.homes.find(h=>h.property_id==='121').protested,false); // Agent assignment alone does not.
+ assert.equal(s.protested.reduced.count,2);assert.equal(s.other.reduced.count,0);
  assert.equal(s.all.averageReduction,125000);
  assert.ok(s.entities.some(e=>e.code==='70'&&!e.applies));
  const early=parseNeighborhood(await call(pre),'100');assert.equal(early.certified_id,null);assert.equal(neighborhoodSummary(early).own,null);

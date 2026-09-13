@@ -16,7 +16,7 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
  let row=0;
  const fields={py_confidential_flag:'F',jan1_confidential_flag:'F',appr_confidential_flag:'F',partial_owner:'F',ownership_pct:'100.00',udi_group:'000000000000',arb_protest_flag:'F',arb_agent_id:'0',geo_id:'G',ref_id1:'R1',ref_id2:'R2',owner_name:'PRIVATE OWNER'};
  const add=(type,id,data,year='02026',ds=source)=>db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,$2,$3,$4,$5,$6)`,[ds,type,++row,id===null?null:String(id).padStart(12,'0'),year,data]);
- for(const id of [101,102,103,104,106,110,200,201,202,203,204,205,206,207,208,209,210]) await add('Property',id,{...fields});
+ for(const id of [101,102,103,104,106,110,200,201,202,203,204,205,206,207,208,209,210,211,212,213]) await add('Property',id,{...fields});
  await add('Property',200,{...fields}); // Duplicate owner rows are ambiguous.
  await add('Agent',null,{agent_id:'0007',agent_name:'FIXTURE TAX ADVISERS',phone:'PRIVATE PHONE'});
  await add('Agent',null,{agent_id:'0008'},'02026',later); // Wrong dataset cannot supply an agent link.
@@ -32,8 +32,10 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
  await add('ARB',208,{arb_status:'EF'});
  await add('ARB',209,{arb_status:'EF'});
  await add('ARB',210,{arb_status:'EF'});
+ await add('ARB',212,{arb_status:'EF',geo_id:'G',ref_id1:'R1',ref_id2:'R2'}); // ARB case can corroborate a protest when the property flag is F.
  for(const [id,changes] of [[101,{arb_protest_flag:'T',arb_agent_id:'0007'}],[200,{arb_protest_flag:'T'}],[110,{arb_agent_id:'0008'}],[201,{arb_agent_id:'0007'}],
-  [203,{py_confidential_flag:'T'}],[204,{jan1_confidential_flag:null}],[205,{appr_confidential_flag:'T'}],[206,{partial_owner:'T'}],[207,{ownership_pct:'50'}],[208,{udi_group:'123'}],[209,{ownership_pct:null}]])
+  [203,{py_confidential_flag:'T'}],[204,{jan1_confidential_flag:null}],[205,{appr_confidential_flag:'T'}],[206,{partial_owner:'T'}],[207,{ownership_pct:'50'}],[208,{udi_group:'123'}],[209,{ownership_pct:null}],
+  [211,{arb_protest_flag:'T'}],[213,{arb_agent_id:'0007'}]])
   await db.query(`update tcad_ingest.records set fields=fields||$1::jsonb where dataset_id=$2 and member_name='Property' and prop_id=$3`,[JSON.stringify(changes),source,String(id).padStart(12,'0')]);
  const publish=(ds=source,after='',limit=50000)=>db.query('select tcad_ingest.publish_property_protests($1,$2,$3) result',[ds,after,limit]);
  const history=async id=>(await db.query('select public.property_history($1) result',[String(id)])).rows[0].result;
@@ -52,10 +54,20 @@ test('protest evidence: exact year/source links, privacy, retries, later absence
  assert.equal((await history(202)).protest_observations[0].protest_flag,false);
  assert.equal((await history(201)).protest_observations[0].arb_case_listed,false);
  assert.equal((await history(201)).protest_observations[0].arb_agent_listed,true); // Agent alone is not a protest.
+ const informal=(await history(211)).protest_observations;
+ const arbOnly=(await history(212)).protest_observations;
+ const agentOnly=(await history(213)).protest_observations;
+ assert.equal(informal[0].protest_flag,true);assert.equal(informal[0].arb_case_listed,false);
+ assert.equal(arbOnly[0].protest_flag,false);assert.equal(arbOnly[0].arb_case_listed,true);
+ assert.equal(agentOnly[0].protest_flag,false);assert.equal(agentOnly[0].arb_case_listed,false);assert.equal(agentOnly[0].arb_agent_listed,true);
  for(const id of [100,102,103,104,106,110,200,203,204,205,206,207,208,209]) assert.deepEqual((await history(id)).protest_observations,[],String(id));
  await publish(); assert.deepEqual((await history(101)).protest_observations,obs);
- await add('Property',101,{...fields},'02026',later); await publish(later);
+ for(const id of [101,211,212,213]) await add('Property',id,{...fields},'02026',later);
+ await publish(later);
  assert.deepEqual((await history(101)).protest_observations,obs); // Later absence never erases evidence.
+ assert.deepEqual((await history(211)).protest_observations,informal); // Informal-resolution evidence also survives a clean later export.
+ assert.deepEqual((await history(212)).protest_observations,arbOnly);
+ assert.deepEqual((await history(213)).protest_observations,agentOnly);
  await db.exec(`create function pg_temp.stop_protests() returns trigger language plpgsql as $$ begin raise exception 'synthetic publication failure'; end $$;
  create trigger stop_protests before insert on public.property_protest_observations for each row execute function pg_temp.stop_protests();`);
  await assert.rejects(publish(),/synthetic publication failure/);

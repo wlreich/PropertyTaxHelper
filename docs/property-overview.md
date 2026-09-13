@@ -79,6 +79,11 @@ guessed definition. Values remain null when unreported.
   withheld rather than presented as the characteristics of one home.
 - Protest evidence is historical. No flag/case is never interpreted as proof that
   no protest occurred. Positive observations are retained across loaded snapshots.
+- A protest is recorded when any available same-year snapshot has a positive TCAD
+  protest flag or a matching ARB case. The flag can preserve an informal-resolution
+  protest that never produced an ARB case. An agent assignment alone is representation
+  evidence, not proof of a protest, and later negative or absent fields never erase an
+  earlier positive observation.
 
 ## Verification
 
