@@ -45,6 +45,11 @@ test('address variants and labeled spelling suggestions', async ({page}, info) =
   await page.screenshot({path:capture,fullPage:true});
   await info.attach('Possible matches',{path:capture,contentType:'image/png'});
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+  const overflowing = await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,className:el.className})));
+  expect(overflowing).toEqual([]);
+  const enlarged=info.outputPath('possible-matches-enlarged.png');
+  await page.screenshot({path:enlarged,fullPage:true});
+  await info.attach('Possible matches with enlarged text',{path:enlarged,contentType:'image/png'});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.locator('.result-card').press('Enter');
   await expect(page).toHaveURL(/property\/990010/);
