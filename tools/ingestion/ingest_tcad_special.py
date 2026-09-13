@@ -222,7 +222,7 @@ def scan_member(archive, item, year, consume=None):
                             f"Property row {properties}: duplicate appeal identifier in export"
                         )
                     seen_appeals.add(appeal["appeal_id"])
-                    statuses[appeal["appeal_status"]] += 1
+                    statuses[appeal["appeal_status"] or "(missing)"] += 1
                     informal += int(appeal["informal"])
                     finalized += int(appeal["finalized"])
                     before, after = appeal["initial_appraised_value"], appeal["final_appraised_value"]
