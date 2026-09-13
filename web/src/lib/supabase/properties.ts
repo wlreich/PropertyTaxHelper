@@ -20,6 +20,7 @@ export type Release = {
   export_time_raw: string | null;
 };
 export type SearchResults = Release & {
+  match_mode: "standard" | "possible";
   items: (SearchItem & { is_parkland: boolean })[];
   has_more: boolean;
   limit_reached: boolean;
@@ -124,7 +125,7 @@ export async function searchProperties(
   if (parseSearch(q).error || !Number.isInteger(page) || page < 0 || page > 249)
     return { status: "invalid" };
   const v = await rpc(
-    "search_property_parcels",
+    "search_property_parcels_v2",
     { p_query: q, p_page: page, p_show_all: showAll },
     config,
     fetchRequest,
@@ -132,6 +133,7 @@ export async function searchProperties(
   if (
     !object(v) ||
     v.available !== true ||
+    (v.match_mode !== undefined && v.match_mode !== "standard" && v.match_mode !== "possible") ||
     !release(v) ||
     !Array.isArray(v.items) ||
     v.items.length > 20 ||
@@ -144,6 +146,7 @@ export async function searchProperties(
   return {
     status: "ok",
     data: {
+      match_mode: v.match_mode === "possible" ? "possible" : "standard",
       tax_year: v.tax_year,
       roll_stage: v.roll_stage,
       export_time_raw: v.export_time_raw,

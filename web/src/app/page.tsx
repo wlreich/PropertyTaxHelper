@@ -90,9 +90,9 @@ export default async function Home({
           >
             <div className="section-heading">
               <div>
-                <h2 id="results-heading">Matching properties</h2>
+                <h2 id="results-heading">{result.data.match_mode === "possible" ? "Possible matches" : "Matching properties"}</h2>
                 <p>
-                  Matches for “{q}” · {" "}
+                  {result.data.match_mode === "possible" ? "Possible matches" : "Matches"} for “{q}” · {" "}
                   {result.data.items.length
                     ? `Showing ${page * 20 + 1}–${page * 20 + result.data.items.length}${result.data.has_more ? "; more results available" : ""}`
                     : "No matches on this page"}
@@ -102,6 +102,7 @@ export default async function Home({
                 Source: TCAD · {result.data.tax_year} {result.data.roll_stage}
               </span>
             </div>
+            {result.data.match_mode === "possible" && <p>No exact address matches found. These addresses have a similar street spelling. Check the stored address before choosing a property.</p>}
             <p className={styles.sourceNote}>{result.data.export_time_raw ? `TCAD export: ${result.data.export_time_raw}` : "Export date not reported in this release."}</p>
             {!result.data.items.length ? (
               <div className="empty-state">

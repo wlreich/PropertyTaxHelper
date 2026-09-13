@@ -62,3 +62,15 @@
   .page :global(.result-arrow) { padding-left: 0; }
   .page :global(.result-value) { order: initial; display: block; width: auto; text-align: right; padding-top: 0; border-top: 0; }
 }
+/* Let enlarged text wrap without widening the search page. */
+.page h1, .page :global(.result-meta), .page :global(.result-value) { overflow-wrap: anywhere; }
+.page :global(.release-badge) { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+.page :global(.results-section) { container-type: inline-size; }
+@container (max-width: 20em) {
+  .resultColumns { display: none; }
+  .page :global(.result-card) { grid-template-columns: minmax(0, 1fr) var(--text-h3); }
+  .page :global(.result-address) { grid-column: 1 / -1; }
+  .page :global(.result-value) { text-align: left; }
+  .page :global(.result-value) .valueLabel { font-size: var(--text-label); line-height: var(--line-label); }
+  .valueLabel { position: static; display: block; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
+}

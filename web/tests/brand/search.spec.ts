@@ -29,3 +29,28 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await page.goto('/?q=NoSuchStreet');
   await expect(page.getByRole('heading',{name:'No matching addresses found'})).toBeVisible();
 });
+
+test('address variants and labeled spelling suggestions', async ({page}, info) => {
+  await page.goto('/?q=1800+West+36th+Street');
+  await expect(page.locator('.result-card').first()).toContainText('1800 W 36 ST');
+  await expect(page.locator('.result-card')).toHaveCount(3);
+  await page.getByLabel('Property address or property ID').fill('700 Paw Prnit Drive Apt 2');
+  await page.getByRole('button',{name:'Search property'}).click();
+  await expect(page.getByRole('heading',{name:'Possible matches',exact:true})).toBeVisible();
+  await expect(page.locator('.result-card')).toHaveCount(1);
+  await expect(page.locator('.result-card')).toContainText('700 PAW PRINT DR UNIT 2');
+  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  await page.locator('.result-card').focus();
+  const capture=info.outputPath('possible-matches.png');
+  await page.screenshot({path:capture,fullPage:true});
+  await info.attach('Possible matches',{path:capture,contentType:'image/png'});
+  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+  const overflowing = await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,className:el.className})));
+  expect(overflowing).toEqual([]);
+  const enlarged=info.outputPath('possible-matches-enlarged.png');
+  await page.screenshot({path:enlarged,fullPage:true});
+  await info.attach('Possible matches with enlarged text',{path:enlarged,contentType:'image/png'});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.locator('.result-card').press('Enter');
+  await expect(page).toHaveURL(/property\/990010/);
+});

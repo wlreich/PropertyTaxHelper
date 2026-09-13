@@ -82,7 +82,7 @@ test("result and back links encode user text and stay inside the site", () => {
 test("valid search uses a read-only, uncached RPC and returns a strict field list", async () => {
   const r = await searchProperties("Oak", 1, config, async (input, init) => {
     const u = new URL(input);
-    assert.equal(u.pathname, "/rest/v1/rpc/search_property_parcels");
+    assert.equal(u.pathname, "/rest/v1/rpc/search_property_parcels_v2");
     assert.equal(u.searchParams.get("p_query"), "Oak");
     assert.equal(u.searchParams.get("p_page"), "1");
     assert.equal(u.searchParams.get("p_show_all"), "false");
@@ -207,4 +207,13 @@ test("all-parcels mode reaches the RPC and survives navigation", async () => {
   }, true);
   assert.equal(r.status,"ok");
   assert.equal(r.data.items[0].is_parkland,true);
+});
+
+test('numbered street queries and unit shorthand pass input validation', () => {
+ for(const q of ['W 36 ST','36 Street','West 36th Street','1800 W 36th St','700 Paw Print Dr #2']) assert.equal(parseSearch(q).error,null);
+});
+test('possible matches survive response validation and unknown modes fail closed', async () => {
+ const r=await searchProperties('Prnit',0,config,async()=>Response.json({...search,match_mode:'possible'}));
+ assert.equal(r.status,'ok'); assert.equal(r.data.match_mode,'possible');
+ assert.equal((await searchProperties('Prnit',0,config,async()=>Response.json({...search,match_mode:'unexpected'}))).status,'unavailable');
 });
