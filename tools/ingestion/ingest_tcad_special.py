@@ -24,7 +24,6 @@ LAYOUT_PATH = Path(__file__).with_name("tcad-special-json-layout.json")
 IMPORT_SCOPE = "special_protests"
 MAX_UNCOMPRESSED_BYTES = 100 * 1024**3
 MAX_APPEALS_PER_PROPERTY = 100
-CODE = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 DECISION_FIELDS = (
     "informalDecisionValueAdjustment",
     "formalDecisionValueAdjustment",
@@ -118,8 +117,9 @@ def flag(value, label):
 def code(value, label, required=False):
     if value is None and not required:
         return None
-    if not isinstance(value, str) or not CODE.fullmatch(value):
-        raise ValidationError(label + " contains an unsupported code")
+    if (not isinstance(value, str) or not value.strip() or len(value) > 100
+            or re.search(r"[\x00-\x1f\x7f]", value)):
+        raise ValidationError(label + " contains unsupported code text")
     return value
 
 
