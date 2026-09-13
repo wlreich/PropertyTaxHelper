@@ -89,13 +89,23 @@ class SpecialJsonTests(unittest.TestCase):
         self.assertEqual(result["source_member_date_raw"], "20260827")
         self.assertIsNone(result["export_run_time_raw"])
 
+    def test_preserves_bounded_printable_source_status_text(self):
+        make_zip(self.path, [{"pID": 1, "pYear": 2026,
+          "appeals": [appeal(10, 1, appealStatus="ARB Hearing/Set (Informal)")]}])
+        with zipfile.ZipFile(self.path) as archive:
+            item = special.select_member(archive)
+            captured = []
+            special.scan_member(archive, item, 2026,
+              lambda prop, appeals: captured.extend(appeals))
+        self.assertEqual(captured[0]["appeal_status"], "ARB Hearing/Set (Informal)")
+
     def test_rejects_non_array_multiple_members_and_unsafe_identity_links(self):
         cases = [
           ({"pID": 1}, None, "top level"),
           (properties(), "extra.txt", "exactly one JSON"),
           ([{"pID": 1, "pYear": 2025, "appeals": []}], None, "Property year"),
           ([{"pID": 1, "pYear": 2026, "appeals": [appeal(pID=2)]}], None, "identifier differs"),
-          ([{"pID": 1, "pYear": 2026, "appeals": [appeal(appealStatus="<bad>", pID=1)]}], None, "unsupported code"),
+          ([{"pID": 1, "pYear": 2026, "appeals": [appeal(appealStatus="bad\ncode", pID=1)]}], None, "unsupported code text"),
           ([{"pID": 1, "pYear": 2026, "appeals": []}, {"pID": "01", "pYear": 2026, "appeals": []}], None, "duplicate property"),
           ([{"pID": 1, "pYear": 2026, "appeals": [appeal(10, 1)]},
             {"pID": 2, "pYear": 2026, "appeals": [appeal(10, 2)]}], None,
