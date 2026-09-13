@@ -108,6 +108,7 @@ class SpecialJsonTests(unittest.TestCase):
             summary = special.scan_member(archive, item, 2026,
               lambda prop, appeals: captured.extend(appeals))
         self.assertEqual(summary["appeals"], 1)
+        self.assertEqual(summary["appeal_status_counts"], {"(missing)": 1})
         self.assertIsNone(captured[0]["appeal_status"])
         self.assertIsNone(captured[0]["appeal_type"])
 
