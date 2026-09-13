@@ -39,6 +39,13 @@ test('result card names only assigned agents for the relevant year, retaining di
 });
 test('promising outcome requires substantial reduction, certified comparison and a protest in the same period/year',()=>{
  assert.equal(seasonOutcome(current,initial,evidence).observedProtest,true);
+ const source=evidence[0];
+ const informal=seasonOutcome(current,initial,[{...source,arb_case_listed:false,arb_status_codes:[]}]);
+ const arbOnly=seasonOutcome(current,initial,[{...source,protest_flag:false}]);
+ const agentOnly=seasonOutcome(current,initial,[{...source,protest_flag:false,arb_case_listed:false,arb_status_codes:[]}]);
+ assert.equal(informal.observedProtest,true);assert.equal(informal.headline,'Looks like a successful protest!');
+ assert.equal(arbOnly.observedProtest,true);assert.equal(arbOnly.headline,'Looks like a successful protest!');
+ assert.equal(agentOnly.observedProtest,false);assert.equal(agentOnly.headline,'Your proposed value came down');
  for(const change of [{tax_year:2025},{export_date:'2026-03-01'},{export_date:'2026-08-01'},{export_date:null},{protest_flag:false,arb_case_listed:false}]) {
   assert.equal(seasonOutcome(current,initial,[{...evidence[0],...change}]).observedProtest,false);
  }

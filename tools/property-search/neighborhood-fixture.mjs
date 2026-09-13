@@ -9,7 +9,10 @@ export async function seedNeighborhood(db) {
   await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,'PROP.TXT',$2,$3,'2026',$4)`,[pre,++row,id,{hs_exempt:hs,hs_qualify_yr:String(qualify),market_value:String(market),appraised_val:String(market),assessed_val:String(assessed),ten_percent_cap:String(market-assessed),nhs_cap_loss:'0',owner_name:'PRIVATE CAP SOURCE'}]);
  }
  for(const source of [anchor,pre])await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed) values($1,$2,'100',2026,'2026-06-01',true,true,false)`,[anchor,source]);
- await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed) values($1,$1,'120',2026,'2026-06-01',false,false,true)`,[anchor]);
+ // A separate protest snapshot survives clean preliminary/certified snapshots.
+ const protest='44444444-4444-4444-8444-444444444444';
+ await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed) values($1,$2,'120',2026,'2026-04-29',true,false,false)`,[anchor,protest]);
+ await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed) values($1,$2,'121',2026,'2026-04-29',false,false,true)`,[anchor,protest]);
  // Authorities can cross neighborhood boundaries; records deduplicate per property.
  await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||jsonb_build_object('entities',jsonb_build_array(jsonb_build_object('code','03','name','Travis County'),jsonb_build_object('code',case when property_id='120' then '70' else '69' end,'name',case when property_id='120' then 'Other ISD' else 'Leander ISD' end))) where anchor_dataset_id=$1`,[anchor]);
  // Release-specific type sources; intentionally separate from private cap facts.
