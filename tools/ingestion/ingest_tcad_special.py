@@ -114,12 +114,17 @@ def flag(value, label):
     raise ValidationError(label + " must be zero or one")
 
 
-def code(value, label, required=False):
-    if value is None and not required:
+def code(value, label):
+    if value is None:
         return None
-    if (not isinstance(value, str) or not value.strip() or len(value) > 100
-            or re.search(r"[\x00-\x1f\x7f]", value)):
-        raise ValidationError(label + " contains unsupported code text")
+    if not isinstance(value, str):
+        raise ValidationError(label + " must be text or null")
+    if not value.strip():
+        return None
+    if len(value) > 500:
+        raise ValidationError(label + " is longer than 500 characters")
+    if re.search(r"[\x00-\x1f\x7f]", value):
+        raise ValidationError(label + " contains control characters")
     return value
 
 
@@ -157,8 +162,8 @@ def appeal_record(value, parent_id, year, index):
     return {
         "appeal_index": index,
         "appeal_id": appeal_id,
-        "appeal_status": code(value.get("appealStatus"), "appealStatus", True),
-        "appeal_type": code(value.get("appealType"), "appealType", True),
+        "appeal_status": code(value.get("appealStatus"), "appealStatus"),
+        "appeal_type": code(value.get("appealType"), "appealType"),
         "appealed_by_type": code(value.get("appealedByType"), "appealedByType"),
         "informal": flag(value.get("informal"), "informal"),
         "finalized": flag(value.get("finalized"), "finalized"),
