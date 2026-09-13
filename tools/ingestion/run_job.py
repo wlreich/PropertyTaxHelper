@@ -12,12 +12,15 @@ from urllib.parse import urlsplit
 from urllib.error import HTTPError
 
 import ingest_tcad as ingest
+import ingest_tcad_special as special
 from archive_storage import ArchiveStorage, BUCKET, PROJECT_REF, archive_key, receipt_key, checksum, uploaded_key
 from chronology import read_receipt, utc_now, reported_filename, PUBLISHER_REFERENCE_PAGE
 from download_tcad import download
 
 
 PROTEST_MODES = {'validate_protests_uploaded': 'validate_uploaded', 'import_protests': 'import'}
+SPECIAL_MODES = {'validate_special_uploaded': 'validate_uploaded', 'import_special': 'import'}
+SCOPED_MODES = {**PROTEST_MODES, **SPECIAL_MODES}
 
 
 class JobError(Exception):
@@ -68,6 +71,43 @@ def verify_database_rows(connection, dataset_id, files, batch_size=50000):
     return total
 
 
+def verify_special_database_rows(connection, dataset_id, files, batch_size=50000):
+    if batch_size <= 0 or len(files) != 1:
+        raise JobError('Special JSON verification requires one file and a positive batch size')
+    member, expected = next(iter(files.items()))
+    total = 0
+    with connection.transaction():
+        connection.execute('set transaction isolation level repeatable read, read only')
+        manifest = connection.execute('''select member_name,status,row_count from tcad_ingest.files
+          where dataset_id=%s''', (dataset_id,)).fetchall()
+        if manifest != [(member, 'complete', expected['rows'])]:
+            raise JobError('Post-load Special JSON manifest differs from validation')
+        for lower in range(0, expected['rows'], batch_size):
+            upper = min(lower + batch_size, expected['rows'])
+            found = connection.execute('''select count(*) from tcad_ingest.special_json_properties
+              where dataset_id=%s and row_number>%s and row_number<=%s''',
+              (dataset_id, lower, upper)).fetchone()[0]
+            if found != upper - lower:
+                raise JobError('Post-load Special JSON property range differs from validation')
+            total += found
+        extra = connection.execute('''select row_number from tcad_ingest.special_json_properties
+          where dataset_id=%s and row_number>%s order by row_number limit 1''',
+          (dataset_id, expected['rows'])).fetchone()
+        if extra is not None:
+            raise JobError('Post-load Special JSON properties exceed validation')
+        appeal_total = 0
+        for lower in range(0, expected['rows'], batch_size):
+            upper = min(lower + batch_size, expected['rows'])
+            appeal_total += connection.execute('''select count(*) from tcad_ingest.special_json_appeals
+              where dataset_id=%s and property_row_number>%s and property_row_number<=%s''',
+              (dataset_id, lower, upper)).fetchone()[0]
+        if appeal_total != expected['appeals']:
+            raise JobError('Post-load Special JSON appeal count differs from validation')
+        print(json.dumps({'phase': 'database_verification', 'record_type': 'SpecialJSON',
+                          'status': 'verified', 'rows': total, 'appeals': appeal_total}), flush=True)
+    return total
+
+
 def official_source(value):
     url=urlsplit(value)
     if (url.scheme!='https' or url.hostname not in ('traviscad.org','www.traviscad.org')
@@ -80,17 +120,23 @@ def official_source(value):
 def settings():
     mode=os.environ.get('INPUT_MODE','validate')
     requested_mode = mode
-    scope = 'protests' if mode in PROTEST_MODES else 'full'
-    mode = PROTEST_MODES.get(mode, mode)
+    scope = ('special_protests' if mode in SPECIAL_MODES else
+             'protests' if mode in PROTEST_MODES else 'full')
+    mode = SCOPED_MODES.get(mode, mode)
     if mode not in ('validate','validate_uploaded','import'):
         raise JobError('Choose a supported full or protest validation/import mode')
     year=int(os.environ.get('INPUT_TAX_YEAR','2026'))
     stage=os.environ.get('INPUT_ROLL_STAGE','certified')
     encoding=os.environ.get('INPUT_ENCODING','ascii')
-    if year not in range(1900,2201) or stage not in (('preliminary','certified','supplemental','unknown') if scope == 'protests' else ('preliminary','certified','supplemental')):
+    stages = (('supplemental',) if scope == 'special_protests' else
+              ('preliminary','certified','supplemental','unknown') if scope == 'protests' else
+              ('preliminary','certified','supplemental'))
+    if year not in range(1900,2201) or stage not in stages:
         raise JobError('Invalid year or roll stage')
     if encoding not in ('ascii','utf-8','cp1252'):
         raise JobError('Invalid encoding')
+    if scope == 'special_protests' and encoding != 'utf-8':
+        raise JobError('Special JSON requires UTF-8 encoding')
     result={'mode':requested_mode,'year':year,'stage':stage,'encoding':encoding,'import_scope':scope}
     if mode in ('validate','validate_uploaded'):
         source = os.environ.get('INPUT_SOURCE_URL','').strip()
@@ -164,8 +210,10 @@ def private_bucket(connection,archive_bytes=None):
 
 
 def execute(config,report,storage,work):
-    mode = PROTEST_MODES.get(config['mode'], config['mode'])
-    scope = 'protests' if config['mode'] in PROTEST_MODES else 'full'
+    mode = SCOPED_MODES.get(config['mode'], config['mode'])
+    scope = ('special_protests' if config['mode'] in SPECIAL_MODES else
+             'protests' if config['mode'] in PROTEST_MODES else 'full')
+    parser = special if scope == 'special_protests' else ingest
     report['import_scope'] = scope
     # Preflight is read-only apart from creating the private archive bucket.
     report['phase']='database_preflight'
@@ -228,7 +276,7 @@ def execute(config,report,storage,work):
     # Validate every selected member before any record inserts, including on import.
     # Skipped members stay in the retained ZIP and are explicitly not validated.
     report['phase']='archive_validation'
-    validation=ingest.run(args)
+    validation=parser.run(args)
     report['validation']=validation
     report['row_count']=sum(f['rows'] for f in validation['files'].values())
     report['uncompressed_bytes']=sum(f['uncompressed_bytes'] for f in validation['files'].values())
@@ -236,12 +284,14 @@ def execute(config,report,storage,work):
     if mode=='import':
         report['phase']='database_import'
         args.load=True
-        result=ingest.run(args)
+        result=parser.run(args)
         report['import']={'attempt_id':result['attempt_id'],'dataset_id':result['dataset_id'],'status':result['status']}
         # Confirm actual DB row count, not just the parser's report.
         report['phase']='database_verification'
         with database_connection() as connection:
-            actual=verify_database_rows(connection,result['dataset_id'],validation['files'])
+            actual=(verify_special_database_rows(connection,result['dataset_id'],validation['files'])
+                    if scope == 'special_protests' else
+                    verify_database_rows(connection,result['dataset_id'],validation['files']))
             if actual!=report['row_count']:
                 raise JobError('Post-load row count differs from the validated archive')
             report['database_row_count']=actual

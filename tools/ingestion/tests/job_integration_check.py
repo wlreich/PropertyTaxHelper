@@ -8,6 +8,7 @@ from unittest.mock import patch
 import psycopg
 from test_ingest_tcad import ingest, make_archive
 from test_job import FakeS3
+from test_special_json import make_zip as make_special_zip
 from archive_storage import ArchiveStorage, archive_key, receipt_key
 import run_job
 
@@ -185,6 +186,42 @@ def main():
         with patch.object(run_job,'database_connection',connection):
             run_job.execute(config,loaded,ArchiveStorage(client),work)
         assert loaded['import']['dataset_id']==str(full_id) and loaded['database_row_count']==20
+        # The Protax Special JSON path retains one coverage row per property and
+        # only an allowlisted private subset of each positive appeal.
+        special_source=root/'special.zip';make_special_zip(special_source)
+        special_key='incoming/2026 Special export Supp 2 08292026.zip'
+        client.objects[special_key]=special_source.read_bytes()
+        special_config={'mode':'validate_special_uploaded','year':2026,'stage':'supplemental',
+          'encoding':'utf-8','import_scope':'special_protests','source_url':run_job.PUBLISHER_REFERENCE_PAGE,
+          'source_url_kind':'publisher_reference_page','original_filename_reported':'2026 Special export Supp 2 08292026.zip',
+          'uploaded_key':special_key,'expected_upload_sha':None,'browser_downloaded_on':None,
+          'published_on':None,'publication_evidence':None}
+        work=root/'special-validate';work.mkdir();special_validation={}
+        with patch.object(run_job,'database_connection',connection):
+            run_job.execute(special_config,special_validation,ArchiveStorage(client),work)
+        assert special_validation['status']=='validated_and_archived'
+        assert special_validation['row_count']==3
+        special_config.update(mode='import_special',archive_sha=special_validation['archive_sha256'],
+                              receipt_sha=special_validation['receipt_sha256'])
+        for attempt in range(2):
+            work=root/f'special-import-{attempt}';work.mkdir();special_loaded={}
+            with patch.object(run_job,'database_connection',connection):
+                run_job.execute(special_config,special_loaded,ArchiveStorage(client),work)
+            assert special_loaded['database_row_count']==3
+        with psycopg.connect(dsn,autocommit=True) as c:
+            special_id=c.execute("select id from tcad_ingest.datasets where import_scope='special_protests'").fetchone()[0]
+            assert c.execute('select count(*) from tcad_ingest.special_json_properties where dataset_id=%s',(special_id,)).fetchone()[0]==3
+            assert c.execute('select count(*) from tcad_ingest.special_json_appeals where dataset_id=%s',(special_id,)).fetchone()[0]==2
+            private=c.execute('select details::text from tcad_ingest.special_json_appeals where dataset_id=%s',(special_id,)).fetchall()
+            assert 'PRIVATE' not in ''.join(row[0] for row in private)
+            for role in ('anon','authenticated','service_role'):
+                c.execute('set role '+role)
+                try:
+                    c.execute('select * from tcad_ingest.special_json_appeals')
+                    raise AssertionError('Raw Special JSON appeal data became public')
+                except psycopg.errors.InsufficientPrivilege:
+                    pass
+                c.execute('reset role')
     print('PASS: private archive + receipt, validation without inserts, full import, retry, durable URI and audit history')
 
 

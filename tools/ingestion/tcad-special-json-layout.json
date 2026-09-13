@@ -1,0 +1,29 @@
+{
+  "layout_name": "TCAD Protax Special JSON protest observation subset",
+  "layout_version": "1.0",
+  "top_level": "array",
+  "property_identity": ["pID", "pYear"],
+  "required_property_fields": ["pID", "pYear", "appeals"],
+  "appeal_identity": ["appealID", "pID", "pYear"],
+  "retained_appeal_fields": [
+    "appealStatus",
+    "appealType",
+    "appealedByType",
+    "informal",
+    "finalized",
+    "initialAppraisedValue",
+    "noticeAppraisedValue",
+    "finalAppraisedValue",
+    "informalDecisionAdjustmentValue",
+    "formalDecisionAdjustmentValue",
+    "informalDecisionValueAdjustment",
+    "formalDecisionValueAdjustment",
+    "decision",
+    "decisionAuthority",
+    "decisionReason",
+    "informalDt",
+    "docketDt",
+    "hearingLetterDt",
+    "finalizedDt"
+  ]
+}

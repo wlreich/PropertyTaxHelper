@@ -131,3 +131,27 @@ without records, both scopes on one archive, interrupted-file rollback, retry,
 private access and rejection by both valuation publishers.
 
 No user-facing UI or brand assets change in this importer update.
+
+## Supplemental Protax Special JSON
+
+TCAD's `Special Export (JSON)` is independent of the fixed-width ARB snapshot.
+Use `validate_special_uploaded` followed by `import_special`; select
+`supplemental` and `utf-8`. The archive must contain exactly one UTF-8 JSON member
+whose top level is an array. Each property must have a numeric `pID`, the declared
+`pYear`, and an `appeals` array. Appeal property/year identifiers must match their
+parent property.
+
+The importer retains one private coverage row per property and the following
+allowlisted appeal facts: source appeal ID/status/type, filer type, informal and
+finalized flags, initial/notice/final appraised values, informal/formal adjustment
+values, decision fields, and dated workflow fields. It deliberately excludes
+owners, addresses, contact data, evidence, claimant comments, staff assignments,
+and appraiser comments. Source status codes remain untranslated.
+
+After import, run `tcad_ingest.publish_special_json_protests(dataset_uuid, after_id,
+batch_size)` from the empty cursor until `processed` is zero, then analyze
+`public.property_protest_observations`. Publication writes only a positive protest
+flag for properties with a nonempty appeal array. It does not claim an ARB case or
+agent assignment, does not publish the private appeal fields, and does not erase
+evidence from other datasets. Future release preparation automatically carries
+ready `special_protests` datasets forward.

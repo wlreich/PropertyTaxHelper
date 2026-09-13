@@ -3,6 +3,7 @@
 See [the operator guide](../../docs/ingestion/tcad-comprehensive.md).
 
 - `ingest_tcad.py`: comprehensive ZIP validation by default; explicit `--load` enables resumable PostgreSQL COPY.
+- `ingest_tcad_special.py`: streaming, privacy-minimized ingestion of the single-member Protax Special JSON export.
 - `tcad-layout.json`: all 20 source layouts and all 1,030 documented positions, with workbook provenance.
 - `requirements.txt`: pinned load-time PostgreSQL driver. Dry-run and unit tests use only the Python standard library.
 - `tests/`: synthetic validation and isolated database integration checks.
@@ -45,3 +46,6 @@ Use `validate_protests_uploaded` followed by `import_protests` to retain the ful
 ZIP while processing only Header, Property, ARB and Agent. Full modes remain
 available. See [protest import instructions](../../docs/ingestion/protest-imports.md)
 for parameters, storage review, recovery, chronology and publication boundaries.
+Use `validate_special_uploaded` followed by `import_special` for TCAD's supplemental
+Special JSON. The parser stores property coverage and allowlisted appeal facts only;
+it never treats a Special JSON appeal as proof of an ARB case.
