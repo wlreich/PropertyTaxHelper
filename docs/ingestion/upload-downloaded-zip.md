@@ -14,7 +14,11 @@ Keep the original ZIP intact. Do not unzip it or upload its individual contents.
 
 If that name already exists, use a new name such as `2026-certified-2.zip` and use the matching path in the next step. Do not overwrite a previous upload.
 
-A roughly 512 MB ZIP fits this workflow's 2 GiB manual-upload limit. Supabase's project-wide upload limit must also allow it. If the dashboard reports a file-size limit error, open **Storage settings** and check the global file-size limit set in the original setup guide (2048 MB). Pro supports a configurable limit above this size. No new account, public bucket, or credentials are required. [Supabase file limits](https://supabase.com/docs/guides/storage/uploads/file-limits).
+The workflow accepts an uploaded archive up to 5 GiB. Supabase's project-wide and
+bucket limits must also allow the selected file. For multi-gigabyte files, use the
+dashboard's resumable uploader or the S3 protocol and confirm the completed object
+size before validation. No public bucket or browser credential is required.
+[Supabase file limits](https://supabase.com/docs/guides/storage/uploads/file-limits).
 
 If the upload itself fails, keep the ZIP and note the dashboard's error. Do not make the bucket public to resolve an upload error.
 
@@ -65,3 +69,12 @@ The browser download date is explicitly labeled **reported** and has day precisi
 Revalidating the same staged object creates a new retrieval receipt but reuses an identical preserved archive. Import uses the exact archive and receipt checksums from the reviewed validation report, so later changes to `incoming/` do not change an approved import.
 
 After validation completes, review the aggregate report and database capacity before approving any import. Keep the local ZIP and private staged copy until the preserved archive is verified. No automatic deletion is performed. The acquisition migration requires separate application after review; merging code alone does not apply it to Supabase.
+
+## Protax Special JSON exports
+
+Special JSON uses a separate streaming parser; never send it through the legacy
+fixed-width modes. Use `validate_special_uploaded`, roll stage `supplemental`,
+encoding `utf-8`, and the exact private object path. After reviewing the property,
+appeal, status, year, and initial-to-final counts, use `import_special` with both
+validation checksums and import approval checked. The parser reads the single JSON
+member as a stream and does not extract its multi-gigabyte contents to disk.

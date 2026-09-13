@@ -7,7 +7,7 @@ import re
 PROJECT_REF = 'flnhdrkfaybruzlbixfy'
 BUCKET = 'tcad-archives'
 ENDPOINT = f'https://{PROJECT_REF}.storage.supabase.co/storage/v1/s3'
-MAX_UPLOADED_ARCHIVE_BYTES = 2 * 1024 * 1024 * 1024
+MAX_UPLOADED_ARCHIVE_BYTES = 5 * 1024 * 1024 * 1024
 
 
 class StorageError(Exception):
@@ -15,8 +15,10 @@ class StorageError(Exception):
 
 
 def uploaded_key(value):
-    if not isinstance(value, str) or not re.fullmatch(r'incoming/[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.zip', value) or '..' in value:
-        raise StorageError('Use incoming/ followed by a ZIP filename with letters, numbers, dots, underscores or hyphens')
+    if (not isinstance(value, str)
+            or not re.fullmatch(r'incoming/[A-Za-z0-9][A-Za-z0-9 ._-]{0,119}\.zip', value)
+            or '..' in value or '  ' in value):
+        raise StorageError('Use incoming/ followed by a ZIP filename with letters, numbers, spaces, dots, underscores or hyphens')
     return value
 
 
@@ -127,7 +129,7 @@ class ArchiveStorage:
         with response['Body'] as body:
             declared = response.get('ContentLength')
             if type(declared) is not int or not 0 < declared <= MAX_UPLOADED_ARCHIVE_BYTES:
-                raise StorageError('Uploaded archive must be nonempty and no larger than 2 GiB')
+                raise StorageError('Uploaded archive must be nonempty and no larger than 5 GiB')
             with path.open('xb') as target:
                 while chunk := body.read(1024 * 1024):
                     size += len(chunk)

@@ -6,7 +6,7 @@ on:
       mode:
         description: Full release or protest-only (Header, Property, ARB, Agent); validate first
         type: choice
-        options: [validate, validate_uploaded, import, validate_protests_uploaded, import_protests]
+        options: [validate, validate_uploaded, import, validate_protests_uploaded, import_protests, validate_special_uploaded, import_special]
         default: validate
         required: true
       source_url:
@@ -16,7 +16,7 @@ on:
         description: Original TCAD filename if known; leave blank if unknown (do not guess)
         type: string
       uploaded_archive_key:
-        description: Private upload path, e.g. incoming/2026-certified.zip (validate_uploaded)
+        description: Private upload path (uploaded validation modes)
         type: string
       browser_downloaded_on:
         description: Browser download date YYYY-MM-DD if known; otherwise blank (validate_uploaded)

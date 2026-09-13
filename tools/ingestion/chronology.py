@@ -61,7 +61,8 @@ def read_receipt(path, archive_sha, source_url):
         uploaded = receipt.get('storage_uploaded_at')
         if uploaded is not None:
             aware_time(uploaded)
-        if not re.fullmatch(r's3://tcad-archives/incoming/[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.zip', receipt['uploaded_object_uri']) or '..' in receipt['uploaded_object_uri']:
+        if (not re.fullmatch(r's3://tcad-archives/incoming/[A-Za-z0-9][A-Za-z0-9 ._-]{0,119}\.zip', receipt['uploaded_object_uri'])
+                or '..' in receipt['uploaded_object_uri'] or '  ' in receipt['uploaded_object_uri']):
             raise ValueError('Invalid private upload object URI')
         if type(receipt.get('archive_bytes')) is not int or receipt['archive_bytes'] <= 0:
             raise ValueError('Manual receipt requires the retrieved byte count')

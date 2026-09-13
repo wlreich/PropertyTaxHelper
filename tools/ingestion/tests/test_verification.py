@@ -66,3 +66,31 @@ class VerificationTests(unittest.TestCase):
                 self.db.execute("update tcad_ingest.files set " + update + " where member_name='PROP'")
                 with self.assertRaisesRegex(run_job.JobError, 'manifest'): self.verify()
                 self.db.execute("update tcad_ingest.files set status='complete',row_count=5 where member_name='PROP'")
+
+
+class SpecialVerificationTests(unittest.TestCase):
+    def setUp(self):
+        self.db = sqlite3.connect(':memory:')
+        self.addCleanup(self.db.close)
+        self.db.executescript('''attach database ':memory:' as tcad_ingest;
+          create table tcad_ingest.files(dataset_id text,member_name text,status text,row_count int);
+          create table tcad_ingest.special_json_properties(dataset_id text,row_number int);
+          create table tcad_ingest.special_json_appeals(dataset_id text,property_row_number int);
+          insert into tcad_ingest.files values('target','special.json','complete',3);
+          insert into tcad_ingest.special_json_properties values('target',1),('target',2),('target',3),('other',1);
+          insert into tcad_ingest.special_json_appeals values('target',2),('target',3),('other',1);''')
+        db = self.db
+        class Connection:
+            def transaction(self): return nullcontext()
+            def execute(self, sql, params=()):
+                if sql == 'set transaction isolation level repeatable read, read only': return None
+                return db.execute(sql.replace('%s', '?'), params)
+        self.connection = Connection()
+        self.files = {'special.json': {'rows': 3, 'appeals': 2}}
+
+    def test_exact_special_property_and_appeal_counts(self):
+        self.assertEqual(run_job.verify_special_database_rows(
+          self.connection,'target',self.files,batch_size=2),3)
+        self.db.execute("delete from tcad_ingest.special_json_appeals where dataset_id='target' and property_row_number=2")
+        with self.assertRaisesRegex(run_job.JobError,'appeal count'):
+            run_job.verify_special_database_rows(self.connection,'target',self.files,batch_size=2)

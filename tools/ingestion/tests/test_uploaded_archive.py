@@ -87,6 +87,8 @@ class UploadedArchiveTests(unittest.TestCase):
             with self.assertRaises(StorageError): uploaded_key(key)
         with patch.dict(os.environ, self.environment(), clear=True):
             self.assertEqual(run_job.settings()['mode'], 'validate_uploaded')
+            os.environ['INPUT_UPLOADED_ARCHIVE_KEY']='incoming/2026 Special export Supp 2 08292026.zip'
+            self.assertEqual(run_job.settings()['uploaded_key'],os.environ['INPUT_UPLOADED_ARCHIVE_KEY'])
             os.environ['INPUT_BROWSER_DOWNLOADED_ON']='2026-02-30'
             with self.assertRaises(run_job.JobError): run_job.settings()
 
