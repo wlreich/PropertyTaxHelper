@@ -482,20 +482,20 @@ export default async function Home({
               aria-labelledby="trust-heading"
             >
               <div id="evidence">
-                <p className={styles.eyebrow}>Evidence before conclusions</p>
+                <p className={styles.eyebrow}>Independent by design</p>
                 <h2 id="trust-heading">
-                  Public records, connected and explained.
+                  Built for homeowners, not property-tax insiders.
                 </h2>
                 <p>
-                  ParcelSavvy is an independent project built for Travis County
-                  homeowners. Source dates, calculations, and limitations stay
-                  visible.
+                  ParcelSavvy connects public TCAD records and explains what
+                  they mean—so you can review your appraisal with more
+                  confidence.
                 </p>
               </div>
               <ul className={styles.trustList}>
                 <li>Independent of TCAD</li>
                 <li>Plain-language explanations</li>
-                <li>No unsupported claims about fairness</li>
+                <li>No pressure or promises</li>
               </ul>
             </section>
 

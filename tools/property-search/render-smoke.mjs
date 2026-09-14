@@ -76,6 +76,8 @@ try {
   assert.match(home, /alt="ParcelSavvy"/);
   assert.match(home, /Know your property/);
   assert.match(home, /Understand your assessment/);
+  assert.match(home, /Built for homeowners, not property-tax insiders/);
+  assert.doesNotMatch(home, /Source dates, calculations, and limitations stay visible/);
   const suggestionResponse = await fetch(
     base + "/api/search/suggestions?q=1104",
     { signal: AbortSignal.timeout(12000) },
