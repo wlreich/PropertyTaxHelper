@@ -9,6 +9,13 @@ test('address variants and guarded spelling suggestions run through the public R
   await seedAddressSearch(db);
   await db.exec('set role anon');
   const search=async(q,page=0)=>(await db.query('select public.search_property_parcels_v2($1,$2,false) result',[q,page])).rows[0].result;
+  const suggest=async(q,limit=8,all=false)=>(await db.query('select public.suggest_property_parcels($1,$2,$3) result',[q,limit,all])).rows[0].result;
+  const broadSuggestions=await suggest('1104');
+  assert.equal(broadSuggestions.items.length,8);
+  assert.equal(broadSuggestions.has_more,true);
+  assert.ok(broadSuggestions.items.every(x=>x.address.startsWith('1104 ')));
+  assert.deepEqual((await suggest('1104 Cedar')).items.map(x=>x.property_id),['990016']);
+  assert.ok((await suggest('1800 36')).items.some(x=>x.property_id==='990000'));
   for(const q of ['1800 West 36th Street','1800 W 36 ST','1800 W 36th St.']) {
    const r=await search(q); assert.equal(r.match_mode,'standard');
    assert.deepEqual(r.items.map(x=>x.property_id),['990000','990006','990007']);

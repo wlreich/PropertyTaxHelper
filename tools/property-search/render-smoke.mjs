@@ -76,6 +76,16 @@ try {
   assert.match(home, /alt="ParcelSavvy"/);
   assert.match(home, /Know your property/);
   assert.match(home, /Understand your assessment/);
+  const suggestionResponse = await fetch(
+    base + "/api/search/suggestions?q=1104",
+    { signal: AbortSignal.timeout(12000) },
+  );
+  assert.equal(suggestionResponse.status, 200);
+  const suggestions = await suggestionResponse.json();
+  assert.equal(suggestions.status, "ok");
+  assert.equal(suggestions.items.length, 8);
+  assert.equal(suggestions.has_more, true);
+  assert.ok(suggestions.items.every((item) => item.address.startsWith("1104 ")));
   const one = await page("/?q=123+Oak");
   assert.equal(cards(one), 1);
   assert.match(one, /123 N OAK ST/);
@@ -132,7 +142,7 @@ try {
   const css = await page(cssPath.replaceAll("&amp;", "&"));
   assert.match(css, /@media/);
   console.log(
-    "Rendered-page checks passed: home, partial/exact/multiple matches, pagination, profile, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
+    "Rendered-page checks passed: home, typeahead API, partial/exact/multiple matches, pagination, profile, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
   );
 } finally {
   for (const child of processes) child.kill("SIGTERM");
