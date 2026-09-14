@@ -68,7 +68,9 @@ try {
     "Ready",
   );
   const home = await page("/");
-  assert.match(home, /Property address or property ID/);
+  assert.match(home, /Property address or TCAD property ID/);
+  assert.match(home, /What happened to your property appraisal\?/);
+  assert.match(home, /Useful property information shouldn’t disappear behind a paywall/);
   assert.match(home, /Skip to content/);
   assert.match(home, /<title>ParcelSavvy/);
   assert.match(home, /alt="ParcelSavvy"/);

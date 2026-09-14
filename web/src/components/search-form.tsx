@@ -21,7 +21,9 @@ export function SearchForm({ query = "", showAll = false }: { query?: string; sh
       }}
       aria-busy={pending}
     >
-      <label htmlFor="address-search">Property address or property ID</label>
+      <label htmlFor="address-search">
+        Property address or TCAD property ID
+      </label>
       <div className="search-controls">
         <input
           id="address-search"
@@ -31,18 +33,18 @@ export function SearchForm({ query = "", showAll = false }: { query?: string; sh
           defaultValue={query}
           required
           maxLength={120}
-          placeholder="Try a street name or a partial address"
+          placeholder="Try a street name or property ID"
           autoComplete="street-address"
           aria-describedby="search-help"
         />
         <button type="submit" disabled={pending}>
-          {pending ? "Searching…" : "Search property"}
-          <span aria-hidden="true"> ↗</span>
+          {pending ? "Searching…" : "Search my property"}
+          <span aria-hidden="true"> →</span>
         </button>
       </div>
       <p id="search-help">
-        A full address isn’t required. Start with a street name, or add a house
-        number to narrow your results.
+        <strong>Free to use.</strong> No account required. A full address isn’t
+        necessary.
       </p>
       <label className="parcel-filter">
         <input
