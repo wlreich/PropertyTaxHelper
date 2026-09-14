@@ -605,19 +605,19 @@
   gap: var(--space-2);
 }
 
-.homeFooter a,
+.page .homeFooter nav[aria-label] a,
 .plannedLink {
   color: var(--color-surface-info);
   font-size: var(--text-label);
   line-height: var(--line-small);
 }
 
-.homeFooter a {
+.page .homeFooter nav[aria-label] a {
   width: fit-content;
   text-decoration: none;
 }
 
-.homeFooter a:hover {
+.page .homeFooter nav[aria-label] a:hover {
   color: var(--color-surface);
   text-decoration: underline;
 }

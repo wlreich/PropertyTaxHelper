@@ -513,7 +513,10 @@ export default async function Home({
                 <h2>Know your property. Understand your assessment.</h2>
                 <p>Start with an address or TCAD property ID.</p>
               </div>
-              <Link className={styles.primaryLink} href="/#property-search">
+              <Link
+                className={`${styles.primaryLink} action-button`}
+                href="/#property-search"
+              >
                 Search my property ↑
               </Link>
             </section>
