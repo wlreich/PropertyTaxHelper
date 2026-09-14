@@ -7,6 +7,7 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByRole('heading',{level:1})).toHaveText('What happened to your property appraisal?');
   await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Built for homeowners, not property-tax insiders.'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Support ParcelSavvy'})).toBeDisabled();
   await expect(page.getByText('Optional contributions are not tax-deductible unless ParcelSavvy later becomes a qualified charitable organization.')).toBeVisible();
   expect(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/manrope/i);
