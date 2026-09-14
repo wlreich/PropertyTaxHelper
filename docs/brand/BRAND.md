@@ -79,7 +79,7 @@ Tokens are defined once in web/src/styles/tokens.css. Compatibility aliases --in
 
 Reuse BrandLogo, SearchForm, SiteHeader/SiteFooter, TermDefinition and existing result/notice foundations. One primary action per task area. Secondary actions should be visibly subordinate. Use clear labels, real links, responsive forms and hover/focus/disabled states. Definitions explain the term first, then why it matters; support hover, focus, click/touch and Escape. Do not hide vital qualifications solely in a tooltip.
 
-Search must support partial addresses, multiple results, pagination, no results, errors and loading. Source year/stage and available export date remain visible; unknown dates stay unknown. “Show all parcels” and parkland classification remain functional. Do not fabricate navigation to unfinished features or advertise unbuilt analysis.
+Search must support partial addresses, multiple results, pagination, no results, errors and loading. Source year/stage and available export date remain visible; unknown dates stay unknown. Public address searches exclude identified parkland; an exact property-ID lookup may still resolve the requested parcel. Do not fabricate navigation to unfinished features or advertise unbuilt analysis.
 
 Evidence status examples are “Worth a closer look,” “Looks consistent,” and “More data needed.” Use them only when the evidence supports the state. Never communicate confidence or outcome through color alone.
 

@@ -27,7 +27,7 @@ Distinguish market value, appraised value, assessed value and the actual tax bil
 
 ## Screen guidance
 
-**Search:** show a specific label (“Property address or property ID”), an example/partial-address hint, and one primary action (“Search property”). A full address is not required. Explain the scope of optional filters; “Show all parcels” includes identified parkland but does not bypass confidentiality restrictions.
+**Search:** show a specific label (“Property address or property ID”), an example/partial-address hint, and one primary action (“Search property”). A full address is not required. Public address searches omit identified parkland; an exact property-ID lookup may still resolve the requested parcel and does not bypass confidentiality restrictions.
 
 **Results:** address first, concise metadata, value with a clear label, source year/stage and available export date. Use neutral labels such as “Parkland” only when supported by source classification. Preserve unknown types instead of guessing residential status.
 

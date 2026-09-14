@@ -55,19 +55,12 @@ function parseSuggestionResponse(
     : null;
 }
 
-export function SearchForm({
-  query = "",
-  showAll = false,
-}: {
-  query?: string;
-  showAll?: boolean;
-}) {
+export function SearchForm({ query = "" }: { query?: string }) {
   const router = useRouter();
   const listboxId = useId();
   const cache = useRef(new Map<string, Omit<SuggestionState, "status">>());
   const [pending, startTransition] = useTransition();
   const [value, setValue] = useState(query);
-  const [includeAll, setIncludeAll] = useState(showAll);
   const [dirty, setDirty] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -77,7 +70,7 @@ export function SearchForm({
   useEffect(() => {
     if (!validSuggestionQuery) return;
     const q = value.trim().replace(/\s+/g, " ");
-    const cacheKey = `${includeAll ? "all" : "homes"}:${q.toUpperCase()}`;
+    const cacheKey = q.toUpperCase();
     const cached = cache.current.get(cacheKey);
     if (cached) {
       setSuggestions({ status: "success", ...cached });
@@ -87,7 +80,6 @@ export function SearchForm({
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       const params = new URLSearchParams({ q });
-      if (includeAll) params.set("all", "1");
       try {
         const response = await fetch(`/api/search/suggestions?${params}`, {
           signal: controller.signal,
@@ -115,15 +107,13 @@ export function SearchForm({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [includeAll, validSuggestionQuery, value]);
+  }, [validSuggestionQuery, value]);
 
   const chooseSuggestion = (suggestion: Suggestion) => {
     setOpen(false);
     setDirty(false);
     startTransition(() =>
-      router.push(
-        propertyUrl(suggestion.property_id, value.trim(), 0, includeAll),
-      ),
+      router.push(propertyUrl(suggestion.property_id, value.trim(), 0)),
     );
   };
 
@@ -148,10 +138,9 @@ export function SearchForm({
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const q = String(formData.get("q") ?? "").trim();
-        const all = formData.get("all") === "1";
         setOpen(false);
         setDirty(false);
-        startTransition(() => router.push(resultsUrl(q, 0, all)));
+        startTransition(() => router.push(resultsUrl(q)));
       }}
       aria-busy={pending}
     >
@@ -294,38 +283,6 @@ export function SearchForm({
       <p id="search-help">
         <strong>Free to use.</strong> No account required. Start with a house
         number or part of a street name.
-      </p>
-      <label className="parcel-filter">
-        <input
-          type="checkbox"
-          name="all"
-          value="1"
-          checked={includeAll}
-          disabled={pending}
-          aria-describedby="parcel-filter-help"
-          onChange={(event) => {
-            const nextValue = event.currentTarget.checked;
-            setIncludeAll(nextValue);
-            if (validSuggestionQuery) {
-              setSuggestions({
-                status: "loading",
-                items: [],
-                hasMore: false,
-              });
-            }
-            if (query) {
-              setOpen(false);
-              setDirty(false);
-              startTransition(() =>
-                router.push(resultsUrl(value.trim(), 0, nextValue)),
-              );
-            }
-          }}
-        />
-        Show all parcels
-      </label>
-      <p id="parcel-filter-help">
-        Includes identified parkland. Property ID searches always include it.
       </p>
     </form>
   );
