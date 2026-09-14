@@ -116,11 +116,7 @@ export default async function Home({
     typeof params.q === "string" ? params.q : "",
     typeof params.page === "string" ? params.page : "0",
   );
-  const showAll = params.all === "1";
-  const result =
-    q && !error
-      ? await searchProperties(q, page, undefined, undefined, showAll)
-      : null;
+  const result = q && !error ? await searchProperties(q, page) : null;
 
   return (
     <div className={styles.page}>
@@ -169,11 +165,7 @@ export default async function Home({
               </p>
             )}
             <div id="property-search" className={styles.searchArea}>
-              <SearchForm
-                key={`${q}:${showAll}`}
-                query={q}
-                showAll={showAll}
-              />
+              <SearchForm key={q} query={q} />
             </div>
           </div>
 
@@ -275,10 +267,10 @@ export default async function Home({
                 <p>
                   {page
                     ? "Return to the first page or try another address."
-                    : "Try just the street name, remove a unit number, or check the spelling. You can also select “Show all parcels” to include identified parkland. Some properties do not have a searchable address."}
+                    : "Try just the street name, remove a unit number, or check the spelling. Some properties do not have a searchable address."}
                 </p>
                 {page > 0 && (
-                  <Link className="text-link" href={resultsUrl(q, 0, showAll)}>
+                  <Link className="text-link" href={resultsUrl(q)}>
                     Return to first page →
                   </Link>
                 )}
@@ -298,12 +290,7 @@ export default async function Home({
                     <li key={property.property_id}>
                       <Link
                         className="result-card"
-                        href={propertyUrl(
-                          property.property_id,
-                          q,
-                          page,
-                          showAll,
-                        )}
+                        href={propertyUrl(property.property_id, q, page)}
                         prefetch={false}
                       >
                         <div className="result-address">
@@ -348,7 +335,7 @@ export default async function Home({
                 <div>
                   {page > 0 && (
                     <Link
-                      href={resultsUrl(q, page - 1, showAll)}
+                      href={resultsUrl(q, page - 1)}
                       prefetch={false}
                     >
                       ← Previous
@@ -359,7 +346,7 @@ export default async function Home({
                 <div>
                   {result.data.has_more && (
                     <Link
-                      href={resultsUrl(q, page + 1, showAll)}
+                      href={resultsUrl(q, page + 1)}
                       prefetch={false}
                     >
                       Next →

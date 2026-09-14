@@ -27,9 +27,10 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   if(process.env.BRAND_VISUAL_COMPARE==='1') await expect(page).toHaveScreenshot('search-results.png',{fullPage:true});
   await page.goto('/?q=Parkdemo');
   await expect(page.locator('.result-card')).toHaveCount(5);
-  await page.getByLabel('Show all parcels',{exact:true}).check();
-  await expect(page.locator('.result-card')).toHaveCount(20);
-  await expect(page).toHaveURL(/all=1/);
+  await expect(page.getByLabel('Show all parcels',{exact:true})).toHaveCount(0);
+  await page.goto('/?q=Parkdemo&all=1');
+  await expect(page.locator('.result-card')).toHaveCount(5);
+  await expect(page.getByText('Parkland',{exact:true})).toHaveCount(0);
   await page.goto('/?q=NoSuchStreet');
   await expect(page.getByRole('heading',{name:'No matching addresses found'})).toBeVisible();
 });
