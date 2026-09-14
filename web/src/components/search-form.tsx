@@ -183,7 +183,9 @@ export function SearchForm({
               if (validSuggestionQuery && suggestions.status !== "idle")
                 setOpen(true);
             }}
-            onBlur={() => setOpen(false)}
+            onBlur={() => {
+              window.setTimeout(() => setOpen(false), 100);
+            }}
             onChange={(event) => {
               const nextValue = event.currentTarget.value;
               const valid = !parseSearch(nextValue).error;
