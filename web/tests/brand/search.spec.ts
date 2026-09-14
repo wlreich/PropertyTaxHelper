@@ -5,7 +5,8 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByRole('img',{name:'ParcelSavvy',exact:true})).toBeVisible();
   await expect(page.getByRole('heading',{level:1})).toHaveText('What happened to your property appraisal?');
-  await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toHaveCount(0);
+  expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Built for homeowners, not property-tax insiders.'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Support ParcelSavvy'})).toBeDisabled();

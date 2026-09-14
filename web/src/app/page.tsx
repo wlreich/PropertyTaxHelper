@@ -15,24 +15,6 @@ import { searchProperties } from "@/lib/supabase/properties";
 
 export const maxDuration = 30;
 
-const benefits = [
-  {
-    number: "01",
-    title: "See what changed",
-    copy: "Follow your value from last year through the preliminary appraisal and certified result.",
-  },
-  {
-    number: "02",
-    title: "Understand where you stand",
-    copy: "Compare your home with similar properties and see where it falls within its TCAD market area.",
-  },
-  {
-    number: "03",
-    title: "Know what to check next",
-    copy: "Review property facts, exemptions, protest information, and evidence worth a closer look.",
-  },
-];
-
 const homeownerQuestions = [
   "Did my value change after the preliminary appraisal?",
   "Is a protest recorded, and did the value go down?",
@@ -65,7 +47,6 @@ function HomeFooter() {
           <h2>Explore</h2>
           <nav aria-label="Explore ParcelSavvy">
             <Link href="/#property-search">Property search</Link>
-            <Link href="/#how-it-works">How ParcelSavvy works</Link>
             <Link href="/#evidence">Data &amp; methodology</Link>
             <Link href="/#questions">Homeowner questions</Link>
           </nav>
@@ -131,7 +112,6 @@ export default async function Home({
           </Link>
           <nav className={styles.mainNav} aria-label="Main navigation">
             <Link href="/#property-search">Search</Link>
-            <Link href="/#how-it-works">How it works</Link>
             <Link href="/#about">About</Link>
             <Link className={styles.supportNavLink} href="/#support">
               Support us
@@ -379,32 +359,6 @@ export default async function Home({
                 </p>
               </div>
               <span>Current through Jul 18, 2026</span>
-            </section>
-
-            <section
-              id="how-it-works"
-              className={styles.benefits}
-              aria-labelledby="benefits-heading"
-            >
-              <div className={styles.sectionIntro}>
-                <p className={styles.eyebrow}>More than a property lookup</p>
-                <h2 id="benefits-heading">
-                  Your records become a story you can use.
-                </h2>
-                <p>
-                  ParcelSavvy connects the pieces homeowners usually have to
-                  find—and interpret—one at a time.
-                </p>
-              </div>
-              <div className={styles.benefitGrid}>
-                {benefits.map((benefit) => (
-                  <article className={styles.benefit} key={benefit.title}>
-                    <span aria-hidden="true">{benefit.number}</span>
-                    <h3>{benefit.title}</h3>
-                    <p>{benefit.copy}</p>
-                  </article>
-                ))}
-              </div>
             </section>
 
             <section
