@@ -76,6 +76,7 @@ try {
   assert.match(home, /alt="ParcelSavvy"/);
   assert.match(home, /Know your property/);
   assert.match(home, /Understand your assessment/);
+  assert.doesNotMatch(home, /Your records become a story you can use/);
   assert.match(home, /Built for homeowners, not property-tax insiders/);
   assert.doesNotMatch(home, /Source dates, calculations, and limitations stay visible/);
   const suggestionResponse = await fetch(
