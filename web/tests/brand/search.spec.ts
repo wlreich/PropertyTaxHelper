@@ -58,3 +58,23 @@ test('address variants and labeled spelling suggestions', async ({page}, info) =
   await page.locator('.result-card').press('Enter');
   await expect(page).toHaveURL(/property\/990010/);
 });
+
+test('typeahead narrows house-number matches and supports keyboard selection', async ({page}) => {
+  await page.goto('/');
+  const search=page.getByLabel('Property address or TCAD property ID');
+  await search.fill('1104');
+  const listbox=page.getByRole('listbox',{name:'Matching property addresses'});
+  await expect(listbox).toBeVisible();
+  await expect(listbox.getByRole('option')).toHaveCount(8);
+  await expect(listbox.getByText('Keep typing to narrow the list, or search to see all matches.')).toBeVisible();
+  await search.press('Escape');
+  await expect(listbox).toBeHidden();
+  await search.fill('1104 Cedar');
+  await expect(listbox.getByRole('option')).toHaveCount(1);
+  await expect(listbox.getByRole('option')).toContainText('1104 CEDAR ST');
+  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  await search.press('ArrowDown');
+  await expect(listbox.getByRole('option')).toHaveAttribute('aria-selected','true');
+  await search.press('Enter');
+  await expect(page).toHaveURL(/property\/990016/);
+});

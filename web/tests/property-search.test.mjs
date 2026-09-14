@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   searchProperties,
+  searchPropertySuggestions,
   getProperty,
 } from "../src/lib/supabase/properties.ts";
 import {
@@ -96,6 +97,83 @@ test("valid search uses a read-only, uncached RPC and returns a strict field lis
   });
   assert.equal(r.status, "ok");
   assert.deepEqual(r.data.items, [{ ...item, is_parkland: false }]);
+});
+test("typeahead uses the capped suggestion RPC and returns only display fields", async () => {
+  const r = await searchPropertySuggestions(
+    "1104 Oak",
+    config,
+    async (input, init) => {
+      const u = new URL(input);
+      assert.equal(u.pathname, "/rest/v1/rpc/suggest_property_parcels");
+      assert.equal(u.searchParams.get("p_query"), "1104 Oak");
+      assert.equal(u.searchParams.get("p_limit"), "8");
+      assert.equal(u.searchParams.get("p_show_all"), "false");
+      assert.equal(init.method, "GET");
+      assert.equal(init.cache, "no-store");
+      return Response.json({
+        available: true,
+        items: [
+          {
+            property_id: "100",
+            address: "1104 N OAK ST",
+            city: "FIXTURE CITY",
+            postal_code: "78700",
+            is_parkland: false,
+            owner_name: "must not pass through",
+          },
+        ],
+        has_more: true,
+      });
+    },
+  );
+  assert.deepEqual(r, {
+    status: "ok",
+    data: {
+      items: [
+        {
+          property_id: "100",
+          address: "1104 N OAK ST",
+          city: "FIXTURE CITY",
+          postal_code: "78700",
+          is_parkland: false,
+        },
+      ],
+      has_more: true,
+    },
+  });
+});
+test("typeahead rejects invalid input and malformed or oversized responses", async () => {
+  const noRequest = async () => assert.fail("must not request");
+  assert.equal(
+    (await searchPropertySuggestions("ab", config, noRequest)).status,
+    "invalid",
+  );
+  for (const payload of [
+    null,
+    { available: false, items: [], has_more: false },
+    { available: true, items: Array(9).fill({}), has_more: true },
+    {
+      available: true,
+      items: [
+        {
+          property_id: "100",
+          address: "1104 OAK ST",
+          city: "AUSTIN",
+          postal_code: "78700",
+          is_parkland: "no",
+        },
+      ],
+      has_more: false,
+    },
+  ])
+    assert.equal(
+      (
+        await searchPropertySuggestions("1104", config, async () =>
+          Response.json(payload),
+        )
+      ).status,
+      "unavailable",
+    );
 });
 test("invalid searches, IDs and privileged configuration never make a request", async () => {
   const noRequest = async () => assert.fail("must not request");

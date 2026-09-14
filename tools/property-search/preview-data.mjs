@@ -38,6 +38,7 @@ createServer((req,res)=>{
    else if(route==='property_neighborhood_v2')result=await call('select public.property_neighborhood_v2($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_comparisons')result=await call('select public.property_comparisons($1,$2,$3,$4,$5) result',[args.p_id,args.p_source??null,typeof args.p_selected==='string'?args.p_selected.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_selected??[],args.p_query??'',Number(args.p_page??0)]);
    else if(route==='search_property_parcels_v2')result=await call('select public.search_property_parcels_v2($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
+   else if(route==='suggest_property_parcels')result=await call('select public.suggest_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_limit),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='search_property_parcels')result=await call('select public.search_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='property_profile')result=await call('select public.property_profile($1) result',[args.p_id]);
    else if(route==='property_history')result=args.p_id==='100'?fixtureHistory:{snapshots:[]};

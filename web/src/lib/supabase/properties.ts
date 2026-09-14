@@ -25,6 +25,17 @@ export type SearchResults = Release & {
   has_more: boolean;
   limit_reached: boolean;
 };
+export type SearchSuggestion = {
+  property_id: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  is_parkland: boolean;
+};
+export type SuggestionResults = {
+  items: SearchSuggestion[];
+  has_more: boolean;
+};
 export type Property = SearchItem &
   Release & {
     appraised_value: number | null;
@@ -57,6 +68,15 @@ function item(v: unknown): v is SearchItem & Record<string, unknown> {
     ) &&
     amount(v.market_value) &&
     typeof v.values_under_review === "boolean"
+  );
+}
+function suggestion(v: unknown): v is SearchSuggestion & Record<string, unknown> {
+  return (
+    object(v) &&
+    typeof v.property_id === "string" &&
+    /^\d{1,12}$/.test(v.property_id) &&
+    [v.address, v.city, v.postal_code].every((x) => typeof x === "string") &&
+    typeof v.is_parkland === "boolean"
   );
 }
 function release(v: unknown): v is Release & Record<string, unknown> {
@@ -162,6 +182,45 @@ export async function searchProperties(
       })),
       has_more: v.has_more,
       limit_reached: v.limit_reached,
+    },
+  };
+}
+export async function searchPropertySuggestions(
+  q: string,
+  config: Config = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
+  },
+  fetchRequest: typeof fetch = fetch,
+  showAll = false,
+): Promise<Result<SuggestionResults>> {
+  if (parseSearch(q).error) return { status: "invalid" };
+  const v = await rpc(
+    "suggest_property_parcels",
+    { p_query: q, p_limit: 8, p_show_all: showAll },
+    config,
+    fetchRequest,
+  );
+  if (
+    !object(v) ||
+    v.available !== true ||
+    !Array.isArray(v.items) ||
+    v.items.length > 8 ||
+    !v.items.every(suggestion) ||
+    typeof v.has_more !== "boolean"
+  )
+    return { status: "unavailable" };
+  return {
+    status: "ok",
+    data: {
+      items: v.items.map((x) => ({
+        property_id: x.property_id,
+        address: x.address,
+        city: x.city,
+        postal_code: x.postal_code,
+        is_parkland: x.is_parkland,
+      })),
+      has_more: v.has_more,
     },
   };
 }

@@ -169,7 +169,11 @@ export default async function Home({
               </p>
             )}
             <div id="property-search" className={styles.searchArea}>
-              <SearchForm query={q} showAll={showAll} />
+              <SearchForm
+                key={`${q}:${showAll}`}
+                query={q}
+                showAll={showAll}
+              />
             </div>
           </div>
 

@@ -159,7 +159,7 @@
   box-shadow: var(--shadow-none);
 }
 
-.page :global(.search-controls button),
+.page :global(.search-controls > button),
 .primaryLink,
 .supportBox button {
   min-height: var(--control-height);
@@ -172,12 +172,12 @@
   font-weight: var(--weight-semibold);
 }
 
-.page :global(.search-controls button:hover),
+.page :global(.search-controls > button:hover),
 .primaryLink:hover {
   background: var(--color-action-hover);
 }
 
-.page :global(.search-controls button:disabled) {
+.page :global(.search-controls > button:disabled) {
   opacity: var(--opacity-disabled);
 }
 
