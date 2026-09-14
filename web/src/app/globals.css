@@ -628,6 +628,10 @@ h1 span {
   .search-controls {
     flex-direction: column;
   }
+  .search-suggestions {
+    position: static;
+    margin-top: var(--space-2);
+  }
   .search-controls input {
     padding: 17px 14px;
   }
