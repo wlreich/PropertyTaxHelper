@@ -29,3 +29,7 @@ Changes should be reviewed in pull requests. Production deployment requires Wend
 ## Comprehensive TCAD ingestion
 
 The private ingestion foundation covers every documented field in all 20 export text files, with complete ZIP retention and resumable file transactions. See [the operator guide](docs/ingestion/tcad-comprehensive.md). It runs separately from the Vercel website; hosted schema activation and a real county load remain pending review.
+
+## Marketing and advertising plan
+
+See [the marketing automation and light advertising plan](docs/marketing-and-advertising-plan.md) for the approved ad-placement approach, proposed traffic strategy, automation boundaries, and phased build requirements. Marketing integrations and campaigns are not active; the plan does not change the ingestion workflow.
