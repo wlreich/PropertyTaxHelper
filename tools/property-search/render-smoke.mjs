@@ -136,7 +136,7 @@ try {
   assert.match(neighborhood, /GRAND MESA SECTION II/);
   assert.match(neighborhood, /Appraisal data snapshot/);
   assert.match(neighborhood, /Values reduced from preliminary/);
-  assert.match(neighborhood, /Open printable report/);
+  assert.match(neighborhood, /Print or save PDF/);
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);
   const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");
   assert.match(printable, /Print or save as PDF/);
