@@ -1,10 +1,6 @@
 -- A subdivision description is a subject-property fact, not a label for the
 -- appraisal district market area. Keep the private source tables behind a
 -- bounded helper and expose only the single public description.
-create index records_abstract_subdivision_code_lookup
-on tcad_ingest.records(dataset_id,(fields->>'abs_subdv_cd'))
-where fields ? 'abs_subdv_desc';
-
 create function parcel_comparison.subject_subdivision(p_anchor uuid,p_source uuid,p_id text)
 returns text language plpgsql stable security definer set search_path='' set statement_timeout='4s' as $$
 declare subdivision_code text; subdivision_description text;
