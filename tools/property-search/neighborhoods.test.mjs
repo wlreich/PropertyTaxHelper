@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 test('neighborhood releases, cap outcomes, protest deduplication, and public visibility',async t=>{
  const db=await fixtureDatabase();t.after(()=>db.close());await db.query('select tcad_ingest.publish_property_search($1)',['11111111-1111-4111-8111-111111111111']);const {old}=await seedComparisons(db);const {anchor,pre}=await seedNeighborhood(db);
  await db.exec('set role anon');
- const call=async(source=null)=>(await db.query('select public.property_neighborhood_v2($1,$2) r',['100',source])).rows[0].r;
+ const call=async(source=null)=>(await db.query('select public.property_neighborhood_v3($1,$2) r',['100',source])).rows[0].r;
  const raw=await call();const data=parseNeighborhood(raw,'100');assert.ok(data);
+ assert.equal(data.subdivision,'GRAND MESA SECTION II');
  assert.equal(data.homes.some(h=>h.property_id==='102'||h.property_id==='103'),false);
  assert.equal(JSON.stringify(raw).includes('PRIVATE'),false);
  const s=neighborhoodSummary(data);
@@ -25,7 +26,7 @@ test('neighborhood releases, cap outcomes, protest deduplication, and public vis
  assert.ok(s.entities.some(e=>e.code==='70'&&!e.applies));
  const early=parseNeighborhood(await call(pre),'100');assert.equal(early.certified_id,null);assert.equal(neighborhoodSummary(early).own,null);
  const historical=parseNeighborhood(await call(old),'100');assert.equal(historical.preliminary_id,null);assert.equal(neighborhoodSummary(historical).protested.count,0);
- assert.equal((await db.query("select public.property_neighborhood_v2('103') r")).rows[0].r.status,'missing_property');
+ assert.equal((await db.query("select public.property_neighborhood_v3('103') r")).rows[0].r.status,'missing_property');
  assert.equal((await db.query('select parcel_comparison.cap_inputs($1,$2,$3) r',[old,pre,['100']])).rows[0].r.length,0);
  await assert.rejects(db.query('select * from tcad_ingest.records limit 1'));
 });
@@ -39,7 +40,7 @@ test('population v2 separates land-only and other types, retains mixed land codi
  const additions=[{id:'2',improvement_id:'2',code:'1ST',class_code:'R3',area:500,value:50000},{id:'3',improvement_id:'3',code:'1ST',class_code:'R3',area:900,value:0}];
  await db.query(`update public.property_snapshot_profiles set snapshot=jsonb_set(snapshot,'{components}',(snapshot->'components')||$2::jsonb) where dataset_id=$1 and property_id='120'`,[anchor,JSON.stringify(additions)]);
  await db.exec('set role anon');
- const call=async(source=null)=>(await db.query('select public.property_neighborhood_v2($1,$2) r',['100',source])).rows[0].r;
+ const call=async(source=null)=>(await db.query('select public.property_neighborhood_v3($1,$2) r',['100',source])).rows[0].r;
  const raw=await call(),data=parseNeighborhood(raw,'100');assert.ok(data);
  assert.equal(data.homes.length,3);
  assert.equal(data.population.candidate_count,6);
