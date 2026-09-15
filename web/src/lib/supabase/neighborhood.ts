@@ -8,7 +8,7 @@ const amount=(v:unknown)=>v===null||typeof v==='number'&&Number.isFinite(v)&&v>=
 const nullableBool=(v:unknown)=>v===null||typeof v==='boolean';
 export function parseNeighborhood(v:unknown,id:string):Neighborhood|null {
  if(!object(v)||v.available!==true||v.status!=='ok'||typeof v.anchor_id!=='string'||!validSource(v.anchor_id)||typeof v.source_id!=='string'||!validSource(v.source_id)
-  ||typeof v.neighborhood!=='string'||v.neighborhood.length>100||!object(v.subject)||v.subject.property_id!==String(Number(id))
+  ||typeof v.neighborhood!=='string'||v.neighborhood.length>100||!(v.subdivision===null||typeof v.subdivision==='string'&&v.subdivision.length<=250)||!object(v.subject)||v.subject.property_id!==String(Number(id))
   ||!Array.isArray(v.releases)||v.releases.length>100||!Array.isArray(v.homes)||v.homes.length>10000||!Array.isArray(v.caps)||v.caps.length>10000)return null;
  const releases:ComparisonRelease[]=[];
  for(const r of v.releases){if(!object(r)||typeof r.dataset_id!=='string'||!validSource(r.dataset_id)||!Number.isInteger(r.tax_year)||Number(r.tax_year)<1900||Number(r.tax_year)>2200||!['preliminary','certified','supplemental'].includes(String(r.roll_stage))||!(r.export_date===null||typeof r.export_date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.export_date)))return null;
@@ -33,11 +33,11 @@ export function parseNeighborhood(v:unknown,id:string):Neighborhood|null {
   excluded.push({property_id:e.property_id,reason:e.reason as keyof typeof exclusionLabels});}
  if(new Set(excluded.map(e=>e.property_id)).size!==excluded.length||p.candidate_count!==homes.length+excluded.length||Number(p.land_code_mismatch)>homes.length||Number(p.multiple_buildings)>homes.length)return null;
  const population:Population={candidate_count:p.candidate_count as number,land_code_mismatch:p.land_code_mismatch as number,multiple_buildings:p.multiple_buildings as number,excluded};
- return {anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps,population};
+ return {anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,subdivision:v.subdivision as string|null,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps,population};
 }
 export async function getNeighborhood(id:string,source:string|null=null) {
  if(!validPropertyId(id)||source!==null&&!validSource(source))return {status:'invalid' as const};
- const v=await rpc('property_neighborhood_v2',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
+ const v=await rpc('property_neighborhood_v3',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
  if(object(v)&&v.available===true&&['missing_property','missing_snapshot','missing_area','area_too_large'].includes(String(v.status)))return {status:v.status as 'missing_property'|'missing_snapshot'|'missing_area'|'area_too_large'};
  const data=parseNeighborhood(v,id);return data?{status:'ok' as const,data}:{status:'unavailable' as const};
 }

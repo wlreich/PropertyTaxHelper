@@ -131,11 +131,24 @@ try {
   assert.match(profile, /Exemptions &amp; taxable values/);
   assert.match(profile, /Back to search results/);
   assert.match(profile, /q=Oak&amp;page=1/);
+  const neighborhood = await page("/property/100/neighborhood");
+  assert.match(neighborhood, /Subdivision on record/);
+  assert.match(neighborhood, /GRAND MESA SECTION II/);
+  assert.match(neighborhood, /Appraisal data snapshot/);
+  assert.match(neighborhood, /Values reduced from preliminary/);
+  assert.match(neighborhood, /Open printable report/);
+  assert.doesNotMatch(neighborhood, /Which properties are included\?/);
+  const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");
+  assert.match(printable, /Print or save as PDF/);
+  assert.match(printable, /Page 1 of 2/);
+  assert.match(printable, /Page 2 of 2/);
+  assert.match(printable, /Protest activity and reductions/);
+  assert.doesNotMatch(printable, /donat|support us/i);
   assert.match(await page("/property/106"), /Some values need further review/);
   assert.match(await page("/property/103"), /Let’s try another address/);
   assert.match(await page("/?q=NoSuchStreet"), /No matching addresses found/);
   assert.match(await page("/?q=ab"), /at least three letters or digits/);
-  for (const html of [home, one, multi, first, second, last, profile])
+  for (const html of [home, one, multi, first, second, last, profile, neighborhood, printable])
     assert.doesNotMatch(
       html,
       /PRIVATE SYNTHETIC OWNER|sb_publishable_fixture|data-nextjs-dialog/,
@@ -144,7 +157,7 @@ try {
   const css = await page(cssPath.replaceAll("&amp;", "&"));
   assert.match(css, /@media/);
   console.log(
-    "Rendered-page checks passed: home, typeahead API, partial/exact/multiple matches, pagination, profile, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
+    "Rendered-page checks passed: home, typeahead API, partial/exact/multiple matches, pagination, profile, neighborhood analysis, two-page printable report, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
   );
 } finally {
   for (const child of processes) child.kill("SIGTERM");
