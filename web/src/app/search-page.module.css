@@ -530,9 +530,9 @@
   gap: var(--space-2);
 }
 
-.page .homeFooter nav[aria-label] a,
 .page .homeFooter nav[aria-label] a {
   width: fit-content;
+  color: var(--color-surface-info);
   text-decoration: none;
 }
 
