@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
@@ -614,6 +615,8 @@ export function PropertyOverview({
             </a>
             <span> · </span>
             <a href={p.source_url}>TCAD source ↗</a>
+            <span> · </span>
+            <Link href={`/report-data-issue?property=${p.property_id}`}>Something looks wrong? Report a data issue</Link>
             </details>
           </section>
         </div>

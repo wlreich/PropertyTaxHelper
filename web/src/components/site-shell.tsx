@@ -16,13 +16,14 @@ export function SiteFooter() {
         Independent of Travis Central Appraisal District. Values reflect the
         selected source release and are not a tax bill.
       </p>
-      <a
-        href="https://traviscad.org/propertysearch/"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Visit the official TCAD search ↗
-      </a>
+      <nav aria-label="ParcelSavvy information">
+        <Link href="/contact">Contact</Link>
+        <Link href="/report-data-issue">Report a data issue</Link>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
+        <Link href="/accessibility">Accessibility</Link>
+      </nav>
+      <p>ParcelSavvy is operated by Systems &amp; Sense LLC.</p>
     </footer>
   );
 }

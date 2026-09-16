@@ -58,7 +58,7 @@
 .neighborhood-own-result {padding:var(--space-4);border-radius:var(--radius-input);background:var(--color-surface-info);display:grid;gap:var(--space-1);}
 .neighborhood-own-result h3 {font-size:var(--text-h3);}
 .neighborhood-own-result p:last-child {font-size:var(--text-small);}
-.neighborhood-protest-strip {display:grid;grid-template-columns:1fr 1fr;border:var(--border-width) solid var(--color-border);border-radius:var(--radius-input);padding:var(--space-3);gap:var(--space-4);}
+.neighborhood-protest-strip {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:var(--border-width) solid var(--color-border);border-radius:var(--radius-input);padding:var(--space-3);gap:var(--space-4);}
 .neighborhood-protest-strip p {font-size:var(--text-small);}
 .neighborhood-protest-strip span {display:block;color:var(--color-text-muted);}
 .neighborhood-insight {padding:var(--space-4);border-radius:var(--radius-input);background:var(--color-brand-primary);color:var(--color-surface);display:grid;gap:var(--space-1);}

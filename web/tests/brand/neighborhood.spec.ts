@@ -14,6 +14,7 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.locator('.neighborhood-outcomes')).toContainText('Values reduced from preliminary');
  await expect(page.locator('.neighborhood-outcomes')).not.toContainText('1 ·');
  await expect(page.locator('.neighborhood-insight')).toContainText('where this comparison could be made');
+ await expect(page.locator('.neighborhood-protest-strip')).toContainText('Median reduction');
  await page.getByRole('button',{name:'Value per sq. ft.',exact:true}).focus();await page.keyboard.press('Enter');
  await expect(page.getByRole('button',{name:'Value per sq. ft.',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('img',{name:/Value per square foot distribution/})).toBeVisible();
@@ -35,6 +36,9 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.getByRole('button',{name:'Print or save as PDF'})).toBeVisible();
  await expect(page.locator('.print-sheet')).toHaveCount(2);
  await expect(page.locator('.print-page-two')).toContainText('Protest activity and reductions');
+ await expect(page.locator('.print-page-two')).toContainText('Median reduction among reduced homes');
+ await expect(page.locator('.print-page-two')).toContainText('PS-NBR-2026.1');
+ await expect(page.locator('.print-page-two')).toContainText('Live analysis:');
  await page.emulateMedia({media:'print'});
  await expect(page.locator('.print-toolbar')).toBeHidden();
  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('.print-sheet')).every(sheet=>Math.abs(sheet.getBoundingClientRect().height-1056)<2))).toBe(true);

@@ -6,6 +6,7 @@ import {neighborhoodSummary} from '@/lib/neighborhood';
 import {validPropertyId} from '@/lib/property-comparisons';
 import {dateLabel} from '@/lib/property-history';
 import {PrintButton} from './print-button';
+import {NEIGHBORHOOD_METHOD_VERSION,SITE_URL} from '@/lib/site';
 import './print.css';
 
 export const maxDuration=30;
@@ -16,7 +17,7 @@ const count=(n:number)=>n.toLocaleString('en-US');
 const homes=(n:number)=>`${count(n)} ${n===1?'home':'homes'}`;
 
 function ReportFooter({page}:{page:number}) {
- return <footer><span>parcelsavvy.org</span><span>Independent of Travis Central Appraisal District</span><span>Page {page} of 2</span></footer>;
+ return <footer><span>parcelsavvy.org</span><span>Method {NEIGHBORHOOD_METHOD_VERSION}</span><span>Page {page} of 2</span></footer>;
 }
 function Position({label,value,percentile}:{label:string;value:string;percentile:number|null}) {
  const position=percentile===null?null:Math.min(100,Math.max(0,percentile));
@@ -33,6 +34,8 @@ export default async function NeighborhoodPrintPage({params,searchParams}:{param
  const subjectPerFoot=d.subject.market_value!==null&&d.subject.living_area?d.subject.market_value/d.subject.living_area:null;
  const subjectAuthorities=s.entities.filter(e=>e.applies);
  const backHref=`/property/${id}/neighborhood?release=${d.source_id}`;
+ const liveUrl=`${SITE_URL}${backHref}`;
+ const generated=new Intl.DateTimeFormat('en-US',{dateStyle:'medium',timeZone:'America/Chicago'}).format(new Date());
  return <main className="neighborhood-print-preview">
   <div className="print-toolbar"><Link href={backHref}>← Back to neighborhood analysis</Link><PrintButton/></div>
   <article className="print-sheet print-page-one">
@@ -54,8 +57,8 @@ export default async function NeighborhoodPrintPage({params,searchParams}:{param
    </section>
    {s.own&&<section className="print-own"><p>Your home</p><h2>{money(s.own.dollars)} below its preliminary capped amount</h2><p>From {money(s.own.threshold)} capped to {money(s.own.final)} certified. This is an appraisal result before exemptions, not tax-dollar savings.</p></section>}
    {complete&&s.all.crossed.total>0&&<section className="print-insight"><h2>What this means</h2><p><strong>{homes(s.all.crossed.count)}</strong> were reduced from above their recorded cap to below it—<strong>{pct(s.all.crossed.percent)}</strong> of the {homes(s.all.crossed.total)} where this comparison could be made. For those homes, the reduction lowered the value used before exemptions below the cap that was already limiting it.</p></section>}
-   <section className="print-protest" aria-labelledby="protest-heading"><div className="print-section-heading"><div><p>Available public records</p><h2 id="protest-heading">Protest activity and reductions</h2></div></div><dl><div><dt>Homes with protest activity identified</dt><dd>{count(s.protested.count)} of {count(s.all.count)} · {pct(s.participation)}</dd></div><div><dt>Homes with reductions</dt><dd>{count(s.all.reduced.count)} · {pct(s.all.shares.reduced.percent)}</dd></div><div><dt>Average reduction among reduced homes</dt><dd>{complete?`${money(s.all.averageReduction)} · ${pct(s.all.averagePercent)}`:'Not available'}</dd></div></dl></section>
-   <section className="print-about" aria-labelledby="about-heading"><h2 id="about-heading">About this analysis</h2><p>Source: Travis Central Appraisal District, {r.tax_year} {r.roll_stage} release dated {dateLabel(r.export_date)}. This analysis includes {count(s.all.count)} properties classified as single-family residential in Appraisal District market area {d.neighborhood} with usable building and market-value data. Market-area boundaries may differ from subdivision boundaries. Market values include land.</p><p>Cap comparisons appear only where public records identify an applicable homestead cap and support a preliminary-to-certified comparison. Eligibility changes and qualifying new improvements can affect the cap. Protest activity reflects the combined public records available for the tax year and may be incomplete. These are appraisal outcomes before exemptions, not estimates of tax savings.</p></section>
+   <section className="print-protest" aria-labelledby="protest-heading"><div className="print-section-heading"><div><p>Available public records</p><h2 id="protest-heading">Protest activity and reductions</h2></div></div><dl><div><dt>Homes with protest activity identified</dt><dd>{count(s.protested.count)} of {count(s.all.count)} · {pct(s.participation)}</dd></div><div><dt>Homes with reductions</dt><dd>{count(s.all.reduced.count)} · {pct(s.all.shares.reduced.percent)}</dd></div><div><dt>Median reduction among reduced homes</dt><dd>{complete?`${money(s.all.medianReduction)} · ${pct(s.all.medianPercent)}`:'Not available'}</dd></div><div><dt>Average reduction among reduced homes</dt><dd>{complete?`${money(s.all.averageReduction)} · ${pct(s.all.averagePercent)}`:'Not available'}</dd></div></dl></section>
+   <section className="print-about" aria-labelledby="about-heading"><h2 id="about-heading">About this analysis</h2><p>Source: Travis Central Appraisal District, {r.tax_year} {r.roll_stage} release dated {dateLabel(r.export_date)}. This analysis includes {count(s.all.count)} properties classified as single-family residential in Appraisal District market area {d.neighborhood} with usable building and market-value data. Market-area boundaries may differ from subdivision boundaries. Market values include land.</p><p>Cap comparisons appear only where public records identify an applicable homestead cap and support a preliminary-to-certified comparison. Eligibility changes and qualifying new improvements can affect the cap. Protest activity reflects the combined public records available for the tax year and may be incomplete. These are appraisal outcomes before exemptions, not estimates of tax savings.</p><p>Generated {generated} · Method {NEIGHBORHOOD_METHOD_VERSION}<br/>Live analysis: <a href={liveUrl}>{liveUrl}</a></p></section>
    <ReportFooter page={2}/>
   </article>
  </main>;
