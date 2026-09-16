@@ -4,7 +4,7 @@ The property overview and neighborhood analysis show exact-code annual TCAD mult
 
 ## Sources and annual refresh
 
-Source PDFs are supplied by the record requester and are not distributed with this change. The UI identifies their filenames and page references. Annual rows retain the exact neighborhood code, factor as printed (percent), PDF page, file SHA-256, imported row count and import timestamp. Display multiplies the printed percentage by 0.01. A factor of 178 is 1.78×, not a 178% annual increase.
+The requester approved publication of the 2025 and 2026 market-adjustment schedules and 2026 residential valuation manual. These exact source PDFs are distributed in `web/public/data/tcad`; the UI links to the relevant PDF pages. Annual rows retain the exact neighborhood code, factor as printed (percent), PDF page, file SHA-256, imported row count and import timestamp. Display multiplies the printed percentage by 0.01. A factor of 178 is 1.78×, not a 178% annual increase.
 
 Initial import: 1,533 unique codes for 2025 and 1,545 for 2026. The 2026 PDF footer says “Total NBHDs” followed by 1,578; the supplied pages contain 1,545 factor rows. The importer stops before that footer and does not manufacture missing entries. Two 2026 codes contain internal spaces (`B N 1314MH`, `B S 1314MH`); those spaces are preserved. No renamed-code or boundary crosswalk was supplied or inferred.
 
