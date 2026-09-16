@@ -16,6 +16,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await expect(panel).toContainText('2026 schedule, p. 26');
  await expect(panel).toContainText('2026_Market_Adjustments.pdf');
  expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+ expect(await panel.locator('.market-adjustment-history').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
  await panel.screenshot({path:info.outputPath('market-adjustment.png')});
  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
