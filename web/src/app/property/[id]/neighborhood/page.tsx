@@ -1,3 +1,4 @@
+import {MarketAdjustmentPanel} from '@/components/market-adjustment-panel';
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
 import {SiteHeader,SiteFooter} from '@/components/site-shell';
@@ -40,6 +41,7 @@ export default async function NeighborhoodPage({params,searchParams}:{params:Pro
   </dl>
   {s.annual&&<p className="neighborhood-note">{pct(Math.abs(s.annual.percent))} {s.annual.percent>=0?'higher':'lower'} median market value than {r.tax_year-1} certified, using the same {count(s.annual.count)} homes in both releases.</p>}
   {!s.subjectIncluded&&<p className="notice">Your property is outside the residential-home population used for these neighborhood metrics.</p>}
+  <MarketAdjustmentPanel data={d.market_adjustment??null} propertyId={id} neighborhood/>
   <NeighborhoodDistribution market={s.marketDistribution} area={s.areaDistribution} compareHref={href}/>
   <section className="neighborhood-panel" aria-labelledby="season-heading"><div className="neighborhood-section-heading"><h2 id="season-heading">From preliminary values to {complete?'certified results':'available records'}</h2><span className="neighborhood-season-badge">{r.tax_year} · {complete?'Certified results':'Comparison incomplete'}</span></div>
    <p>How preliminary appraisal values changed before certification.</p><p><strong>Each headline percentage uses the same {count(s.all.count)} included homes.</strong></p>

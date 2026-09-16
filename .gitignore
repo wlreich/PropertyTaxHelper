@@ -1,3 +1,6 @@
 /data/
 __pycache__/
 *.pyc
+
+# Requester-provided source PDFs require separate publication approval.
+/web/public/data/tcad/*.pdf
