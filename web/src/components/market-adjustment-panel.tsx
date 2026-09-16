@@ -8,12 +8,14 @@ export function MarketAdjustmentPanel({data,propertyId,neighborhood=false}:{data
   return <section className="market-adjustment-panel" id="market-adjustment" aria-labelledby="market-adjustment-heading">
     <p className="eyebrow">{data.year} · MARKET AREA {data.neighborhood}</p>
     <h2 id="market-adjustment-heading" tabIndex={-1}>Neighborhood market adjustment</h2>
-    <p>The appraisal district uses selected property sales to compare sale prices, after allowing for land and other features, with its estimated building costs after depreciation. It uses that comparison to set a neighborhood multiplier for the improvement model.</p>
-    <p>For example, a multiplier of 1.50 means 1.50 times the applicable model amount. It does not mean your total property value rose 50% this year.</p>
+    <p><strong>Your home’s appraisal depends partly on where it is.</strong></p>
+    <p>TCAD starts by estimating what it would cost to rebuild your house, with a reduction for its age and condition. It then uses sales it selects from your neighborhood to adjust that starting estimate to better reflect what buyers are paying.</p>
+    <p>That neighborhood adjustment is expressed as a multiplier. For example, if the starting estimate is <strong>$200,000</strong>, a multiplier of <strong>1.50</strong> raises it to <strong>$300,000</strong>. Land is valued separately.</p>
+    <p><strong>When the multiplier goes up, your appraisal can increase even if nothing about your home has changed.</strong> ParcelSavvy estimates how much that change alone added to or subtracted from your home’s preliminary appraisal.</p>
     <dl className="market-adjustment-metrics">
       <div><dt>Change in multiplier</dt><dd>{s.previous&&s.current?`${multiplier(s.previous.factor)} → ${multiplier(s.current.factor)}`:'Not available'}</dd><dd className="market-adjustment-note">{s.percent===null?'Both annual schedules are needed.':`${s.percent>0?'+':''}${s.percent.toFixed(1)}% from ${data.year-1} to ${data.year}`}</dd></div>
       {neighborhood&&<div><dt>Median estimated effect across matched homes</dt><dd>{money(s.median)}</dd><dd className="market-adjustment-note">{s.count.toLocaleString()} of {s.total.toLocaleString()} included homes qualify for this estimate.</dd></div>}
-      <div><dt>Estimated effect on your improvement value</dt><dd>{money(home?.effect??null)}</dd><dd className="market-adjustment-note">{home?.effect!=null?'Changing only the neighborhood multiplier, with current-year preliminary inputs held fixed.':home?adjustmentReasons[home.status]:'Your home is outside the included population.'}</dd></div>
+      <div><dt>Estimated change caused by the neighborhood adjustment</dt><dd>{money(home?.effect??null)}</dd><dd className="market-adjustment-note">{home?.effect!=null?'Changing only the neighborhood multiplier, with current-year preliminary inputs held fixed.':home?adjustmentReasons[home.status]:'Your home is outside the included population.'}</dd></div>
       {!neighborhood&&<div><dt>Actual preliminary improvement change</dt><dd>{money(home?.actual_change??null)}</dd><dd className="market-adjustment-note">{home?.actual_change!=null?`${data.year-1} preliminary → ${data.year} preliminary`:'Both years’ preliminary records in the same neighborhood are needed. Certified values are not substituted.'}</dd></div>}
     </dl>
     <h3>Multiplier history</h3>
