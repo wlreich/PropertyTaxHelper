@@ -38,6 +38,30 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByRole('heading',{name:'No matching addresses found'})).toBeVisible();
 });
 
+test('search support action stays readable and opens checkout information',async({page},info)=>{
+  await page.goto('/');
+  const support=page.locator('aside').getByRole('link',{name:'Support ParcelSavvy',exact:true});
+  await expect(support).toBeVisible();
+  await expect(support).toHaveCSS('color','rgb(255, 255, 255)');
+  await expect(support).toHaveCSS('background-color','rgb(23, 105, 170)');
+  await support.scrollIntoViewIfNeeded();
+  expect((await new AxeBuilder({page}).include('#support').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  await support.hover();
+  await expect(support).toHaveCSS('color','rgb(255, 255, 255)');
+  await expect(support).toHaveCSS('background-color','rgb(11, 45, 77)');
+  await support.focus();
+  await expect(support).toBeFocused();
+  await expect(support).toHaveCSS('outline-style','solid');
+  await page.screenshot({path:info.outputPath('support-button.png')});
+  await support.press('Enter');
+  await expect(page).toHaveURL(/\/support$/);
+  await expect(page.getByRole('link',{name:'Continue to secure checkout'})).toHaveAttribute('href','https://donate.stripe.com/6oUaEP7jn6l39fSgXg7AI00');
+  await page.goBack();
+  await expect(support).toHaveCSS('color','rgb(255, 255, 255)');
+  await support.click();
+  await expect(page).toHaveURL(/\/support$/);
+});
+
 test('launch information pages are complete, linked and accessible',async({page})=>{
   for(const [path,heading] of [
     ['/privacy','Privacy policy'],

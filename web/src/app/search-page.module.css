@@ -418,6 +418,11 @@
   text-decoration: none;
 }
 
+/* Keep this filled action readable above the global anchor-color rule. */
+.page .supportBox a.supportButton[href] {
+  color: var(--color-surface);
+}
+
 .supportBox small {
   display: block;
   margin-top: var(--space-2);
