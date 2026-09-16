@@ -1,9 +1,10 @@
+import type {MarketAdjustment} from './market-adjustments.ts';
 import { type ComparisonProperty, type ComparisonRelease } from './property-comparisons.ts';
 export type Home = { property_id:string;market:number|null;area:number|null;preliminary:number|null;certified:number|null;certified_area:number|null;prior:number|null;protested:boolean;entities:{code:string;name:string}[] };
 export type Cap = {property_id:string;eligible:boolean|null;above:boolean|null;threshold:number|null};
 export const exclusionLabels = {land_only:'Land-only valuation',unverified_type:'Property type needs verification',other_type:'Other property type',unverified_improvements:'Building value needs verification',unusable_value:'Market value unavailable or anomalous'};
 export type Population = {candidate_count:number;excluded:{property_id:string;reason:keyof typeof exclusionLabels}[];land_code_mismatch:number;multiple_buildings:number};
-export type Neighborhood = {anchor_id:string;source_id:string;releases:ComparisonRelease[];preliminary_id:string|null;certified_id:string|null;prior_id:string|null;neighborhood:string;subdivision:string|null;subject:ComparisonProperty;homes:Home[];caps:Cap[];population:Population};
+export type Neighborhood = {market_adjustment?:MarketAdjustment|null;anchor_id:string;source_id:string;releases:ComparisonRelease[];preliminary_id:string|null;certified_id:string|null;prior_id:string|null;neighborhood:string;subdivision:string|null;subject:ComparisonProperty;homes:Home[];caps:Cap[];population:Population};
 export const median=(values:number[])=>{const s=[...values].sort((a,b)=>a-b);return s.length?(s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2:null;};
 export const usable=(n:number|null):n is number=>n!==null&&Number.isFinite(n)&&n>=1000;
 export const perFoot=(value:number|null,area:number|null)=>usable(value)&&area!==null&&area>0?value/area:null;

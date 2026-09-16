@@ -1,3 +1,5 @@
+import {MarketAdjustmentPanel} from './market-adjustment-panel';
+import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
 import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
@@ -115,6 +117,7 @@ function EntityExemptions({ entity }: { entity: Entity }) {
 }
 export function PropertyOverview({
   property: p,
+  marketAdjustment = null,
   snapshots,
   historyUnavailable,
   protests = [],
@@ -122,6 +125,7 @@ export function PropertyOverview({
   season = null,
 }: {
   property: Property;
+  marketAdjustment?: MarketAdjustment | null;
   snapshots: Snapshot[];
   historyUnavailable: boolean;
   protests?: ProtestObservation[];
@@ -217,6 +221,7 @@ export function PropertyOverview({
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
         <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
+        <PropertySectionLink target="market-adjustment-heading">Market adjustment</PropertySectionLink>
         <PropertySectionLink target="history-heading">Value history</PropertySectionLink>
         <PropertySectionLink target="representation-heading">Protest &amp; agent</PropertySectionLink>
         <PropertySectionLink target="exemptions-heading">Exemptions</PropertySectionLink>
@@ -331,6 +336,7 @@ export function PropertyOverview({
               </p>
             </div>
           )}
+          <MarketAdjustmentPanel data={marketAdjustment} propertyId={p.property_id}/>
           <section
             className="overview-section"
             aria-labelledby="history-heading"

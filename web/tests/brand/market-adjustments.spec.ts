@@ -1,0 +1,27 @@
+import {test,expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+test('market factors, matched median, unavailable preliminary baseline and sources',async({page},info)=>{
+ await page.goto('/property/100');
+ const panel=page.locator('#market-adjustment');
+ await expect(panel).toContainText('+$112,000');
+ await expect(panel).toContainText('Both years’ preliminary records');
+ await expect(panel).toContainText('1.46× → 1.78×');
+ await page.getByRole('navigation',{name:'Property sections'}).getByRole('link',{name:'Market adjustment',exact:true}).click();
+ await expect(page).toHaveURL(/#market-adjustment-heading$/);
+ await page.goto('/property/100/neighborhood');
+ await expect(panel).toContainText('Median estimated effect across matched homes');
+ await expect(panel).toContainText('2 of 5 included homes');
+ await panel.getByText('How this estimate works and what is covered',{exact:true}).click();
+ await expect(panel).toContainText('2 homes: preliminary snapshot unavailable');
+ await expect(panel).toContainText('2026 schedule, p. 26');
+ await expect(panel).toContainText('2026_Market_Adjustments.pdf');
+ expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+ await panel.screenshot({path:info.outputPath('market-adjustment.png')});
+ await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.evaluate(()=>{document.documentElement.style.fontSize='';});
+ await page.locator('#neighborhood-release').selectOption('22222222-2222-4222-8222-222222222222');
+ await page.getByRole('button',{name:'View',exact:true}).click();
+ await expect(panel).not.toContainText('1.78×');
+ await expect(panel).toContainText('Both annual schedules are needed.');
+});

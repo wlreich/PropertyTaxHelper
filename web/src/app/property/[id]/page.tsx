@@ -1,3 +1,4 @@
+import {getMarketAdjustment} from '@/lib/supabase/market-adjustments';
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader, SiteFooter, Unavailable } from "@/components/site-shell";
@@ -21,7 +22,7 @@ export default async function PropertyPage({
     typeof search.q === "string" ? search.q : "",
     typeof search.page === "string" ? search.page : "0",
   );
-  const [overview, calendar] = await Promise.all([getPropertyOverview(id), getSeasonCalendar()]);
+  const [overview, calendar, marketAdjustment] = await Promise.all([getPropertyOverview(id), getSeasonCalendar(), getMarketAdjustment(id)]);
   const result = overview.property;
   if (result.status === "not_found" || result.status === "invalid") notFound();
   return (
@@ -39,6 +40,7 @@ export default async function PropertyPage({
         </Link>
         {result.status === "ok" ? (
           <PropertyOverview
+            marketAdjustment={marketAdjustment}
             property={result.data}
             snapshots={overview.snapshots}
             historyUnavailable={overview.historyUnavailable}

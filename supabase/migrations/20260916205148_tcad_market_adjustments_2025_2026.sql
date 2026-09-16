@@ -1,0 +1,3 @@
+-- Annual source data is imported separately with tools/market-adjustments/import.py.
+-- The 2025/2026 source editions have already been loaded in production.
+-- This migration marker contains no uploaded document contents.

@@ -1,6 +1,9 @@
 export async function seedComparisons(db) {
  const anchor='11111111-1111-4111-8111-111111111111';
  const old='22222222-2222-4222-8222-222222222222';
+ // Synthetic annual multipliers for fixture calculations, not a copy of district schedules.
+ await db.exec(`insert into public.market_adjustment_sources(tax_year,filename,sha256,row_count) values (2025,'2025_Market_Adjustments.pdf',repeat('a',64),1),(2026,'2026_Market_Adjustments.pdf',repeat('b',64),1);
+ insert into public.neighborhood_market_adjustments values (2025,'T2450',146,25),(2026,'T2450',178,26);`);
  const snapshot=(area,year,value,source=anchor)=>({dataset_id:source,tax_year:source===anchor?2026:2025,roll_stage:'certified',export_date:source===anchor?'2026-07-18':'2025-07-19',export_time_raw:source===anchor?'07/18/2026 16:27':'07/19/2025',market_value:value,improvement_value:value===null?null:value-100000,land_value:100000,land_acres:.25,neighborhood:'T2450',components:[{id:'1',improvement_id:'1',code:'1ST',area,class_code:'R3',year_built:year,value:350000}]});
  // Safe synthetic search documents created from an already-public fixture.
  for(const [id,address,area,year,value] of [['120','120 CYPRESS ST',2000,2014,400000],['121','121 CYPRESS ST',2010,2015,460000],['122','122 CYPRESS ST',2080,2016,480000],['123','123 PINE ST',2400,2000,null]]) {

@@ -1,3 +1,4 @@
+import {parseMarketAdjustment} from '../market-adjustments.ts';
 import 'server-only';
 import {rpc} from './properties.ts';
 import {validPropertyId,validSource} from '../property-comparisons.ts';
@@ -33,11 +34,11 @@ export function parseNeighborhood(v:unknown,id:string):Neighborhood|null {
   excluded.push({property_id:e.property_id,reason:e.reason as keyof typeof exclusionLabels});}
  if(new Set(excluded.map(e=>e.property_id)).size!==excluded.length||p.candidate_count!==homes.length+excluded.length||Number(p.land_code_mismatch)>homes.length||Number(p.multiple_buildings)>homes.length)return null;
  const population:Population={candidate_count:p.candidate_count as number,land_code_mismatch:p.land_code_mismatch as number,multiple_buildings:p.multiple_buildings as number,excluded};
- return {anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,subdivision:v.subdivision as string|null,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps,population};
+ return {market_adjustment:parseMarketAdjustment(v.market_adjustment),anchor_id:v.anchor_id,source_id:v.source_id,neighborhood:v.neighborhood,subdivision:v.subdivision as string|null,releases,preliminary_id:v.preliminary_id as string|null,certified_id:v.certified_id as string|null,prior_id:v.prior_id as string|null,subject,homes,caps,population};
 }
 export async function getNeighborhood(id:string,source:string|null=null) {
  if(!validPropertyId(id)||source!==null&&!validSource(source))return {status:'invalid' as const};
- const v=await rpc('property_neighborhood_v3',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
+ const v=await rpc('property_neighborhood_v4',{p_id:id,...(source?{p_source:source}:{})},{SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY},fetch);
  if(object(v)&&v.available===true&&['missing_property','missing_snapshot','missing_area','area_too_large'].includes(String(v.status)))return {status:v.status as 'missing_property'|'missing_snapshot'|'missing_area'|'area_too_large'};
  const data=parseNeighborhood(v,id);return data?{status:'ok' as const,data}:{status:'unavailable' as const};
 }
