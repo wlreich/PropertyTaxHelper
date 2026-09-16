@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { InformationPage, informationStyles as styles } from "@/components/information-page";
-import { CONTACT_EMAIL, SITE_OPERATOR, contactHref } from "@/lib/site";
+import {
+  CONTACT_EMAIL,
+  SITE_OPERATOR,
+  SUPPORT_PAYMENT_URL,
+  contactHref,
+} from "@/lib/site";
 
 export const metadata: Metadata = { title: "Support ParcelSavvy" };
 
 function getCheckoutUrl() {
-  const configuredUrl = process.env.SUPPORT_PAYMENT_URL;
-  if (!configuredUrl) return null;
+  const configuredUrl = process.env.SUPPORT_PAYMENT_URL ?? SUPPORT_PAYMENT_URL;
 
   try {
     const url = new URL(configuredUrl);

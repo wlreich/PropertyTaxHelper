@@ -55,6 +55,8 @@ test('launch information pages are complete, linked and accessible',async({page}
   }
   await page.goto('/report-data-issue?property=100');
   await expect(page.getByRole('link',{name:'Start a data-issue email'})).toHaveAttribute('href',/property\+100|property%20100/);
+  await page.goto('/support');
+  await expect(page.getByRole('link',{name:'Continue to secure checkout'})).toHaveAttribute('href','https://donate.stripe.com/6oUaEP7jn6l39fSgXg7AI00');
 });
 
 test('address variants and labeled spelling suggestions', async ({page}, info) => {
