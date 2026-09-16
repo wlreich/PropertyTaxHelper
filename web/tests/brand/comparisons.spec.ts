@@ -52,6 +52,6 @@ test('comparison selection, median, manual search, release switching and respons
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(results).toContainText('$30,000 above');
  await expect(results).toContainText('2025 certified');
- await expect(page.getByText('2025 rules have not been verified.',{exact:false})).toBeVisible();
+ await expect(page.getByText('2025 rules have not been verified',{exact:false})).toBeVisible();
  await page.goto('/property/103/compare');await expect(page.getByRole('heading',{name:"Let’s try another address"})).toBeVisible();
 });

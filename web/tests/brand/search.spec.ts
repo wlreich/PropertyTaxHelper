@@ -9,7 +9,7 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Built for homeowners, not property-tax insiders.'})).toBeVisible();
-  await expect(page.getByRole('link',{name:'Support ParcelSavvy'})).toHaveAttribute('href','/support');
+  await expect(page.locator('aside').getByRole('link',{name:'Support ParcelSavvy'})).toHaveAttribute('href','/support');
   await expect(page.getByText('Optional contributions are not charitable donations and are not tax-deductible.')).toBeVisible();
   await expect(page.getByRole('link',{name:'Privacy policy'})).toHaveAttribute('href','/privacy');
   expect(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/manrope/i);

@@ -43,11 +43,13 @@ test('neighborhood outcomes, chart, release continuity and accessible layout',as
  await expect(page.locator('.print-toolbar')).toBeHidden();
  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('.print-sheet')).every(sheet=>Math.abs(sheet.getBoundingClientRect().height-1056)<2))).toBe(true);
  await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();
- await page.getByLabel('Appraisal data snapshot').selectOption('33333333-3333-4333-8333-333333333333');await page.getByRole('button',{name:'View',exact:true}).click();
+ await expect(page).toHaveURL(/\/property\/100\/neighborhood\?release=/);
+ const snapshotSelect=page.locator('#neighborhood-release');
+ await snapshotSelect.selectOption('33333333-3333-4333-8333-333333333333');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page).toHaveURL(/release=33333333/);await expect(page.locator('.neighborhood-season-badge')).toContainText('Comparison incomplete');
  await expect(page.locator('.neighborhood-own-result')).toHaveCount(0);
- await page.reload();await expect(page.getByLabel('Appraisal data snapshot')).toHaveValue('33333333-3333-4333-8333-333333333333');
- await page.getByLabel('Appraisal data snapshot').selectOption('22222222-2222-4222-8222-222222222222');await page.getByRole('button',{name:'View',exact:true}).click();
+ await page.reload();await expect(snapshotSelect).toHaveValue('33333333-3333-4333-8333-333333333333');
+ await snapshotSelect.selectOption('22222222-2222-4222-8222-222222222222');await page.getByRole('button',{name:'View',exact:true}).click();
  await expect(page.locator('.neighborhood-season-badge')).toContainText('2025');
  await page.getByText('Compare homes with and without identified protest activity',{exact:true}).click();
  await expect(page.getByRole('row').filter({hasText:'Started above their recorded cap'})).toContainText('Not available');
