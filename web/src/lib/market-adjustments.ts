@@ -2,6 +2,7 @@ export const adjustmentReasons = {
   ok: 'Estimate available',
   missing_preliminary: 'Preliminary snapshot unavailable',
   unmatched_neighborhood: 'Same neighborhood not verified in both years',
+  missing_prior_home: 'Prior-year residential improvement not verified',
   missing_factor: 'Annual factor pair unavailable',
   unverified_components: 'Improvement components incomplete',
   unverified_buildings: 'Single residential building not verified',

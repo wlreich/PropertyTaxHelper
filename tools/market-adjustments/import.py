@@ -28,6 +28,8 @@ def parse(text):
 def sql(year, pdf):
     if not 2000 <= year <= 2200:
         raise ValueError("Invalid year")
+    if pdf.name != f'{year}_Market_Adjustments.pdf':
+        raise ValueError('Source filename must match the tax year')
     rows = parse(subprocess.check_output(['pdftotext', '-layout', str(pdf), '-'], text=True))
     sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
     quote = lambda s: "'" + str(s).replace("'", "''") + "'"

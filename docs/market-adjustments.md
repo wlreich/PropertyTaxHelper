@@ -19,7 +19,7 @@ To add a year:
 
 For the selected release's tax year, take each home's first available dated preliminary snapshot on or before the selected release. The prior-year membership match uses the latest available prior-year snapshot; its value is not used as a preliminary baseline.
 
-A dollar estimate requires both annual factors, identical neighborhood codes in the selected, preliminary and prior-year snapshots, complete nonnegative component values, one residential main building, and a positive improvement total. Sum the preliminary component values to obtain B. Verify `abs(round(B × current_factor) − recorded_preliminary_improvement) <= 1`. Otherwise show the exclusion reason, not a dollar estimate.
+A dollar estimate requires both annual factors, identical neighborhood codes in the selected, preliminary and prior-year snapshots, a residential improvement in the prior-year records, complete nonnegative component values, one residential main building, and a positive improvement total. Sum the preliminary component values to obtain B. Verify `abs(round(B × current_factor) − recorded_preliminary_improvement) <= 1`. Otherwise show the exclusion reason, not a dollar estimate.
 
 Estimated effect is `round(B × current_factor) − round(B × previous_factor)`. This holds current-year property details, costs and depreciation fixed. It estimates the factor change's effect on improvements, not land, taxable value or taxes. Reconciliation is a guard against inapplicable schedules and overrides, not evidence that an appraisal is correct or incorrect.
 

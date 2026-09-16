@@ -29,6 +29,7 @@ test('factor estimates require reconciliation and matching; respect RLS and rele
  assert.deepEqual(await evaluate(snapshot,prior,prior),{status:'ok',effect:32000,actual_change:18000,preliminary_date:'2026-04-02',prior_preliminary_date:'2025-04-02'});
  assert.equal((await evaluate({...snapshot,improvement_value:150000},prior,null)).status,'does_not_reconcile');
  assert.equal((await evaluate(snapshot,{...prior,neighborhood:'RENAMED'},null)).status,'unmatched_neighborhood');
+ assert.equal((await evaluate(snapshot,{...prior,improvement_value:0,components:[]},null)).status,'missing_prior_home');
  assert.equal((await evaluate(snapshot,prior,null,null)).status,'missing_factor');
  assert.equal((await evaluate(null,prior,null)).status,'missing_preliminary');
  assert.equal((await evaluate({...snapshot,components:[]},prior,null)).status,'unverified_components');
