@@ -13,3 +13,5 @@
 .market-adjustment-panel summary{cursor:pointer;min-height:var(--target-min);font-weight:var(--weight-semibold)}
 .market-adjustment-panel li{margin-block:var(--space-2)}
 @media(max-width:600px){.market-adjustment-panel{padding:var(--space-4)}.market-adjustment-history th,.market-adjustment-history td{padding:var(--space-2)}}
+.market-adjustment-panel a{text-decoration:underline;text-underline-offset:var(--space-1)}
+

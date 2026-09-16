@@ -2,5 +2,8 @@
 __pycache__/
 *.pyc
 
-# Requester-provided source PDFs require separate publication approval.
+# Keep future source PDFs private until publication is authorized.
 /web/public/data/tcad/*.pdf
+!web/public/data/tcad/2025_Market_Adjustments.pdf
+!web/public/data/tcad/2026_Market_Adjustments.pdf
+!web/public/data/tcad/2026_Residential_Valuation_Manual.pdf

@@ -13,7 +13,13 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await expect(panel).toContainText('2 of 5 included homes');
  await panel.getByText('How this estimate works and what is covered',{exact:true}).click();
  await expect(panel).toContainText('2 homes: preliminary snapshot unavailable');
- await expect(panel).toContainText('2026 schedule, p. 26');
+ await expect(panel.getByRole('link',{name:'2026 schedule, p. 26'})).toHaveAttribute('href','/data/tcad/2026_Market_Adjustments.pdf#page=26');
+ for(const name of ['2025_Market_Adjustments.pdf','2026_Market_Adjustments.pdf','2026_Residential_Valuation_Manual.pdf']){
+  const response=await page.request.get(`/data/tcad/${name}`);
+  expect(response.ok()).toBe(true);expect(response.headers()['content-type']).toContain('application/pdf');
+  expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');
+ }
+ await expect(panel.getByRole('link',{name:'TCAD’s 2026 residential valuation manual, p. 8'})).toHaveAttribute('href','/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8');
  await expect(panel).toContainText('2026_Market_Adjustments.pdf');
  expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
  expect(await panel.locator('.market-adjustment-history').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
