@@ -71,6 +71,8 @@ try {
   assert.match(home, /Property address or TCAD property ID/);
   assert.match(home, /What happened to your property appraisal\?/);
   assert.match(home, /Useful property information shouldn’t disappear behind a paywall/);
+  assert.match(home, /href="\/privacy"/);
+  assert.match(home, /Systems &amp; Sense LLC/);
   assert.match(home, /Skip to content/);
   assert.match(home, /<title>ParcelSavvy/);
   assert.match(home, /alt="ParcelSavvy"/);
@@ -136,6 +138,7 @@ try {
   assert.match(neighborhood, /GRAND MESA SECTION II/);
   assert.match(neighborhood, /Appraisal data snapshot/);
   assert.match(neighborhood, /Values reduced from preliminary/);
+  assert.match(neighborhood, /Median reduction/);
   assert.match(neighborhood, /Print or save PDF/);
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);
   const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");
@@ -143,7 +146,22 @@ try {
   assert.match(printable, /Page 1 of 2/);
   assert.match(printable, /Page 2 of 2/);
   assert.match(printable, /Protest activity and reductions/);
+  assert.match(printable, /Median reduction among reduced homes/);
+  assert.match(printable, /PS-NBR-2026\.1/);
+  assert.match(printable, /Live analysis:/);
   assert.doesNotMatch(printable, /donat|support us/i);
+  for (const [path, heading] of [
+    ["/privacy", "Privacy policy"],
+    ["/terms", "Terms of use"],
+    ["/accessibility", "Accessibility"],
+    ["/contact", "How can we help?"],
+    ["/report-data-issue?property=100", "Report a data issue"],
+    ["/support", "Help keep ParcelSavvy open"],
+  ]) {
+    const information = await page(path);
+    assert.match(information, new RegExp(heading.replace(/[?]/g, "\\$&")));
+    assert.match(information, /Systems &amp; Sense LLC/);
+  }
   assert.match(await page("/property/106"), /Some values need further review/);
   assert.match(await page("/property/103"), /Let’s try another address/);
   assert.match(await page("/?q=NoSuchStreet"), /No matching addresses found/);

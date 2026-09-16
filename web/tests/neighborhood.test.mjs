@@ -9,6 +9,7 @@ test('cap equality, missing inputs and percent denominators stay distinct',()=>{
  assert.equal(s.above.total,3);assert.equal(s.above.count,2);assert.equal(s.reduced.total,4);assert.equal(s.reduced.count,3);
  assert.equal(s.crossed.total,2);assert.equal(s.crossed.count,1);assert.equal(s.crossed.percent,50);assert.equal(s.missingPair,2);
  assert.equal(s.averageReduction,40000);assert.ok(Math.abs(s.averagePercent-(40+100/3+12.5)/3)<1e-9);
+ assert.equal(s.medianReduction,50000);assert.ok(Math.abs(s.medianPercent-100/3)<1e-9);
 });
 test('distribution counts ties strictly and handles empty and uniform populations',()=>{
  assert.equal(distribution([100,200,200,300],200).percentile,25);

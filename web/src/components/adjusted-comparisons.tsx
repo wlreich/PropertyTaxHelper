@@ -7,6 +7,7 @@ import { adjustmentSummary, propertyAdjustments } from "@/lib/property-adjustmen
 import { tcadMethod } from "@/lib/tcad-method";
 import { currency } from "@/lib/property-search";
 import { PropertySectionLink } from "./property-section-link";
+import { ADJUSTMENT_METHOD_VERSION } from "@/lib/site";
 
 const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${currency(Math.abs(value))}`;
 const difference = (value: number | null) => value === null ? "Not available" : value === 0 ? "Same as median" : `${currency(Math.abs(value))} ${value > 0 ? "above" : "below"}`;
@@ -19,12 +20,12 @@ export function AdjustedComparisons({ subject, selected, release }: {
   const reported = comparisonSummary(subject, selected);
   const adjusted = adjustmentSummary(subject, results);
   return <section className="comparison-card comparison-adjusted" aria-labelledby="adjusted-comparison-heading">
-    <h3 id="adjusted-comparison-heading" tabIndex={-1}>Your comparison at a glance</h3>
-    <p className="comparison-adjusted-note">Estimates follow TCAD’s adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ.</p>
+    <h3 id="adjusted-comparison-heading" tabIndex={-1}>ParcelSavvy estimated adjusted values</h3>
+    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow TCAD’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
     <p>Your property’s reported market value: <strong>{currency(subject.market_value)}</strong>. Your own value stays unchanged.</p>
     <dl className="comparison-summary comparison-adjusted-summary">
       <div><dt>Reported median</dt><dd>{reported.median === null ? "Not available" : currency(reported.median)}</dd><dd className="comparison-summary-percent">Before adjustments · {reported.count} properties</dd><dd className="comparison-summary-percent">Your property: {difference(reported.difference).toLowerCase()}{reported.percent !== null ? ` (${Math.abs(reported.percent).toFixed(1)}% ${reported.percent > 0 ? "higher" : reported.percent < 0 ? "lower" : "difference"})` : ""}</dd></div>
-      <div><dt>Estimated adjusted median</dt><dd>{adjusted.median === null ? "Not available" : currency(adjusted.median)}</dd><dd className="comparison-summary-percent">{adjusted.count} {adjusted.count === 1 ? "estimate" : "estimates"}</dd></div>
+      <div><dt>ParcelSavvy estimated median</dt><dd>{adjusted.median === null ? "Not available" : currency(adjusted.median)}</dd><dd className="comparison-summary-percent">{adjusted.count} {adjusted.count === 1 ? "estimate" : "estimates"}</dd></div>
       <div><dt>Your property vs. adjusted median</dt><dd>{difference(adjusted.difference)}</dd>{adjusted.percent !== null && <dd className="comparison-summary-percent">{Math.abs(adjusted.percent).toFixed(1)}% {adjusted.percent > 0 ? "higher" : adjusted.percent < 0 ? "lower" : "difference"}</dd>}</div>
     </dl>
     <p className="comparison-adjusted-note" role="status">{selected.length === 0 ? "Edit the comparison set to choose properties for adjustment." : `${adjusted.count} of ${results.length} selected properties have estimated adjusted values. ${adjusted.excluded ? `${adjusted.excluded} properties without an estimate are excluded from the adjusted median.` : "Both medians use the same properties."}`} Your property is excluded from both medians.{reported.missing > 0 ? ` ${reported.missing} missing reported values are also excluded from the reported median.` : ""}</p>
@@ -34,7 +35,7 @@ export function AdjustedComparisons({ subject, selected, release }: {
       <div className="comparison-adjusted-heading"><h4>Adjusted comparisons</h4><PropertySectionLink target="comparison-rules-heading">How matching works</PropertySectionLink></div>
       <p className="comparison-small comparison-mobile-hint">Scroll the table sideways to see all values.</p>
       <div className="comparison-table-scroll" role="region" aria-label="Adjusted property comparison" tabIndex={0}>
-        <table className="comparison-adjustment-table"><thead><tr><th scope="col">Property</th><th scope="col">Reported value</th><th scope="col">Total adjustment</th><th scope="col">Estimated adjusted value</th></tr></thead><tbody>
+        <table className="comparison-adjustment-table"><thead><tr><th scope="col">Property</th><th scope="col">Reported value</th><th scope="col">Total adjustment</th><th scope="col">ParcelSavvy estimate</th></tr></thead><tbody>
           {results.map(result => <Fragment key={result.property.property_id}>
             <tr className={expanded === result.property.property_id ? "comparison-adjustment-active" : undefined}>
               <th scope="row"><button className="comparison-expand" aria-expanded={expanded === result.property.property_id} aria-controls={`adjustment-${result.property.property_id}`} onClick={() => setExpanded(expanded === result.property.property_id ? null : result.property.property_id)}><span aria-hidden="true">{expanded === result.property.property_id ? "▾" : "▸"}</span> Adjustment breakdown · {result.property.address}</button></th>

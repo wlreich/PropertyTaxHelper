@@ -269,6 +269,12 @@ h1 span {
 .site-footer p {
   margin-bottom: 7px;
 }
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0;
+}
 .site-footer a,
 .notice a {
   text-decoration: underline;

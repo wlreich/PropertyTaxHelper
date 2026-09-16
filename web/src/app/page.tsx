@@ -23,14 +23,6 @@ const homeownerQuestions = [
   "Are my property facts and exemptions recorded correctly?",
 ];
 
-function PlannedLink({ children }: { children: React.ReactNode }) {
-  return (
-    <span className={styles.plannedLink}>
-      {children} <small>Before launch</small>
-    </span>
-  );
-}
-
 function HomeFooter() {
   return (
     <footer className={styles.homeFooter}>
@@ -55,17 +47,17 @@ function HomeFooter() {
           <h2>ParcelSavvy</h2>
           <nav aria-label="About ParcelSavvy">
             <Link href="/#about">About ParcelSavvy</Link>
-            <PlannedLink>Contact</PlannedLink>
-            <PlannedLink>Report a data issue</PlannedLink>
-            <Link href="/#support">Support ParcelSavvy</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/report-data-issue">Report a data issue</Link>
+            <Link href="/support">Support ParcelSavvy</Link>
           </nav>
         </div>
         <div>
           <h2>Legal &amp; access</h2>
           <nav aria-label="Legal and access">
-            <PlannedLink>Privacy policy</PlannedLink>
-            <PlannedLink>Terms of use</PlannedLink>
-            <PlannedLink>Accessibility</PlannedLink>
+            <Link href="/privacy">Privacy policy</Link>
+            <Link href="/terms">Terms of use</Link>
+            <Link href="/accessibility">Accessibility</Link>
             <a
               href="https://traviscad.org/propertysearch/"
               target="_blank"
@@ -77,7 +69,7 @@ function HomeFooter() {
         </div>
       </div>
       <div className={styles.footerBottom}>
-        <span>© 2026 ParcelSavvy. All rights reserved.</span>
+        <span>© 2026 Systems &amp; Sense LLC. All rights reserved.</span>
         <span>
           A missing protest entry does not rule out a protest. Official TCAD
           records and notices control.
@@ -413,19 +405,16 @@ export default async function Home({
                   A small contribution can help maintain the data and build the
                   next homeowner tools. Access will not depend on payment.
                 </p>
-                <button
-                  type="button"
-                  disabled
-                  aria-describedby="support-status support-tax-note"
+                <Link
+                  href="/support"
+                  className={styles.supportButton}
+                  aria-describedby="support-tax-note"
                 >
                   Support ParcelSavvy
-                </button>
-                <span id="support-status" className={styles.supportStatus}>
-                  Contribution options are being finalized before launch.
-                </span>
+                </Link>
                 <small id="support-tax-note">
-                  Optional contributions are not tax-deductible unless
-                  ParcelSavvy later becomes a qualified charitable organization.
+                  Optional contributions are not charitable donations and are
+                  not tax-deductible.
                 </small>
               </aside>
             </section>

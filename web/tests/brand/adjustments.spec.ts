@@ -3,10 +3,12 @@ import AxeBuilder from '@axe-core/playwright';
 
 test('estimated adjustment breakdowns, mixed medians, selection and release continuity',async({page},info)=>{
  await page.goto('/property/100/compare?view=adjusted');
- const adjusted=page.getByRole('region',{name:'Your comparison at a glance'});
+ const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
  await expect(page.getByRole('heading',{name:'Your property comparison',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(adjusted).toContainText('3 of 3 selected properties have estimated adjusted values');
+ await expect(adjusted).toContainText('Not an official Appraisal District appraisal.');
+ await expect(adjusted).toContainText('PS-ADJ-2026.1');
  await expect(adjusted).toContainText('$460,000');
  await expect(adjusted).toContainText('Your property: $10,000 below (2.2% lower)');
  await expect(adjusted.locator('.comparison-summary').getByText('Not available',{exact:true})).toHaveCount(0);

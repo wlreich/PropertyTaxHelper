@@ -9,8 +9,9 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Built for homeowners, not property-tax insiders.'})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Support ParcelSavvy'})).toBeDisabled();
-  await expect(page.getByText('Optional contributions are not tax-deductible unless ParcelSavvy later becomes a qualified charitable organization.')).toBeVisible();
+  await expect(page.locator('aside').getByRole('link',{name:'Support ParcelSavvy'})).toHaveAttribute('href','/support');
+  await expect(page.getByText('Optional contributions are not charitable donations and are not tax-deductible.')).toBeVisible();
+  await expect(page.getByRole('link',{name:'Privacy policy'})).toHaveAttribute('href','/privacy');
   expect(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/manrope/i);
   expect(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/inter/i);
   await expect(page.getByRole('button',{name:'Search my property'})).toHaveCSS('background-color','rgb(23, 105, 170)');
@@ -35,6 +36,25 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByText('Parkland',{exact:true})).toHaveCount(0);
   await page.goto('/?q=NoSuchStreet');
   await expect(page.getByRole('heading',{name:'No matching addresses found'})).toBeVisible();
+});
+
+test('launch information pages are complete, linked and accessible',async({page})=>{
+  for(const [path,heading] of [
+    ['/privacy','Privacy policy'],
+    ['/terms','Terms of use'],
+    ['/accessibility','Accessibility'],
+    ['/contact','How can we help?'],
+    ['/report-data-issue?property=100','Report a data issue'],
+    ['/support','Help keep ParcelSavvy open'],
+  ]) {
+    await page.goto(path);
+    await expect(page.getByRole('heading',{level:1,name:heading,exact:true})).toBeVisible();
+    await expect(page.getByText('Systems & Sense LLC',{exact:false}).first()).toBeVisible();
+    expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  }
+  await page.goto('/report-data-issue?property=100');
+  await expect(page.getByRole('link',{name:'Start a data-issue email'})).toHaveAttribute('href',/property\+100|property%20100/);
 });
 
 test('address variants and labeled spelling suggestions', async ({page}, info) => {

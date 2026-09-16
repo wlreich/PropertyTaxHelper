@@ -160,7 +160,7 @@
 
 .page :global(.search-controls > button),
 .primaryLink,
-.supportBox button {
+.supportButton {
   min-height: var(--control-height);
   padding: var(--space-4) var(--space-6);
   border: 0;
@@ -172,7 +172,8 @@
 }
 
 .page :global(.search-controls > button:hover),
-.primaryLink:hover {
+.primaryLink:hover,
+.supportButton:hover {
   background: var(--color-action-hover);
 }
 
@@ -409,24 +410,20 @@
   line-height: 1.6;
 }
 
-.supportBox button {
+.supportButton {
   width: 100%;
-  cursor: not-allowed;
-  opacity: var(--opacity-disabled);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
-.supportStatus,
 .supportBox small {
   display: block;
   margin-top: var(--space-2);
   color: var(--color-text-muted);
   font-size: var(--text-label);
   line-height: var(--line-small);
-}
-
-.supportStatus {
-  color: var(--color-text);
-  font-weight: var(--weight-semibold);
 }
 
 .trust {
@@ -533,31 +530,15 @@
   gap: var(--space-2);
 }
 
-.page .homeFooter nav[aria-label] a,
-.plannedLink {
-  color: var(--color-surface-info);
-  font-size: var(--text-label);
-  line-height: var(--line-small);
-}
-
 .page .homeFooter nav[aria-label] a {
   width: fit-content;
+  color: var(--color-surface-info);
   text-decoration: none;
 }
 
 .page .homeFooter nav[aria-label] a:hover {
   color: var(--color-surface);
   text-decoration: underline;
-}
-
-.plannedLink {
-  opacity: var(--opacity-disabled);
-}
-
-.plannedLink small {
-  display: block;
-  font-size: inherit;
-  font-style: italic;
 }
 
 .footerBottom {

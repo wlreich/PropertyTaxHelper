@@ -24,6 +24,7 @@ export function summarizeGroup(homes:Home[],caps:Cap[]) {
   capNotApplicable:homes.filter(h=>byId.get(h.property_id)?.eligible===false).length,capUnknown:homes.length-eligible.length-homes.filter(h=>byId.get(h.property_id)?.eligible===false).length,
   reducedWithoutThreshold:reduced.length-crossingEligible.length,remainedAbove:crossingEligible.length-crossed.length,
   averageReduction:mean(reduced.map(h=>h.preliminary!-h.certified!)),averagePercent:mean(reduced.map(h=>(h.preliminary!-h.certified!)/h.preliminary!*100)),
+  medianReduction:median(reduced.map(h=>h.preliminary!-h.certified!)),medianPercent:median(reduced.map(h=>(h.preliminary!-h.certified!)/h.preliminary!*100)),
   preliminaryMedian:median(paired.map(h=>h.preliminary!)),certifiedMedian:median(paired.map(h=>h.certified!)),
   certifiedPerFoot:median(paired.map(h=>perFoot(h.certified,h.certified_area)).filter((n):n is number=>n!==null))};
 }
