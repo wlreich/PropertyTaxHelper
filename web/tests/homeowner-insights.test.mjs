@@ -117,3 +117,9 @@ test('agent names are an explicit allowlist and require a recorded assignment',(
  const parsed=parseProtestObservations({protest_observations:[{...evidence[0],agent_addr_line1:'PRIVATE'}]});
  assert.ok(!JSON.stringify(parsed).includes('PRIVATE'));
 });
+
+test('interim July values cannot produce a whole-season reduction headline',()=>{
+ const interim={...initial,preliminary_baseline_eligible:false};
+ assert.equal(assessmentSummary(current,interim,previous).proposed,null);
+ assert.equal(seasonOutcome(current,interim,evidence),null);
+});

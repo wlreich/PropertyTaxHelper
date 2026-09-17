@@ -199,3 +199,13 @@ test("agent names: full snapshots, exact directory identity, duplicates and conf
  await publish();
  assert.equal((await db.query('select count(*)::int n from public.property_agent_names')).rows[0].n,0);
 });
+
+test("interim provenance survives publication with the source date and roll label",async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ await db.query("select tcad_ingest.publish_property_search($1)",[dataset]);
+ await db.query("update tcad_ingest.datasets set preliminary_baseline_excluded=true,valuation_note='July snapshot; not original notice.',header=jsonb_set(header,'{run_date_time}','\"07/03/2026 12:49\"'::jsonb),roll_stage='preliminary' where id=$1",[dataset]);
+ await db.query("select tcad_ingest.publish_property_snapshots($1,'',1000)",[dataset]);
+ const s=(await db.query("select snapshot from public.property_snapshot_profiles where dataset_id=$1 and property_id='101'",[dataset])).rows[0].snapshot;
+ assert.equal(s.export_date,'2026-07-03');assert.equal(s.roll_stage,'preliminary');
+ assert.equal(s.preliminary_baseline_eligible,false);assert.equal(s.valuation_note,'July snapshot; not original notice.');
+});

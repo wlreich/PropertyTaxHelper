@@ -35,6 +35,13 @@ test('factor estimates require reconciliation and matching; respect RLS and rele
  assert.equal((await evaluate({...snapshot,components:[]},prior,null)).status,'unverified_components');
  assert.equal((await evaluate({...snapshot,components:[{...snapshot.components[0],value:null}]},prior,null)).status,'unverified_components');
  assert.equal((await evaluate({...snapshot,components:[...snapshot.components,{...snapshot.components[0],improvement_id:'2'}]},prior,null)).status,'unverified_buildings');
+ assert.equal((await evaluate(snapshot,prior,{...prior,preliminary_baseline_eligible:false})).actual_change,null);
+ assert.equal((await evaluate({...snapshot,preliminary_baseline_eligible:false},prior,prior)).status,'missing_preliminary');
+ await db.exec('reset role');
+ await db.query("update public.property_snapshot_profiles set snapshot=snapshot||'{\"preliminary_baseline_eligible\":false}'::jsonb where dataset_id=$1",[pre]);
+ await db.exec('set role anon');
+ assert.equal((await db.query("select public.property_neighborhood_v4('100') r")).rows[0].r.preliminary_id,null);
+ assert.equal((await call()).homes.find(h=>h.property_id==='100').effect,null);
  assert.equal((await evaluate(snapshot,prior,null,1.78,1.78)).effect,0);
  assert.equal((await evaluate(snapshot,prior,null,1.78,2)).effect,-22000);
  assert.equal(parseMarketAdjustment({...raw,homes:[{...raw.homes[0],effect:Infinity}]}),null);
