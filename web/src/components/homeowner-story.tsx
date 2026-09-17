@@ -20,8 +20,8 @@ export function AssessmentSummary({current,initial,previous}:Omit<Context,"entit
     <p className="homeowner-summary-value">{currency(summary.value)}</p>
     <p className="overview-note">{current.tax_year} {current.roll_stage} record · {dateLabel(current.export_date)}</p>
     <dl className="homeowner-summary-comparisons">
-      {current.roll_stage === "certified" && <div><dt>Since the {current.tax_year} preliminary value</dt><dd><SummaryChange change={summary.proposed} /></dd></div>}
-      <div><dt>Compared with {current.tax_year - 1} certified value</dt><dd><SummaryChange change={summary.annual} /></dd></div>
+      {current.roll_stage === "certified" && <div><dt>Since the {current.tax_year} preliminary market value</dt><dd><SummaryChange change={summary.proposed} /></dd></div>}
+      <div><dt>Compared with {current.tax_year - 1} certified market value</dt><dd><SummaryChange change={summary.annual} /></dd></div>
     </dl>
   </section>;
 }
@@ -29,17 +29,18 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
   const season=seasonOutcome(current,initial,evidence,entity);
   const agents=current ? agentsForYear(evidence,current.tax_year) : [];
   return <>
-    {season && <section className={`overview-insight${season.observedProtest ? " homeowner-positive" : ""}`} aria-labelledby={historical ? "historical-result-heading" : "change-heading"}>
+    {season && <section className={`overview-insight${season.possibleProtestResult ? " homeowner-positive" : ""}`} aria-labelledby={historical ? "historical-result-heading" : "change-heading"}>
       <p className="eyebrow">{historical ? "Earlier season’s result · " : ""}{current!.tax_year} · Proposed to certified</p>
       <h2 id={historical ? "historical-result-heading" : "change-heading"}>{season.headline}</h2>
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
-      <p>{season.label} fell between {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
+      <p>{season.label} fell from {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
+      {season.kind === "taxable" && <p>{season.marketContext} Appraisal caps and exemptions can lower taxable value without lowering market value.</p>}
       {season.observedProtest && <div className="homeowner-result-agent">
         <h3>{agents.length ? `${agents.length > 1 ? "Agents" : "Agent"} listed` : "Agent information"} for {current!.tax_year}</h3>
         {agents.length ? <ul>{agents.map(agent=><li key={agent.name}><strong>{agent.name}</strong><span>Recorded: {agent.dates.map(dateLabel).join(" · ")}</span></li>)}</ul> : <p>Agent not identified in the available records.</p>}
         {agents.length > 1 && <p className="overview-note">Different agents appear in the dated records; they do not establish who handled the protest.</p>}
       </div>}
-      <p className="overview-note">{season.observedProtest ? "The records suggest a successful protest, but do not confirm what caused the reduction or who handled the case. " : "The records do not establish what caused the reduction. "}This is a change in value, not tax savings.</p>
+      <p className="overview-note">{season.possibleProtestResult ? "The records suggest a successful protest, but do not confirm what caused the reduction or who handled the case. " : season.kind === "taxable" ? "A taxable-value decrease alone does not establish a successful protest. " : "The records do not establish what caused the reduction. "}This is a change in value, not tax savings.</p>
       {season.observedProtest && <PropertySectionLink target="representation-heading">View protest and agent records</PropertySectionLink>}
     </section>}
   </>;

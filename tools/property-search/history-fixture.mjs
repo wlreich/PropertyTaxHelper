@@ -85,3 +85,17 @@ export const fixtureHistory = {
     },
   ],
 };
+
+// A recorded protest plus lower taxable value must not imply a market-value reduction.
+export const taxableOnlyHistory = {
+  protest_observations: fixtureHistory.protest_observations,
+  snapshots: fixtureHistory.snapshots.map(s => s.tax_year !== 2026 ? s : {
+    ...s,
+    market_value: 600000,
+    assessed_value: s.roll_stage === 'preliminary' ? 600000 : 500000,
+    entities: [{...base.entities[0],
+      taxable_value: s.roll_stage === 'preliminary' ? 600000 : 360000,
+      exemptions: s.roll_stage === 'preliminary' ? {} : {HS:140000},
+    }],
+  }),
+};
