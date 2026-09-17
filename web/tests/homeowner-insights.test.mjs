@@ -45,7 +45,7 @@ test('promising outcome requires substantial reduction, certified comparison and
  const agentOnly=seasonOutcome(current,initial,[{...source,protest_flag:false,arb_case_listed:false,arb_status_codes:[]}]);
  assert.equal(informal.observedProtest,true);assert.equal(informal.headline,'Looks like a successful protest!');
  assert.equal(arbOnly.observedProtest,true);assert.equal(arbOnly.headline,'Looks like a successful protest!');
- assert.equal(agentOnly.observedProtest,false);assert.equal(agentOnly.headline,'Your proposed value came down');
+ assert.equal(agentOnly.observedProtest,false);assert.equal(agentOnly.headline,'Your proposed market value came down');
  for(const change of [{tax_year:2025},{export_date:'2026-03-01'},{export_date:'2026-08-01'},{export_date:null},{protest_flag:false,arb_case_listed:false}]) {
   assert.equal(seasonOutcome(current,initial,[{...evidence[0],...change}]).observedProtest,false);
  }
@@ -56,6 +56,33 @@ test('promising outcome requires substantial reduction, certified comparison and
  assert.equal(seasonOutcome(current,{...initial,export_date:current.export_date},evidence),null);
  assert.equal(seasonOutcome({...current,market_value:0},initial,evidence).change.percent,-100);
  assert.equal(seasonOutcome({...current,market_value:550000},initial,evidence,{...current.entities[0],taxable_value:200000}).label,'Leander ISD taxable value');
+});
+test('taxable-only decreases never imply a market reduction or successful protest',()=>{
+ const entity={...current.entities[0],taxable_value:360000,exemptions:{HS:140000}};
+ const proposed={...initial,market_value:600000,assessed_value:600000,entities:[{...entity,taxable_value:600000,exemptions:{}}]};
+ const certified={...current,market_value:600000,assessed_value:500000,entities:[entity]};
+ assert.equal(assessmentSummary(certified,proposed,previous).proposed.dollars,0);
+ for(const records of [[],evidence]) {
+  const result=seasonOutcome(certified,proposed,records,entity);
+  assert.equal(result.kind,'taxable');
+  assert.equal(result.change.dollars,-240000);
+  assert.equal(result.headline,'Your taxable value came down');
+  assert.equal(result.marketContext,'Your market value stayed at $600,000.');
+  assert.equal(result.possibleProtestResult,false);
+  assert.equal(result.observedProtest,records.length>0);
+ }
+ const rising=seasonOutcome({...certified,market_value:650000},proposed,evidence,entity);
+ assert.match(rising.marketContext,/up \$50,000/);
+ assert.equal(rising.possibleProtestResult,false);
+ const unknown=seasonOutcome({...certified,market_value:null},proposed,evidence,entity);
+ assert.equal(unknown.marketContext,'The market-value comparison is unavailable.');
+ assert.equal(unknown.possibleProtestResult,false);
+ const marketDrop=seasonOutcome({...certified,market_value:550000},proposed,evidence,entity);
+ assert.equal(marketDrop.kind,'market');
+ assert.equal(marketDrop.change.dollars,-50000);
+ assert.equal(marketDrop.possibleProtestResult,true);
+ assert.equal(seasonOutcome(certified,proposed,evidence,{...entity,code:'NO_MATCH'}),null);
+ assert.equal(seasonOutcome(certified,proposed,evidence,{...entity,taxable_value:null}),null);
 });
 test('annual explanation separates market and taxable direction and only attributes exemption effects when amounts reconcile',()=>{
  const old={...previous,market_value:500000,assessed_value:400000,entities:[{code:'69',name:'SCHOOL ISD',taxable_value:300000,exemptions:{HS:100000}}]};

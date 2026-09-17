@@ -1,5 +1,28 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+test("taxable-only reduction stays distinct from unchanged market value and protest success", async ({page}, info) => {
+  await page.goto('/property/101');
+  const summary=page.getByRole('region',{name:'Your certified market value'});
+  await expect(summary).toContainText('$600,000');
+  await expect(summary).toContainText('Since the 2026 preliminary market value');
+  await expect(summary).toContainText('Unchanged');
+  const result=page.getByRole('region',{name:'Your taxable value came down'});
+  await expect(result).toContainText('$240,000 lower');
+  await expect(result).toContainText('Leander ISD taxable value');
+  await expect(result).toContainText('Your market value stayed at $600,000.');
+  await expect(result).toContainText('Appraisal caps and exemptions');
+  await expect(result).toContainText('A protest was also recorded');
+  await expect(result).toContainText('A taxable-value decrease alone does not establish a successful protest.');
+  await expect(result).not.toHaveClass(/homeowner-positive/);
+  await expect(page.getByRole('heading',{name:'Looks like a successful protest!'})).toHaveCount(0);
+  expect((await new AxeBuilder({page}).include('.homeowner-summary').include('.overview-insight').analyze()).violations).toEqual([]);
+  await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await page.evaluate(()=>{document.documentElement.style.zoom='1';});
+  const capture=info.outputPath('taxable-only-result.png');
+  await result.screenshot({path:capture});
+  await info.attach('Taxable-only result',{path:capture,contentType:'image/png'});
+});
 test("combined property view: dates, missing feature, exemptions, keyboard and responsive layout", async ({
   page,
 }, info) => {

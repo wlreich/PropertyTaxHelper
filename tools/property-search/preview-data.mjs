@@ -3,7 +3,8 @@ import {seedAddressSearch} from './address-search-fixture.mjs';
 import {seedNeighborhood} from './neighborhood-fixture.mjs';
 // Local browser verification only. Synthetic records and authentication, loopback only.
 import {seedComparisons} from './comparison-fixture.mjs';
-import {fixtureHistory} from './history-fixture.mjs';
+import {fixtureHistory,taxableOnlyHistory} from './history-fixture.mjs';
+const historyFor = id => id === '100' ? fixtureHistory : id === '101' ? taxableOnlyHistory : {snapshots:[]};
 import {createServer} from 'node:http';
 import {fixtureDatabase} from './projection.test.mjs';
 const db=await fixtureDatabase({parklandFixtures:true});
@@ -45,8 +46,8 @@ createServer((req,res)=>{
    else if(route==='suggest_property_parcels')result=await call('select public.suggest_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_limit),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='search_property_parcels')result=await call('select public.search_property_parcels($1,$2,$3) result',[args.p_query,Number(args.p_page),args.p_show_all===true||args.p_show_all==='true']);
    else if(route==='property_profile')result=await call('select public.property_profile($1) result',[args.p_id]);
-   else if(route==='property_history')result=args.p_id==='100'?fixtureHistory:{snapshots:[]};
-   else if(route==='property_overview_bundle')result={profile:await call('select public.property_profile($1) result',[args.p_id]),history:args.p_id==='100'?fixtureHistory:{snapshots:[]}};
+   else if(route==='property_history')result=historyFor(args.p_id);
+   else if(route==='property_overview_bundle')result={profile:await call('select public.property_profile($1) result',[args.p_id]),history:historyFor(args.p_id)};
    else if(route==='season_calendar')result=await call('select public.season_calendar() result');
    else if(route==='admin_access')result=await call('select public.admin_access() result');
    else if(route==='admin_dashboard')result=await call('select public.admin_dashboard() result');

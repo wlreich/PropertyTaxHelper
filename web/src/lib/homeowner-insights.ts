@@ -56,12 +56,16 @@ export function seasonOutcome(current: Snapshot | undefined, initial: Snapshot |
   const market = comparison(initial.market_value,current.market_value);
   const oldEntity = initial.entities.find(e=>e.code===entity?.code);
   const taxable = comparison(oldEntity?.taxable_value,entity?.taxable_value);
-  const reduction = market?.significant && market.dollars < 0 ? {change:market,label:"Market value"}
-    : taxable?.significant && taxable.dollars < 0 && entity ? {change:taxable,label:`${entityDisplayName(entity)} taxable value`} : null;
+  const reduction = market?.significant && market.dollars < 0 ? {kind:"market" as const,change:market,label:"Market value"}
+    : taxable?.significant && taxable.dollars < 0 && entity ? {kind:"taxable" as const,change:taxable,label:`${entityDisplayName(entity)} taxable value`} : null;
   const observedProtest = evidence.some(s=>s.tax_year===current.tax_year && (s.protest_flag || s.arb_case_listed) && s.export_date && s.export_date >= initial.export_date! && s.export_date <= current.export_date!);
   if (!reduction) return null;
-  return {...reduction, observedProtest,
-    headline:observedProtest ? "Looks like a successful protest!" : "Your proposed value came down",
+  const possibleProtestResult = reduction.kind === "market" && observedProtest;
+  const marketContext = reduction.kind !== "taxable" ? null : !market ? "The market-value comparison is unavailable."
+    : market.dollars === 0 ? `Your market value stayed at ${currency(current.market_value)}.`
+    : `Your market value is ${changeWords(initial.market_value,current.market_value)} over the same period.`;
+  return {...reduction, observedProtest, possibleProtestResult, marketContext,
+    headline:reduction.kind === "taxable" ? "Your taxable value came down" : possibleProtestResult ? "Looks like a successful protest!" : "Your proposed market value came down",
     period:`${dateLabel(initial.export_date)} to ${dateLabel(current.export_date)}`};
 }
 export function historySequence(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
