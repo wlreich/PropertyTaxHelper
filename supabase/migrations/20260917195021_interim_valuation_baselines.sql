@@ -7,6 +7,13 @@ update tcad_ingest.datasets set preliminary_baseline_excluded=true,
  valuation_note='This July 3 snapshot may already include protest changes. It is shown as dated history, not as the original proposed value.'
 where archive_sha256='653d3628b8e3bef5912abebbb16afc47fef1f7bd18d952271f858f54d5261be1' and tax_year=2025;
 
+-- Serialize with any publication batch, then annotate rows already published.
+select pg_advisory_xact_lock(hashtext('property_snapshots'),hashtext(id::text))
+from tcad_ingest.datasets where preliminary_baseline_excluded;
+update public.property_snapshot_profiles s set snapshot=s.snapshot || jsonb_build_object(
+ 'preliminary_baseline_eligible',false,'valuation_note',d.valuation_note)
+from tcad_ingest.datasets d where s.dataset_id=d.id and d.preliminary_baseline_excluded;
+
 create or replace function tcad_ingest.publish_property_snapshots(p_dataset uuid,p_after text default '',p_limit integer default 2000)
 returns jsonb language plpgsql security invoker set search_path='' as $$
 declare d record; anchor uuid; ids text[]; raw_ids text[]; inserted integer; source_date text; lap timestamptz := clock_timestamp(); timings jsonb := '{}';
