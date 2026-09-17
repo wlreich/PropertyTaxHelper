@@ -345,6 +345,7 @@ export function PropertyOverview({
               <h2 id="history-heading" tabIndex={-1}>Assessment history</h2>
             </div>
             <AssessmentSequence current={current} previous={previous} initial={initial} />
+            {[...new Set(snapshots.map(s => s.valuation_note).filter(Boolean))].map(note => <p key={note}>{note}</p>)}
             {snapshots.length ? (
               <details className="homeowner-details"><summary>View all assessment values</summary>
               <div className="overview-table-wrap">

@@ -1,4 +1,4 @@
-import { comparison, componentKey, componentName, dateLabel, entityDisplayName, type Entity, type ProtestObservation, type Snapshot } from "./property-history.ts";
+import { isPreliminaryBaseline, comparison, componentKey, componentName, dateLabel, entityDisplayName, type Entity, type ProtestObservation, type Snapshot } from "./property-history.ts";
 import { currency } from "./property-search.ts";
 
 export function changeWords(before: number | null | undefined, after: number | null | undefined) {
@@ -9,7 +9,7 @@ export function changeWords(before: number | null | undefined, after: number | n
 }
 export function assessmentSummary(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {
   if (!current || current.market_value === null) return null;
-  const proposed = current.roll_stage === "certified" && initial?.roll_stage === "preliminary" && initial.tax_year === current.tax_year && initial.export_date && current.export_date && initial.export_date < current.export_date
+  const proposed = current.roll_stage === "certified" && initial && isPreliminaryBaseline(initial) && initial.tax_year === current.tax_year && initial.export_date && current.export_date && initial.export_date < current.export_date
     ? comparison(initial.market_value, current.market_value) : null;
   const annual = previous?.roll_stage === "certified" && previous.tax_year === current.tax_year - 1
     ? comparison(previous.market_value, current.market_value) : null;
@@ -52,7 +52,7 @@ export function annualExplanation(current: Snapshot | undefined, previous: Snaps
   return {headline,summary,explanation};
 }
 export function seasonOutcome(current: Snapshot | undefined, initial: Snapshot | undefined, evidence: ProtestObservation[], entity?: Entity) {
-  if (!current || !initial || current.roll_stage !== "certified" || initial.roll_stage !== "preliminary" || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
+  if (!current || !initial || current.roll_stage !== "certified" || !isPreliminaryBaseline(initial) || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
   const market = comparison(initial.market_value,current.market_value);
   const oldEntity = initial.entities.find(e=>e.code===entity?.code);
   const taxable = comparison(oldEntity?.taxable_value,entity?.taxable_value);
@@ -74,7 +74,7 @@ export function historySequence(current: Snapshot | undefined, initial: Snapshot
 
 export function priorSeasonResult(snapshots: Snapshot[], year: number) {
   const current = snapshots.filter(s => s.tax_year < year && s.roll_stage === "certified" && s.export_date).at(-1);
-  const initial = current ? snapshots.find(s => s.tax_year === current.tax_year && s.roll_stage === "preliminary" && s.export_date && s.export_date < current.export_date!) : undefined;
+  const initial = current ? snapshots.find(s => s.tax_year === current.tax_year && isPreliminaryBaseline(s) && s.export_date && s.export_date < current.export_date!) : undefined;
   return { current, initial };
 }
 export function featureHighlights(current: Snapshot | undefined, initial: Snapshot | undefined, previous: Snapshot | undefined) {

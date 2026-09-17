@@ -192,3 +192,13 @@ test("invalid supplemental payload does not hide valid valuation history or impl
   async()=>new Response(JSON.stringify({snapshots:[sample],protest_observations:false})));
  assert.equal(result.status,"ok"); assert.equal(result.data.length,1); assert.equal(result.protestsUnavailable,true);
 });
+
+test("interim snapshots retain their values but cannot become the notice baseline", () => {
+  const interim = {...sample, dataset_id:"july", roll_stage:"preliminary", export_date:"2026-07-03", preliminary_baseline_eligible:false, valuation_note:"May include protest changes."};
+  const earlier = {...sample, dataset_id:"may", roll_stage:"preliminary", export_date:"2026-05-08"};
+  const parsed = parseHistory({snapshots:[interim,sample]});
+  assert.equal(parsed.find(s=>s.dataset_id==="july").preliminary_baseline_eligible,false);
+  assert.equal(preliminaryBaseline(parsed,sample),undefined);
+  assert.equal(preliminaryBaseline([earlier,interim,sample],sample).dataset_id,"may");
+  assert.equal(parseHistory({snapshots:[{...interim,preliminary_baseline_eligible:"false"}]}),null);
+});

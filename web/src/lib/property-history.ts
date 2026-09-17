@@ -19,6 +19,8 @@ export type Snapshot = {
   dataset_id: string;
   tax_year: number;
   roll_stage: string;
+  preliminary_baseline_eligible?: boolean;
+  valuation_note?: string | null;
   export_date: string | null;
   export_time_raw: string | null;
   market_value: number | null;
@@ -61,6 +63,8 @@ export function parseHistory(value: unknown): Snapshot[] | null {
       !["certified", "preliminary", "supplemental"].includes(
         String(s.roll_stage),
       ) ||
+      !(s.preliminary_baseline_eligible === undefined || typeof s.preliminary_baseline_eligible === "boolean") ||
+      !(s.valuation_note == null || typeof s.valuation_note === "string" && s.valuation_note.length <= 1000) ||
       !nullableText(s.export_time_raw) ||
       !(
         s.export_date === null ||
@@ -135,6 +139,8 @@ export function parseHistory(value: unknown): Snapshot[] | null {
       dataset_id: s.dataset_id,
       tax_year: s.tax_year as number,
       roll_stage: s.roll_stage as string,
+      preliminary_baseline_eligible: s.preliminary_baseline_eligible as boolean | undefined,
+      valuation_note: (s.valuation_note ?? null) as string | null,
       export_date: s.export_date as string | null,
       export_time_raw: s.export_time_raw as string | null,
       market_value: s.market_value as number | null,
@@ -190,17 +196,18 @@ export function annualBaseline(snapshots: Snapshot[], current: Snapshot) {
     )
     .at(-1);
 }
+export const isPreliminaryBaseline = (s: Snapshot) => s.roll_stage === "preliminary" && s.preliminary_baseline_eligible !== false;
 export function preliminaryBaseline(snapshots: Snapshot[], current: Snapshot) {
   return snapshots.find(
     (s) =>
       s.tax_year === current.tax_year &&
-      s.roll_stage === "preliminary" &&
+      isPreliminaryBaseline(s) &&
       s.export_date &&
       current.export_date &&
       s.export_date < current.export_date,
   );
 }
-export const snapshotLabel = (s: Snapshot) => `${s.tax_year} ${s.roll_stage}`;
+export const snapshotLabel = (s: Snapshot) => `${s.tax_year} ${s.preliminary_baseline_eligible === false ? "interim snapshot" : s.roll_stage}`;
 export function dateLabel(date: string | null) {
   if (!date) return "Export date not reported";
   const [year, month, day] = date.split("-").map(Number);
