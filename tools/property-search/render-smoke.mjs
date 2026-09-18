@@ -68,7 +68,7 @@ try {
     "Ready",
   );
   const home = await page("/");
-  assert.match(home, /Property address or TCAD property ID/);
+  assert.match(home, /Property address or property ID/);
   assert.match(home, /What happened to your property appraisal\?/);
   assert.match(home, /Useful property information shouldn’t disappear behind a paywall/);
   assert.match(home, /href="\/privacy"/);
@@ -79,7 +79,7 @@ try {
   assert.match(home, /Know your property/);
   assert.match(home, /Understand your assessment/);
   assert.doesNotMatch(home, /Your records become a story you can use/);
-  assert.match(home, /Built for homeowners, not property-tax insiders/);
+  assert.match(home, /Independent by design\. Built for homeowners/);
   assert.doesNotMatch(home, /Source dates, calculations, and limitations stay visible/);
   const suggestionResponse = await fetch(
     base + "/api/search/suggestions?q=1104",
@@ -97,9 +97,9 @@ try {
   assert.match(one, /\$450,000/);
   const multi = await page("/?q=Oak");
   assert.equal(cards(multi), 2);
-  assert.match(multi, /TCAD market value/);
+  assert.match(multi, /Market value/);
   assert.match(multi, /role="tooltip"/);
-  assert.match(multi, /Source: TCAD/);
+  assert.match(multi, /Source: Appraisal District/);
   const first = await page("/?q=Map");
   const second = await page("/?q=Map&page=1");
   const last = await page("/?q=Map&page=2");
