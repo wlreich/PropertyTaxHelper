@@ -33,7 +33,7 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
       <p className="eyebrow">{historical ? "Earlier season’s result · " : ""}{current!.tax_year} · Proposed to certified</p>
       <h2 id={historical ? "historical-result-heading" : "change-heading"}>{season.headline}</h2>
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
-      <p>{season.label} fell from {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year} during that period.` : ""}</p>
+      <p>{season.label} fell from {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year}.` : ""}</p>
       {season.kind === "taxable" && <p>{season.marketContext} Appraisal caps and exemptions can lower taxable value without lowering market value.</p>}
       {season.observedProtest && <div className="homeowner-result-agent">
         <h3>{agents.length ? `${agents.length > 1 ? "Agents" : "Agent"} listed` : "Agent information"} for {current!.tax_year}</h3>
