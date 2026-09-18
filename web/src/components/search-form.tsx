@@ -145,7 +145,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
       aria-busy={pending}
     >
       <label htmlFor="address-search">
-        Property address or TCAD property ID
+        Property address or property ID
       </label>
       <div className="search-controls">
         <div className="search-combobox">
@@ -156,7 +156,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
             value={value}
             required
             maxLength={120}
-            placeholder="Try a street name or property ID"
+            placeholder="Enter an address or property ID"
             autoComplete="off"
             aria-describedby="search-help search-suggestion-status"
             role="combobox"
@@ -268,8 +268,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
           )}
         </div>
         <button type="submit" disabled={pending}>
-          {pending ? "Searching…" : "Search my property"}
-          <span aria-hidden="true"> →</span>
+          {pending ? "Searching…" : "Search"}
         </button>
       </div>
       <p
@@ -281,8 +280,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
         {statusMessage}
       </p>
       <p id="search-help">
-        <strong>Free to use.</strong> No account required. Start with a house
-        number or part of a street name.
+        A partial address works, too.
       </p>
     </form>
   );
