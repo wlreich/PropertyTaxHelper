@@ -37,7 +37,7 @@ test('result card names only assigned agents for the relevant year, retaining di
  ]);
  assert.deepEqual(agentsForYear([],2026),[]);
 });
-test('promising outcome requires substantial reduction, certified comparison and a protest in the same period/year',()=>{
+test('promising outcome requires substantial reduction, certified comparison and a protest for the same tax year',()=>{
  assert.equal(seasonOutcome(current,initial,evidence).observedProtest,true);
  const source=evidence[0];
  const informal=seasonOutcome(current,initial,[{...source,arb_case_listed:false,arb_status_codes:[]}]);
@@ -46,7 +46,7 @@ test('promising outcome requires substantial reduction, certified comparison and
  assert.equal(informal.observedProtest,true);assert.equal(informal.headline,'Looks like a successful protest!');
  assert.equal(arbOnly.observedProtest,true);assert.equal(arbOnly.headline,'Looks like a successful protest!');
  assert.equal(agentOnly.observedProtest,false);assert.equal(agentOnly.headline,'Your proposed market value came down');
- for(const change of [{tax_year:2025},{export_date:'2026-03-01'},{export_date:'2026-08-01'},{export_date:null},{protest_flag:false,arb_case_listed:false}]) {
+ for(const change of [{tax_year:2025},{tax_year:2027},{protest_flag:false,arb_case_listed:false}]) {
   assert.equal(seasonOutcome(current,initial,[{...evidence[0],...change}]).observedProtest,false);
  }
  assert.equal(seasonOutcome({...current,roll_stage:'preliminary'},initial,evidence),null);
@@ -56,6 +56,20 @@ test('promising outcome requires substantial reduction, certified comparison and
  assert.equal(seasonOutcome(current,{...initial,export_date:current.export_date},evidence),null);
  assert.equal(seasonOutcome({...current,market_value:0},initial,evidence).change.percent,-100);
  assert.equal(seasonOutcome({...current,market_value:550000},initial,evidence,{...current.entities[0],taxable_value:200000}).label,'Leander ISD taxable value');
+});
+test('same-year supplemental evidence counts without treating its export date as the protest date',()=>{
+ const proposed={...initial,market_value:816294};
+ const certified={...current,market_value:759000};
+ for(const export_date of [null,'2026-03-01','2026-08-29','2027-01-10']) {
+  const records=[{...evidence[0],tax_year:2026,export_date,protest_flag:true,arb_case_listed:false}];
+  const result=seasonOutcome(certified,proposed,records);
+  assert.equal(result.change.dollars,-57294);
+  assert.equal(result.possibleProtestResult,true);
+  assert.equal(result.headline,'Looks like a successful protest!');
+  assert.equal(seasonOutcome(certified,{...proposed,preliminary_baseline_eligible:false},records),null);
+  assert.equal(seasonOutcome(certified,proposed,[{...records[0],tax_year:2025}]).possibleProtestResult,false);
+  assert.equal(seasonOutcome(certified,proposed,[{...records[0],protest_flag:false,arb_agent_listed:true}]).possibleProtestResult,false);
+ }
 });
 test('taxable-only decreases never imply a market reduction or successful protest',()=>{
  const entity={...current.entities[0],taxable_value:360000,exemptions:{HS:140000}};
