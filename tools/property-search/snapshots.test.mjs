@@ -2,6 +2,43 @@ import { fixtureDatabase } from "./projection.test.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
 const dataset = "11111111-1111-4111-8111-111111111111";
+test("reviewed preliminary conflicts preserve history but exclude comparisons in both publishers", async (t) => {
+  const db = await fixtureDatabase();
+  t.after(() => db.close());
+  await db.query("select tcad_ingest.publish_property_search($1)", [dataset]);
+  await db.query("insert into tcad_ingest.special_json_properties values($1,1,'101',2026,1)", [dataset]);
+  await db.query(`insert into tcad_ingest.special_json_appeals
+    (dataset_id,property_row_number,appeal_index,property_id,tax_year,appeal_id,appeal_status,appeal_type,informal,finalized,initial_appraised_value)
+    values($1,1,1,'101',2026,1,'closed','value',true,true,500000)`, [dataset]);
+  const conflict = async (id='101', market=450000) => (await db.query(
+    "select tcad_ingest.preliminary_value_conflicts($1,$2,$3) value", [dataset,id,market])).rows[0].value;
+  assert.equal(await conflict(), false); // Only explicitly reviewed sources apply.
+  await db.query("insert into tcad_ingest.preliminary_review_sources values($1,$1)", [dataset]);
+  assert.equal(await conflict('000101'), true);
+  assert.equal(await conflict('101',500000), false);
+  assert.equal(await conflict('999'), false);
+  await db.exec("update tcad_ingest.special_json_appeals set tax_year=2025");
+  assert.equal(await conflict(), false);
+  await db.exec("update tcad_ingest.special_json_appeals set tax_year=2026,initial_appraised_value=0");
+  assert.equal(await conflict(), false);
+  await db.exec("update tcad_ingest.special_json_appeals set initial_appraised_value=null");
+  assert.equal(await conflict(), false);
+  await db.exec("update tcad_ingest.special_json_appeals set initial_appraised_value=500000");
+  const snapshot = async () => (await db.query("select snapshot from public.property_snapshot_profiles where property_id='101' and dataset_id=$1", [dataset])).rows[0].snapshot;
+  await db.query("select tcad_ingest.publish_property_snapshots($1,'',1000)", [dataset]);
+  assert.equal((await snapshot()).market_value,450000);
+  assert.equal((await snapshot()).preliminary_baseline_eligible,false);
+  await db.exec("delete from public.property_search_state");
+  await db.query("select tcad_ingest.prepare_property_snapshots($1,$1,'',1000)", [dataset]);
+  assert.equal((await snapshot()).market_value,450000);
+  assert.equal((await snapshot()).preliminary_baseline_eligible,false);
+  for (const role of ['anon','authenticated','service_role','tcad_loader']) {
+    await db.exec(`set role ${role}`);
+    await assert.rejects(db.query('select * from tcad_ingest.preliminary_review_sources'), /permission denied/);
+    await assert.rejects(conflict(), /permission denied/);
+    await db.exec('reset role');
+  }
+});
 test("background snapshots: atomic progress, failure recovery, completion, release changes and private access", async (t) => {
   const db = await fixtureDatabase();
   t.after(() => db.close());
