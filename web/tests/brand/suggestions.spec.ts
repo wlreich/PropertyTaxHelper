@@ -30,8 +30,11 @@ test('suggestion popup saves privately, supports keyboard and preserves failed d
  await page.screenshot({path:info.outputPath('suggestion-popup-enlarged.png'),fullPage:true});
  await page.evaluate(()=>{document.documentElement.style.fontSize='';});
  const savedRequest=page.waitForRequest('**/api/suggestions');
+ const savedResponse=page.waitForResponse('**/api/suggestions');
  await dialog.getByRole('button',{name:'Send suggestion'}).click();
  expect((await savedRequest).postDataJSON().submissionId).toBe(firstId);
+ const response=await savedResponse;
+ expect(response.status(),await response.text()).toBe(200);
  await expect(dialog.getByRole('status')).toContainText('saved for private review');
  await dialog.getByRole('button',{name:'Done',exact:true}).click();await expect(trigger).toBeFocused();
  await page.goto('/admin/suggestions');await expect(page).toHaveURL(/\/admin\/login/);

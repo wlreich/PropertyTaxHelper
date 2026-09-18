@@ -3,7 +3,16 @@ const MAX_BYTES = 8_192;
 const reply = (status: number, error?: string) => Response.json(error ? { error } : { ok: true }, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function handleSuggestion(request: Request, save: (suggestion: Suggestion) => Promise<void>) {
-  if (request.headers.get("origin") !== new URL(request.url).origin) return reply(403, "Please submit your suggestion from ParcelSavvy.");
+  // Next.js can reconstruct request.url with an internal hostname behind a proxy.
+  // Compare the browser Origin with the actual HTTP Host, as server actions do.
+  const host = request.headers.get("host") ?? new URL(request.url).host;
+  let sameOrigin = false;
+  try {
+    const origin = new URL(request.headers.get("origin") ?? "");
+    sameOrigin = origin.host === host && (origin.protocol === "https:" ||
+      origin.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname));
+  } catch { /* Missing or malformed origins fail closed. */ }
+  if (!sameOrigin) return reply(403, "Please submit your suggestion from ParcelSavvy.");
   if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json") return reply(415, "Please use the suggestion form.");
   const reader = request.body?.getReader();
   if (!reader) return reply(400, "Please enter a suggestion.");

@@ -26,3 +26,15 @@ test('rejects cross-origin, malformed and unbounded inputs without writing',asyn
  assert.equal((await handleSuggestion(request({...draft,website:'spam.test'}),save)).status,200);
  assert.equal(writes,0);
 });
+
+test('uses the incoming Host behind a proxy, without trusting arbitrary forwarded hosts',async()=>{
+ let writes=0;const save=async()=>{writes++;};
+ const proxied=new Request('http://internal:3000/api/suggestions',{method:'POST',headers:{origin:'https://parcelsavvy.org',host:'parcelsavvy.org','content-type':'application/json'},body:JSON.stringify(draft)});
+ assert.equal((await handleSuggestion(proxied,save)).status,200);
+ for(const headers of [
+  {origin:'https://other.test',host:'parcelsavvy.org','x-forwarded-host':'other.test'},
+  {origin:'http://parcelsavvy.org',host:'parcelsavvy.org'},
+  {origin:'null',host:'parcelsavvy.org'},
+ ]) assert.equal((await handleSuggestion(request(draft,headers),save)).status,403);
+ assert.equal(writes,1);
+});

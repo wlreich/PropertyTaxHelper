@@ -67,6 +67,14 @@ try {
     },
     "Ready",
   );
+  const suggestionPayload = { submissionId: "88888888-8888-4888-8888-888888888888", category: "metric", message: "Compare neighborhood values in the smoke test.", website: "" };
+  const saveSuggestion = await fetch(base + "/api/suggestions", {
+    method: "POST", headers: { "Content-Type": "application/json", Origin: base },
+    body: JSON.stringify(suggestionPayload),
+  });
+  const savedSuggestionBody = await saveSuggestion.text();
+  assert.equal(saveSuggestion.status, 200, savedSuggestionBody);
+  assert.deepEqual(JSON.parse(savedSuggestionBody), { ok: true });
   const home = await page("/");
   assert.match(home, /Property address or property ID/);
   assert.match(home, /What happened to your property appraisal\?/);
