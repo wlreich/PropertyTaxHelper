@@ -58,7 +58,9 @@ export function seasonOutcome(current: Snapshot | undefined, initial: Snapshot |
   const taxable = comparison(oldEntity?.taxable_value,entity?.taxable_value);
   const reduction = market?.significant && market.dollars < 0 ? {kind:"market" as const,change:market,label:"Market value"}
     : taxable?.significant && taxable.dollars < 0 && entity ? {kind:"taxable" as const,change:taxable,label:`${entityDisplayName(entity)} taxable value`} : null;
-  const observedProtest = evidence.some(s=>s.tax_year===current.tax_year && (s.protest_flag || s.arb_case_listed) && s.export_date && s.export_date >= initial.export_date! && s.export_date <= current.export_date!);
+  // The tax year ties evidence to the season. Export dates describe snapshots,
+  // not protest event dates; later and undated supplemental records still count.
+  const observedProtest = evidence.some(s=>s.tax_year===current.tax_year && (s.protest_flag || s.arb_case_listed));
   if (!reduction) return null;
   const possibleProtestResult = reduction.kind === "market" && observedProtest;
   const marketContext = reduction.kind !== "taxable" ? null : !market ? "The market-value comparison is unavailable."
