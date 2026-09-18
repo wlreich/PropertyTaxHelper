@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "./brand-logo";
+import { appraisalDistrict } from "@/lib/appraisal-district";
 export function SiteHeader() {
   return (
     <header className="site-header">
@@ -33,8 +34,8 @@ export function Unavailable() {
       <h2>Property search is temporarily unavailable</h2>
       <p>
         Please try again in a few minutes. You can also use{" "}
-        <a href="https://traviscad.org/propertysearch/">
-          TCAD’s official property search
+        <a href={appraisalDistrict.propertySearchUrl}>
+          the Appraisal District’s official property search
         </a>
         .
       </p>

@@ -1,0 +1,16 @@
+.trigger { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: underline; cursor: pointer; }
+.trigger[type="button"]:focus-visible { outline: var(--focus-width) solid var(--color-focus-on-dark); outline-offset: var(--focus-offset); }
+.dialog { width: min(34rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: var(--space-6); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); color: var(--color-text); background: var(--color-surface); font-size: var(--text-body); line-height: var(--line-body); text-align: left; overflow-wrap: anywhere; }
+.dialog::backdrop { background: color-mix(in srgb, var(--color-brand-primary) 65%, transparent); }
+.heading { display: flex; align-items: start; justify-content: space-between; gap: var(--space-4); }
+.heading h2 { margin: 0; font-size: var(--text-h2); }
+.close { flex-shrink: 0; min-width: var(--target-min); min-height: var(--target-min); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); background: var(--color-surface); color: var(--color-action); font: inherit; font-size: var(--text-h3); cursor: pointer; }
+.form { display: grid; gap: var(--space-2); }
+.form select, .form textarea { width: 100%; min-width: 0; min-height: var(--target-min); padding: var(--space-3); color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); font: inherit; }
+.form textarea { resize: vertical; }
+.form label { font-weight: var(--weight-semibold); }
+.dialog a { color: var(--color-action); text-decoration: underline; }
+.dialog button:focus-visible, .dialog select:focus-visible, .dialog textarea:focus-visible, .dialog a:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.dialog button:disabled { opacity: var(--opacity-disabled); cursor: wait; }
+.note { font-size: var(--text-small); color: var(--color-text-muted); }
+.error { color: var(--color-error); }

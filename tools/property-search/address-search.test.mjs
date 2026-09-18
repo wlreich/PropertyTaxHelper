@@ -38,3 +38,46 @@ test('address variants and guarded spelling suggestions run through the public R
   assert.equal((await search('123 Secret')).items.length,0);
  } finally {await db.close();}
 });
+
+test('indexed numeric searches preserve release isolation, boundaries and pagination in pooled plans', async () => {
+ const db=await fixtureDatabase();
+ try {
+  await db.exec("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
+  await seedAddressSearch(db);
+  const add=async(id,address,extra={})=>db.query(`insert into public.property_search_documents
+   select (jsonb_populate_record(null::public.property_search_documents,to_jsonb(d)||$1::jsonb)).*
+   from public.property_search_documents d where property_id='100'`,
+   [JSON.stringify({property_id:id,address,search_text:`${address} FIXTURE CITY 78700`,...extra})]);
+  await add('1104','1104 EXACT ST',{is_parkland:true});
+  await add('991001','11040 WRONG ST');
+  await add('991002','1104A WRONG ST');
+  await add('991003','1104 PARK ST',{is_parkland:true});
+  for(let i=0;i<42;i++) await add(String(992000+i),`2500 PAGE ${String(i).padStart(2,'0')} ST`);
+  const hidden='22222222-2222-4222-8222-222222222222';
+  await db.query(`insert into public.property_releases(dataset_id,tax_year,roll_stage,source_url)
+   values($1,2025,'preliminary','https://traviscad.org/fixture')`,[hidden]);
+  await add('993000','1104 HIDDEN ST',{dataset_id:hidden});
+  for(const role of ['anon','authenticated']) {
+   await db.exec(`set role ${role}; set plan_cache_mode=force_generic_plan`);
+   const search=async(q,page=0)=>(await db.query('select public.search_property_parcels_v2($1,$2,false) result',[q,page])).rows[0].result;
+   const suggest=async(q,all=false)=>(await db.query('select public.suggest_property_parcels($1,8,$2) result',[q,all])).rows[0].result;
+   for(const run of [search,suggest]) {
+    // Exact ID stays first even for parkland, with no duplicate address match.
+    const result=await run('1104');
+    const ids=result.items.map(x=>x.property_id);
+    assert.equal(ids[0],'1104');
+    assert.equal(ids.filter(x=>x==='1104').length,1);
+    assert.ok(!ids.some(x=>['991001','991002','991003','993000'].includes(x)));
+    assert.equal((await run('993000')).items.length,0);
+    assert.equal((await run('1104 Hidden')).items.length,0);
+    assert.equal((await run('0001104')).items[0].property_id,'1104');
+   }
+   assert.ok((await suggest('1104 Park',true)).items.some(x=>x.property_id==='991003'));
+   const pages=await Promise.all([0,1,2].map(page=>search('2500 Page',page)));
+   assert.deepEqual(pages.map(x=>x.items.length),[20,20,2]);
+   assert.deepEqual(pages.map(x=>x.has_more),[true,true,false]);
+   assert.equal(new Set(pages.flatMap(x=>x.items.map(y=>y.property_id))).size,42);
+   await db.exec('reset role');
+  }
+ } finally {await db.close();}
+});

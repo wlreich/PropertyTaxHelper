@@ -16,6 +16,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { notice } = await searchParams;
   return <>
     <div className="admin-actions"><h1>Administration</h1><form action={signOut}><button>Sign out</button></form></div>
+    <p><Link href="/admin/suggestions">Review visitor suggestions →</Link></p>
     {notice && <p role="status">{noticeText[notice] ?? "Review the current settings below."}</p>}
     {seasons ? <SeasonEditor seasons={seasons} /> : <p>Season settings could not be loaded safely. Please try again.</p>}
     <section className="admin-section">

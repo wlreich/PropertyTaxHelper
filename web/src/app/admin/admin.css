@@ -24,3 +24,4 @@
 .admin-shell p a:not(.action-button), .admin-shell li a:not(.action-button) { color: var(--color-action); text-decoration: underline; }
 .admin-shell button:not(.action-button) { padding: var(--space-2) var(--space-4); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-input); color: var(--color-action); background: var(--color-surface); }
 .admin-shell button[aria-pressed="true"]:not(.action-button) { color: var(--color-surface); background: var(--color-brand-primary); }
+.suggestion-message { white-space: pre-wrap; overflow-wrap: anywhere; }

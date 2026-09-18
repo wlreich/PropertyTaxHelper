@@ -50,6 +50,8 @@ createServer((req,res)=>{
    else if(route==='property_overview_bundle')result={profile:await call('select public.property_profile($1) result',[args.p_id]),history:historyFor(args.p_id)};
    else if(route==='season_calendar')result=await call('select public.season_calendar() result');
    else if(route==='admin_access')result=await call('select public.admin_access() result');
+   else if(route==='submit_feature_suggestion')result=await call('select public.submit_feature_suggestion($1,$2,$3) result',[args.p_submission_id,args.p_category,args.p_message]);
+   else if(route==='admin_suggestions')result=await call('select public.admin_suggestions($1) result',[Number(args.p_page??0)]);
    else if(route==='admin_dashboard')result=await call('select public.admin_dashboard() result');
    else if(route==='admin_save_season')result=await call('select public.admin_save_season($1,$2) result',[args.p_config,args.p_revision]);
    else if(route==='admin_preview_property'){
