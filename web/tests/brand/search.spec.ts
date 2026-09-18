@@ -15,7 +15,7 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   expect(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/manrope/i);
   expect(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/inter/i);
   await expect(page.getByRole('button',{name:'Search',exact:true})).toHaveCSS('background-color','rgb(23, 105, 170)');
-  await expect(page.getByText('Travis Central Appraisal District (TCAD)',{exact:true})).toBeVisible();
+  await expect(page.getByText('County Appraisal District: Travis Central Appraisal District (TCAD)',{exact:true})).toBeVisible();
   const example=page.getByRole('complementary',{name:'An example appraisal story'});
   await expect(example.getByText('Example only',{exact:true})).toBeVisible();
   await expect(example).toHaveAccessibleDescription('Fictional values to show what you can explore.');

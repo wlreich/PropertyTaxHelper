@@ -115,7 +115,7 @@ export default async function Home({
           <div className={styles.county}>
             <span>{appraisalDistrict.countyLabel}</span>
             <span className={styles.districtName}>
-              {appraisalDistrict.name} ({appraisalDistrict.abbreviation})
+              County Appraisal District: {appraisalDistrict.name} ({appraisalDistrict.abbreviation})
             </span>
           </div>
         </div>
