@@ -4,6 +4,7 @@ import { Unavailable } from "@/components/site-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { TermDefinition } from "@/components/term-definition";
 import styles from "./search-page.module.css";
+import { appraisalDistrict } from "@/lib/appraisal-district";
 import {
   parseSearch,
   currency,
@@ -19,7 +20,7 @@ const homeownerQuestions = [
   "Did my value change after the preliminary appraisal?",
   "Is a protest recorded, and did the value go down?",
   "How does my home compare with similar properties?",
-  "What happened to other homes in my TCAD market area?",
+  "What happened to other homes in my market area?",
   "Are my property facts and exemptions recorded correctly?",
 ];
 
@@ -31,7 +32,7 @@ function HomeFooter() {
           <p className={styles.footerBrand}>ParcelSavvy.org</p>
           <p>
             Independent property-assessment context for Travis County
-            homeowners. Values reflect selected public TCAD releases and are
+            homeowners. Values reflect selected public Appraisal District releases and are
             not a tax bill.
           </p>
         </div>
@@ -59,11 +60,11 @@ function HomeFooter() {
             <Link href="/terms">Terms of use</Link>
             <Link href="/accessibility">Accessibility</Link>
             <a
-              href="https://traviscad.org/propertysearch/"
+              href={appraisalDistrict.propertySearchUrl}
               target="_blank"
               rel="noreferrer"
             >
-              Official TCAD search ↗
+              Official Appraisal District search ↗
             </a>
           </nav>
         </div>
@@ -71,7 +72,7 @@ function HomeFooter() {
       <div className={styles.footerBottom}>
         <span>© 2026 Systems &amp; Sense LLC. All rights reserved.</span>
         <span>
-          A missing protest entry does not rule out a protest. Official TCAD
+          A missing protest entry does not rule out a protest. Official Appraisal District
           records and notices control.
         </span>
       </div>
@@ -109,7 +110,12 @@ export default async function Home({
               Support us
             </Link>
           </nav>
-          <span className={styles.county}>TRAVIS COUNTY, TEXAS</span>
+          <div className={styles.county}>
+            <span>{appraisalDistrict.countyLabel}</span>
+            <span className={styles.districtName}>
+              {appraisalDistrict.name} ({appraisalDistrict.abbreviation})
+            </span>
+          </div>
         </div>
       </header>
 
@@ -121,7 +127,7 @@ export default async function Home({
           <div className={styles.heroCopy}>
             {!q && (
               <p className={styles.eyebrow}>
-                Travis County property assessments, explained
+                Property assessments, explained
               </p>
             )}
             <h1 id="home-heading">
@@ -131,9 +137,8 @@ export default async function Home({
             </h1>
             {!q && (
               <p className={styles.heroDescription}>
-                See how TCAD valued your home, what changed between preliminary
-                and certified values, how your property compares, and what may
-                deserve a closer look.
+                See how the Appraisal District valued your home, what changed,
+                and how your property compares.
               </p>
             )}
             <div id="property-search" className={styles.searchArea}>
@@ -144,19 +149,20 @@ export default async function Home({
           {!q && (
             <aside
               className={styles.preview}
-              aria-label="Illustrative property result"
+              aria-labelledby="example-heading"
+              aria-describedby="example-disclaimer"
             >
               <div className={styles.previewHeader}>
-                <div>
-                  <p className={styles.previewLabel}>Your appraisal story</p>
-                  <h2>2026 certified result</h2>
-                </div>
-                <p className={styles.exampleLabel}>Illustrative example</p>
+                <p className={styles.exampleLabel}>Example only</p>
+                <p id="example-disclaimer" className={styles.exampleDescription}>
+                  Fictional values to show what you can explore.
+                </p>
+                <h2 id="example-heading">An example appraisal story</h2>
               </div>
               <div className={styles.previewValue}>
-                <span>Certified market value</span>
+                <span>2026 certified market value</span>
                 <strong>$612,000</strong>
-                <p>↓ $38,000 from preliminary</p>
+                <p>↓ $38,000 below preliminary</p>
               </div>
               <dl className={styles.previewGrid}>
                 <div>
@@ -164,18 +170,13 @@ export default async function Home({
                   <dd>Found</dd>
                 </div>
                 <div>
-                  <dt>Neighborhood position</dt>
-                  <dd>Above 62% of homes</dd>
-                </div>
-                <div>
-                  <dt>Compared with 2025</dt>
+                  <dt>Compared with prior year</dt>
                   <dd>$21,000 lower</dd>
                 </div>
-                <div>
-                  <dt>Next useful check</dt>
-                  <dd>Compare similar homes</dd>
-                </div>
               </dl>
+              <p className={styles.exampleNextStep}>
+                Search to see your own property.
+              </p>
             </aside>
           )}
         </section>
@@ -214,7 +215,7 @@ export default async function Home({
                 </p>
               </div>
               <span className="release-badge">
-                Source: TCAD · {result.data.tax_year} {result.data.roll_stage}
+                Source: Appraisal District · {result.data.tax_year} {result.data.roll_stage}
               </span>
             </div>
             {result.data.match_mode === "possible" && (
@@ -226,7 +227,7 @@ export default async function Home({
             )}
             <p className={styles.sourceNote}>
               {result.data.export_time_raw
-                ? `TCAD export: ${result.data.export_time_raw}`
+                ? `Appraisal District export: ${result.data.export_time_raw}`
                 : "Export date not reported in this release."}
             </p>
             {!result.data.items.length ? (
@@ -251,8 +252,8 @@ export default async function Home({
               <>
                 <div className={styles.resultColumns}>
                   <span>Property</span>
-                  <TermDefinition term="TCAD market value">
-                    TCAD’s estimate of what the property would sell for as of
+                  <TermDefinition term="Market value">
+                    The Appraisal District’s estimate of what the property would sell for as of
                     January 1 of the source year. It is not your tax bill.
                   </TermDefinition>
                   <span aria-hidden="true" />
@@ -284,7 +285,7 @@ export default async function Home({
                         </div>
                         <div className="result-value">
                           <span className={styles.valueLabel}>
-                            TCAD market value
+                            Market value
                           </span>
                           <strong>
                             {property.market_value === null &&
@@ -346,7 +347,7 @@ export default async function Home({
                 <strong>2026 certified results are available</strong>
                 <p>
                   Compare preliminary and certified values, see available
-                  protest records, and understand what happened across your TCAD
+                  protest records, and understand what happened across your
                   market area.
                 </p>
               </div>
@@ -425,27 +426,43 @@ export default async function Home({
               aria-labelledby="trust-heading"
             >
               <div id="evidence">
-                <p className={styles.eyebrow}>Independent by design</p>
                 <h2 id="trust-heading">
-                  Built for homeowners, not property-tax insiders.
+                  Independent by design. Built for homeowners.
                 </h2>
                 <p>
-                  ParcelSavvy connects public TCAD records and explains what
-                  they mean—so you can review your appraisal with more
-                  confidence.
+                  ParcelSavvy brings public appraisal records together so you
+                  can understand your assessment and decide what to explore next.
                 </p>
               </div>
               <ul className={styles.trustList}>
-                <li>Independent of TCAD</li>
-                <li>Plain-language explanations</li>
-                <li>No pressure or promises</li>
+                <li>
+                  <h3>Independent perspective</h3>
+                  <p>
+                    We are not affiliated with the Appraisal District. We help
+                    explain its public records.
+                  </p>
+                </li>
+                <li>
+                  <h3>Answers in plain language</h3>
+                  <p>
+                    See what changed, how nearby homes compare, and where the
+                    records leave questions.
+                  </p>
+                </li>
+                <li>
+                  <h3>You decide what comes next</h3>
+                  <p>
+                    Explore the information at your own pace. No pressure to
+                    protest and no promises of savings.
+                  </p>
+                </li>
               </ul>
             </section>
 
             <section className={styles.finalCallout}>
               <div>
                 <h2>Know your property. Understand your assessment.</h2>
-                <p>Start with an address or TCAD property ID.</p>
+                <p>Start with an address or property ID.</p>
               </div>
               <Link
                 className={`${styles.primaryLink} action-button`}
