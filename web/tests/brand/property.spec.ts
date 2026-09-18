@@ -89,6 +89,8 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(assessmentSummary).toContainText("$100,000 lower");
   await expect(assessmentSummary).toContainText("$50,000 higher");
   const protestResult = page.getByRole("region", {name:"Looks like a successful protest!"});
+  await expect(protestResult).toContainText("A protest was also recorded for 2026.");
+  await expect(protestResult).not.toContainText("during that period");
   await expect(protestResult).toContainText("Agent listed for 2026");
   await expect(protestResult).toContainText("FIXTURE TAX PARTNERS");
   await expect(protestResult).toContainText("Recorded: Apr 29, 2026");
