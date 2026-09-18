@@ -8,17 +8,28 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toHaveCount(0);
   expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
-  await expect(page.getByRole('heading',{name:'Built for homeowners, not property-tax insiders.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Independent by design. Built for homeowners.'})).toBeVisible();
   await expect(page.locator('aside').getByRole('link',{name:'Support ParcelSavvy'})).toHaveAttribute('href','/support');
   await expect(page.getByText('Optional contributions are not charitable donations and are not tax-deductible.')).toBeVisible();
   await expect(page.getByRole('link',{name:'Privacy policy'})).toHaveAttribute('href','/privacy');
   expect(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/manrope/i);
   expect(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily)).toMatch(/inter/i);
-  await expect(page.getByRole('button',{name:'Search my property'})).toHaveCSS('background-color','rgb(23, 105, 170)');
-  await page.getByLabel('Property address or TCAD property ID').fill('Oak');
-  await page.getByRole('button',{name:'Search my property'}).click();
+  await expect(page.getByRole('button',{name:'Search',exact:true})).toHaveCSS('background-color','rgb(23, 105, 170)');
+  await expect(page.getByText('Travis Central Appraisal District (TCAD)',{exact:true})).toBeVisible();
+  const example=page.getByRole('complementary',{name:'An example appraisal story'});
+  await expect(example.getByText('Example only',{exact:true})).toBeVisible();
+  await expect(example).toHaveAccessibleDescription('Fictional values to show what you can explore.');
+  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:info.outputPath('home-page.png'),fullPage:true});
+  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,className:el.className})))).toEqual([]);
+  await page.screenshot({path:info.outputPath('home-page-enlarged.png'),fullPage:true});
+  await page.evaluate(()=>{document.documentElement.style.fontSize='';});
+  await page.getByLabel('Property address or property ID').fill('Oak');
+  await page.getByRole('button',{name:'Search',exact:true}).click();
   await expect(page.locator('.result-card')).toHaveCount(2);
-  const term=page.getByRole('button',{name:'TCAD market value'});
+  const term=page.getByRole('button',{name:'Market value',exact:true});
   await term.focus(); await expect(page.getByRole('tooltip')).toBeVisible();
   await term.press('Escape'); await expect(page.getByRole('tooltip')).toBeHidden();
   const issues=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
@@ -87,8 +98,8 @@ test('address variants and labeled spelling suggestions', async ({page}, info) =
   await page.goto('/?q=1800+West+36th+Street');
   await expect(page.locator('.result-card').first()).toContainText('1800 W 36 ST');
   await expect(page.locator('.result-card')).toHaveCount(3);
-  await page.getByLabel('Property address or TCAD property ID').fill('700 Paw Prnit Drive Apt 2');
-  await page.getByRole('button',{name:'Search my property'}).click();
+  await page.getByLabel('Property address or property ID').fill('700 Paw Prnit Drive Apt 2');
+  await page.getByRole('button',{name:'Search',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Possible matches',exact:true})).toBeVisible();
   await expect(page.locator('.result-card')).toHaveCount(1);
   await expect(page.locator('.result-card')).toContainText('700 PAW PRINT DR UNIT 2');
@@ -110,7 +121,7 @@ test('address variants and labeled spelling suggestions', async ({page}, info) =
 
 test('typeahead narrows house-number matches and supports keyboard selection', async ({page}) => {
   await page.goto('/');
-  const search=page.getByLabel('Property address or TCAD property ID');
+  const search=page.getByLabel('Property address or property ID');
   await search.fill('1104');
   const listbox=page.getByRole('listbox',{name:'Matching property addresses'});
   await expect(listbox).toBeVisible();
