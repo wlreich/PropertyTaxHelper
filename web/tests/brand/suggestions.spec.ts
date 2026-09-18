@@ -1,0 +1,47 @@
+import {test,expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+test('suggestion popup saves privately, supports keyboard and preserves failed drafts',async({page},info)=>{
+ await page.goto('/');
+ await expect(page.locator('#questions')).toContainText('local neighborhood');
+ await expect(page.locator('footer')).not.toContainText('A missing protest entry');
+ const trigger=page.getByRole('button',{name:'Suggest a feature or metric'});
+ await trigger.focus();await trigger.press('Enter');
+ const dialog=page.getByRole('dialog',{name:'What would help you?'});
+ await expect(dialog).toBeVisible();
+ await expect(dialog.locator('input[type="email"]')).toHaveCount(0);
+ expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+ await page.keyboard.press('Escape');await expect(dialog).toBeHidden();await expect(trigger).toBeFocused();
+ await trigger.click();
+ const message=`Compare neighborhood values for ${info.project.name}. <script>alert("test")</script>`;
+ await dialog.getByLabel('I’d like to suggest').selectOption('metric');
+ await dialog.getByLabel('What would you like to see?').fill(message);
+ let firstId='';
+ await page.route('**/api/suggestions',async route=>{
+  firstId=route.request().postDataJSON().submissionId;
+  await route.fulfill({status:503,json:{error:'Unavailable'}});
+ });
+ await dialog.getByRole('button',{name:'Send suggestion'}).click();
+ await expect(dialog.getByRole('alert')).toContainText('Your text is still here');
+ await expect(dialog.getByLabel('What would you like to see?')).toHaveValue(message);
+ await page.unroute('**/api/suggestions');
+ await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+ expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('suggestion-popup-enlarged.png'),fullPage:true});
+ await page.evaluate(()=>{document.documentElement.style.fontSize='';});
+ const savedRequest=page.waitForRequest('**/api/suggestions');
+ await dialog.getByRole('button',{name:'Send suggestion'}).click();
+ expect((await savedRequest).postDataJSON().submissionId).toBe(firstId);
+ await expect(dialog.getByRole('status')).toContainText('saved for private review');
+ await dialog.getByRole('button',{name:'Done',exact:true}).click();await expect(trigger).toBeFocused();
+ await page.goto('/admin/suggestions');await expect(page).toHaveURL(/\/admin\/login/);
+ await page.getByLabel('Email',{exact:true}).fill('admin@example.test');
+ await page.getByLabel('Password',{exact:true}).fill('fixture-password');
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.getByRole('link',{name:'Review visitor suggestions'}).click();
+ await expect(page.getByRole('heading',{name:'Suggestions',exact:true})).toBeVisible();
+ await expect(page.getByText(message,{exact:true})).toHaveCount(1);
+ expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:info.outputPath('suggestion-inbox.png'),fullPage:true});
+});

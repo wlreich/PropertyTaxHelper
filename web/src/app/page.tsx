@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SuggestionForm } from "@/components/suggestion-form";
 import { SearchForm } from "@/components/search-form";
 import { Unavailable } from "@/components/site-shell";
 import { BrandLogo } from "@/components/brand-logo";
@@ -17,11 +18,11 @@ import { searchProperties } from "@/lib/supabase/properties";
 export const maxDuration = 30;
 
 const homeownerQuestions = [
-  "Did my value change after the preliminary appraisal?",
-  "Is a protest recorded, and did the value go down?",
-  "How does my home compare with similar properties?",
-  "What happened to other homes in my market area?",
-  "Are my property facts and exemptions recorded correctly?",
+  "Did my home’s value change after the first appraisal notice?",
+  "Was a protest filed for my home, and was its value lowered?",
+  "How does my home’s value compare with similar homes?",
+  "What happened to home values in my local neighborhood?",
+  "Are my home’s details and property tax exemptions correct?",
 ];
 
 function HomeFooter() {
@@ -49,6 +50,7 @@ function HomeFooter() {
           <nav aria-label="About ParcelSavvy">
             <Link href="/#about">About ParcelSavvy</Link>
             <Link href="/contact">Contact</Link>
+            <SuggestionForm />
             <Link href="/report-data-issue">Report a data issue</Link>
             <Link href="/support">Support ParcelSavvy</Link>
           </nav>
@@ -72,8 +74,8 @@ function HomeFooter() {
       <div className={styles.footerBottom}>
         <span>© 2026 Systems &amp; Sense LLC. All rights reserved.</span>
         <span>
-          A missing protest entry does not rule out a protest. Official Appraisal District
-          records and notices control.
+          Official property records are available on{" "}
+          <a href={appraisalDistrict.propertySearchUrl} target="_blank" rel="noreferrer">TCAD’s website ↗</a>.
         </span>
       </div>
     </footer>
@@ -348,7 +350,7 @@ export default async function Home({
                 <p>
                   Compare preliminary and certified values, see available
                   protest records, and understand what happened across your
-                  market area.
+                  local neighborhood.
                 </p>
               </div>
               <span>Current through Jul 18, 2026</span>

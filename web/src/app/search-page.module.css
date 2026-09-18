@@ -544,7 +544,7 @@
   font-weight: var(--weight-bold);
 }
 
-.homeFooter h2 {
+.footerGrid > div > h2 {
   margin-bottom: var(--space-3);
   color: var(--color-surface);
   font-family: var(--font-body);
@@ -558,13 +558,13 @@
   gap: var(--space-2);
 }
 
-.page .homeFooter nav[aria-label] a {
+.page .homeFooter nav[aria-label] > a {
   width: fit-content;
   color: var(--color-surface-info);
   text-decoration: none;
 }
 
-.page .homeFooter nav[aria-label] a:hover {
+.page .homeFooter nav[aria-label] > a:hover {
   color: var(--color-surface);
   text-decoration: underline;
 }
@@ -935,3 +935,5 @@
     white-space: normal;
   }
 }
+
+.page .homeFooter .footerBottom a[href] { color: inherit; text-decoration: underline; }

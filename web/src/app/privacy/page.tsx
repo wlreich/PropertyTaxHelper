@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           You can search ParcelSavvy without creating an account. We do not sell
           personal information, use it for targeted advertising, or ask for
           sensitive information to search public property records. We collect
-          only the information needed to operate the site, answer messages, and
+          only the information needed to operate and improve the site, answer messages, and
           process optional contributions.
         </p>
       </section>
@@ -48,6 +48,13 @@ export default function PrivacyPage() {
           in the message. Please do not send Social Security numbers, payment-card
           numbers, passwords, medical information, or other sensitive personal
           information.
+        </p>
+        <h3>Suggestions you submit</h3>
+        <p>
+          If you use the suggestion form, we store your suggestion, its category,
+          and the time received for private review and product planning. No email
+          address is required. Suggestions are not automatically published or
+          sent by email. Please leave out personal or sensitive information.
         </p>
         <h3>Optional contributions</h3>
         <p>
@@ -97,7 +104,7 @@ export default function PrivacyPage() {
       <section>
         <h2>Retention and security</h2>
         <p>
-          We keep correspondence, contribution records, and operational records
+          We keep suggestions, correspondence, contribution records, and operational records
           only as long as reasonably necessary for the purposes described above,
           legal or accounting requirements, dispute resolution, and security.
           Service-provider logs may follow the provider’s own retention schedule.
