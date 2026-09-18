@@ -5,6 +5,20 @@ import {parseNeighborhood} from '../../web/src/lib/supabase/neighborhood.ts';
 import {neighborhoodSummary} from '../../web/src/lib/neighborhood.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+test('conflicting preliminary values are excluded per home without removing homes or protest evidence',async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ await db.query('select tcad_ingest.publish_property_search($1)',['11111111-1111-4111-8111-111111111111']);
+ await seedComparisons(db);const {pre}=await seedNeighborhood(db);
+ await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"preliminary_baseline_eligible":false}'::jsonb where dataset_id=$1 and property_id='120'`,[pre]);
+ await db.exec('set role anon');
+ const data=parseNeighborhood((await db.query("select public.property_neighborhood_v3('100') r")).rows[0].r,'100');
+ assert.ok(data);
+ const home=data.homes.find(h=>h.property_id==='120');
+ assert.ok(home);assert.equal(home.preliminary,null);assert.equal(home.protested,true);assert.ok(home.certified>0);
+ const summary=neighborhoodSummary(data);
+ assert.equal(summary.all.reduced.total,2);assert.equal(summary.all.reduced.count,1);
+ assert.equal(summary.all.above.total,2);assert.equal(summary.all.missingPair,data.homes.length-2);
+});
 test('neighborhood releases, cap outcomes, protest deduplication, and public visibility',async t=>{
  const db=await fixtureDatabase();t.after(()=>db.close());await db.query('select tcad_ingest.publish_property_search($1)',['11111111-1111-4111-8111-111111111111']);const {old}=await seedComparisons(db);const {anchor,pre}=await seedNeighborhood(db);
  await db.exec('set role anon');
