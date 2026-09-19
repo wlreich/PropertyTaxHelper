@@ -1,0 +1,136 @@
+name: Home page regression
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'supabase/migrations/**'
+      - 'tools/property-search/**'
+      - 'docs/brand/**'
+      - 'docs/qa/**'
+      - 'AGENTS.md'
+      - '.github/workflows/home-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'supabase/migrations/**'
+      - 'tools/property-search/**'
+      - 'docs/qa/**'
+      - '.github/workflows/home-regression.yml'
+  schedule:
+    # 03:17 CDT / 02:17 CST; UTC avoids daylight-saving skipped runs.
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+  deployment_status:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: home-${{ github.event_name }}-${{ github.event.deployment.id || github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  fixture:
+    name: Home regression with synthetic data
+    if: github.event_name != 'deployment_status'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            tools/property-search/package-lock.json
+      - run: npm ci --prefix web
+      - run: npm ci --prefix tools/property-search --ignore-scripts
+      - run: npm run build --prefix web
+      - name: Install browsers
+        working-directory: web
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Run home regression
+        working-directory: web
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            npm run test:home -- --project=chromium-375 --project=chromium-768 --project=chromium-1440
+          else
+            npm run test:home
+          fi
+      - name: Save regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            web/home-report/
+            web/home-test-results/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Publish run summary
+        if: always()
+        run: |
+          echo '### Home regression' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Synthetic data only. PR: Chromium at 375/768/1440. Main, nightly and manual: also Firefox desktop and WebKit mobile width.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download the home-regression artifact for HTML, JSON, JUnit, screenshots, copy inventory and failure traces. No automatic retries or snapshot updates.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Runbook: docs/qa/home-search-regression.md. Original manual cases and open remediation remain separate from automated coverage.' >> "$GITHUB_STEP_SUMMARY"
+
+  deployed:
+    name: Deployed home smoke
+    # Deployment events test the successful production deployment. PR previews may
+    # require Vercel authentication; never weaken protection or pass a bypass key.
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tests always come from the trusted default branch for deployment events.
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --prefix web
+      - working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Run deployed smoke
+        working-directory: web
+        env:
+          # Stable public alias also works when immutable deployment URLs are protected.
+          HOME_BASE_URL: https://property-tax-helper.vercel.app
+        run: npm run test:home:smoke
+      - name: Save deployed evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            web/smoke-report/
+            web/smoke-test-results/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Publish smoke summary
+        if: always()
+        env:
+          DEPLOYMENT_SHA: ${{ github.event.deployment.sha }}
+        run: |
+          echo '### Deployed home smoke' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Target: https://property-tax-helper.vercel.app (current public alias; may advance during a concurrent deployment).' >> "$GITHUB_STEP_SUMMARY"
+          echo "Triggering deployment SHA: ${DEPLOYMENT_SHA:-nightly or manual}" >> "$GITHUB_STEP_SUMMARY"
+          echo 'GET-only browser journeys at 375/1440. HTML report includes actual search timings; 10s availability budget, 1s suggestion / 3s submit review targets.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No payments, suggestion writes, authentication or production database credentials.' >> "$GITHUB_STEP_SUMMARY"
