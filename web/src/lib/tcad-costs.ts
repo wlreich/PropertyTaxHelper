@@ -6,7 +6,7 @@ export type CostBuilding = {
   class_code: string | null; year_built: number | null; depreciation_year: number | null;
   floors: number; complete: boolean; features: {code: string; description: string; value: number | null}[];
 };
-export type CostRecord = { property_id: string; tax_year: number; improvements: CostBuilding[] };
+export type CostRecord = { property_id: string; tax_year: number; market_land_value: number | null; improvements: CostBuilding[] };
 const object = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const text = (v: unknown): v is string => typeof v === "string" && v.length <= 250;
 const nullableText = (v: unknown) => v === null || text(v);
@@ -16,7 +16,7 @@ export function parseCostRecords(v: unknown, anchor: string, source: string, yea
   const records: CostRecord[] = [];
   for (const item of v.items) {
     if (!object(item) || !text(item.property_id) || !/^\d{1,12}$/.test(item.property_id) || item.tax_year !== year
-      || !Array.isArray(item.improvements) || item.improvements.length > 100) return null;
+      || !amount(item.market_land_value) || !Array.isArray(item.improvements) || item.improvements.length > 100) return null;
     const improvements: CostBuilding[] = [];
     for (const b of item.improvements) {
       if (!object(b) || !text(b.id) || ![b.type_code,b.state_code,b.class_code].every(nullableText)
@@ -33,7 +33,7 @@ export function parseCostRecords(v: unknown, anchor: string, source: string, yea
         depreciation_year:b.depreciation_year as number|null,floors:b.floors as number,complete:b.complete,features});
     }
     if(new Set(improvements.map(b=>b.id)).size!==improvements.length) return null;
-    records.push({property_id:item.property_id,tax_year:year,improvements});
+    records.push({property_id:item.property_id,tax_year:year,market_land_value:item.market_land_value as number|null,improvements});
   }
   return new Set(records.map(r=>r.property_id)).size===records.length ? records : null;
 }
@@ -43,6 +43,6 @@ export function primaryBuilding(costs: CostRecord | undefined) {
 }
 export function withCosts(property: ComparisonProperty, costs: CostRecord | undefined): ComparisonProperty {
   const main=primaryBuilding(costs);
-  return {...property,costs,...(main ? {living_area:main.main_area,class_code:main.class_code,year_built:main.year_built,
+  return {...property,costs,...(costs ? {land_value:costs.market_land_value} : {land_value:null}),...(main ? {living_area:main.main_area,class_code:main.class_code,year_built:main.year_built,
     main_buildings:costs!.improvements.filter(b=>b.floors>0).length} : {})};
 }

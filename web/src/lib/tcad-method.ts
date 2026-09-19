@@ -1,26 +1,17 @@
-// TCAD 2026 worked-grid calibration, expressed as age so future releases work.
-// These are observed examples, not the district's full depreciation schedule.
-export const tcadMethod = {year:2026, version:"TCAD 2026 formulas · estimated inputs v2", mainAreaFactor:1};
-const curves:Record<string,readonly (readonly [number,number])[]>={
-  R3:[[0,100],[6,96],[8,95],[11,92],[12,91],[13,90],[15,88],[16,88]],
-  R4:[[0,100],[12,90],[22,79]],
-  R5:[[0,100],[11,90]],
-};
+import { depreciationSchedules } from "./tcad-depreciation.ts";
+
+export const tcadMethod = {year:2026, version:"TCAD formulas · published age schedules · grouping safeguards v3", mainAreaFactor:1};
 export function estimatePercentGood(classCode:string|null, taxYear:number, effectiveYear:number|null, actualYear:number|null) {
-  const year=effectiveYear && effectiveYear>=1800 ? effectiveYear : actualYear;
-  if(!year || year<1800 || year>taxYear || !classCode || !/^R[1-6]$/.test(classCode)) return null;
-  const age=taxYear-year, calibration=curves[classCode]?classCode:"R3", curve=curves[calibration];
-  let value:number;let extrapolated=false;
-  const exact=curve.find(([a])=>a===age);
-  if(exact) value=exact[1];
-  else {
-    const upper=curve.findIndex(([a])=>a>age);
-    if(upper>0) {const [a,g]=curve[upper-1],[b,h]=curve[upper];value=g+(age-a)/(b-a)*(h-g);}
-    else {const [a,g]=curve[1],[b,h]=curve[curve.length-1];const slope=b>a?(h-g)/(b-a):(h-100)/b;
-      value=h+(age-b)*slope;extrapolated=true;}
-  }
-  value=Math.round(Math.max(20,Math.min(100,value))*100)/100;
-  return {value,year,age,basis:`Estimated from ${calibration} age examples${calibration!==classCode?` as a proxy for ${classCode}`:""}${extrapolated?"; extrapolated beyond the observed ages":""}. Average condition and no other depreciation adjustments are assumed.${effectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}${taxYear!==2026?" Uses the 2026 calibration for this release year.":""}`};
+  const hasEffectiveYear=effectiveYear!==null && Number.isInteger(effectiveYear) && effectiveYear>=1800;
+  const year=hasEffectiveYear ? effectiveYear : actualYear;
+  if(!year || !Number.isInteger(year) || year<1800 || year>taxYear || !classCode) return null;
+  const schedule=depreciationSchedules[String(taxYear)]?.classes[classCode];
+  if(!schedule) return null;
+  const age=taxYear-year;
+  // Tables specify each age followed by a terminal 999 band; never extrapolate.
+  const row=schedule.rows.find(([upperAge])=>upperAge>=age);
+  if(!row) return null;
+  return {value:row[1],year,age,basis:`TCAD ${taxYear} published ${classCode} schedule ${schedule.pricingId}, condition A (average). Condition is assumed because it is not reported in these inputs; other depreciation adjustments are not included.${hasEffectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}`};
 }
 export type TcadInputs={market:number|null;land:number|null;area:number|null;classCode:string|null;
  mainRcn:number|null;mainRcnld:number|null;percentGood:number|null;nonliving:number|null;secondary:number|null;mass:number|null};
