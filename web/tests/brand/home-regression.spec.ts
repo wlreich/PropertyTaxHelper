@@ -95,7 +95,9 @@ test('PAR-6 search links focus input; Back, Forward and clear preserve only the 
   await search.fill('1102 Paw');
   await search.fill('');
   await page.getByRole('link', { name: 'Data & methodology', exact: true }).click();
+  await expect(page).toHaveURL(/\/methodology$/);
   await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
   await expect(search).toHaveValue('');
   await expect(search).toHaveAttribute('aria-expanded', 'false');
 });

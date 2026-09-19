@@ -217,7 +217,11 @@ export function SearchForm({ query = "" }: { query?: string }) {
                 setOpen(true);
             }}
             onBlur={() => {
-              setOpen(false);
+              // Keep the mobile submit target stable until its click completes,
+              // but never let an old blur close a newly focused search.
+              window.setTimeout(() => {
+                if (document.activeElement !== input.current) setOpen(false);
+              }, 100);
             }}
             onChange={(event) => {
               const nextValue = event.currentTarget.value;
