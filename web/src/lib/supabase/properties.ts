@@ -2,7 +2,7 @@ import "server-only";
 import { parseHistory, parseProtestObservations, type Snapshot, type ProtestObservation } from "../property-history.ts";
 import { DATABASE_REQUEST_TIMEOUT_MS } from "./request-policy.ts";
 import { createClient } from "@supabase/supabase-js";
-import { parseSearch } from "../property-search.ts";
+import { parseSearch, searchAddressQuery } from "../property-search.ts";
 
 type Config = { SUPABASE_URL?: string; SUPABASE_PUBLISHABLE_KEY?: string };
 export type SearchItem = {
@@ -146,7 +146,7 @@ export async function searchProperties(
     return { status: "invalid" };
   const v = await rpc(
     "search_property_parcels_v2",
-    { p_query: q, p_page: page, p_show_all: showAll },
+    { p_query: searchAddressQuery(q), p_page: page, p_show_all: showAll },
     config,
     fetchRequest,
   );
@@ -197,7 +197,7 @@ export async function searchPropertySuggestions(
   if (parseSearch(q).error) return { status: "invalid" };
   const v = await rpc(
     "suggest_property_parcels",
-    { p_query: q, p_limit: 8, p_show_all: showAll },
+    { p_query: searchAddressQuery(q), p_limit: 8, p_show_all: showAll },
     config,
     fetchRequest,
   );

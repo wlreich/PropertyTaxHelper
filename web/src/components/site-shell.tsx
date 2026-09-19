@@ -18,6 +18,7 @@ export function SiteFooter() {
         selected source release and are not a tax bill.
       </p>
       <nav aria-label="ParcelSavvy information">
+        <Link href="/methodology">Data &amp; methodology</Link>
         <Link href="/contact">Contact</Link>
         <Link href="/report-data-issue">Report a data issue</Link>
         <Link href="/privacy">Privacy</Link>

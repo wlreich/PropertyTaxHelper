@@ -4,7 +4,7 @@ import brand from './playwright.brand.config';
 // Never point the fixture suite at a deployed database. All RPCs stay on loopback.
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['brand/search.spec.ts', 'regression/**/*.spec.ts'],
+  testMatch: ['brand/search.spec.ts', 'brand/home-regression.spec.ts', 'regression/**/*.spec.ts'],
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: false,

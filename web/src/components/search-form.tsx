@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { parseSearch, propertyUrl, resultsUrl } from "@/lib/property-search";
+import { noResultsGuidance, parseSearch, propertyUrl, resultsUrl } from "@/lib/property-search";
 
 type Suggestion = {
   property_id: string;
@@ -58,6 +58,7 @@ function parseSuggestionResponse(
 export function SearchForm({ query = "" }: { query?: string }) {
   const router = useRouter();
   const listboxId = useId();
+  const input = useRef<HTMLInputElement>(null);
   const cache = useRef(new Map<string, Omit<SuggestionState, "status">>());
   const [pending, startTransition] = useTransition();
   const [value, setValue] = useState(query);
@@ -65,7 +66,37 @@ export function SearchForm({ query = "" }: { query?: string }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [suggestions, setSuggestions] = useState(idleSuggestions);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const validSuggestionQuery = dirty && !parseSearch(value).error;
+
+  useEffect(() => {
+    // History belongs to this entry, not to a persistent session-wide search.
+    const restore = () => {
+      const saved = window.history.state?.parcelSavvySearchQuery;
+      if (typeof saved === "string") setValue(saved);
+      setOpen(false);
+      setDirty(false);
+      setActiveIndex(-1);
+      setSuggestions(idleSuggestions);
+      setValidationError(null);
+    };
+    restore();
+    if (window.location.hash === "#property-search") input.current?.focus({ preventScroll: true });
+    window.addEventListener("popstate", restore);
+    window.addEventListener("pageshow", restore);
+    return () => {
+      window.removeEventListener("popstate", restore);
+      window.removeEventListener("pageshow", restore);
+    };
+  }, []);
+
+  const rememberQuery = (nextValue: string) => {
+    window.history.replaceState(
+      { ...window.history.state, parcelSavvySearchQuery: nextValue },
+      "",
+      window.location.href,
+    );
+  };
 
   useEffect(() => {
     if (!validSuggestionQuery) return;
@@ -110,8 +141,11 @@ export function SearchForm({ query = "" }: { query?: string }) {
   }, [validSuggestionQuery, value]);
 
   const chooseSuggestion = (suggestion: Suggestion) => {
+    rememberQuery(value);
     setOpen(false);
     setDirty(false);
+    setActiveIndex(-1);
+    setSuggestions(idleSuggestions);
     startTransition(() =>
       router.push(propertyUrl(suggestion.property_id, value.trim(), 0)),
     );
@@ -123,7 +157,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
       : suggestions.status === "error"
         ? "Suggestions are temporarily unavailable. You can still search."
         : suggestions.status === "success" && suggestions.items.length === 0
-          ? "No matching addresses yet. Add a street name or check the spelling."
+          ? `No matching properties found. ${noResultsGuidance(value)}`
           : suggestions.status === "success"
             ? `${suggestions.items.length} address suggestion${suggestions.items.length === 1 ? "" : "s"} available.`
             : "";
@@ -134,12 +168,20 @@ export function SearchForm({ query = "" }: { query?: string }) {
       className="search-form"
       action="/"
       method="get"
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const q = String(formData.get("q") ?? "").trim();
+        const { q, error } = parseSearch(String(formData.get("q") ?? ""));
         setOpen(false);
         setDirty(false);
+        setActiveIndex(-1);
+        setSuggestions(idleSuggestions);
+        setValidationError(error);
+        if (error) {
+          input.current?.focus();
+          return;
+        }
         startTransition(() => router.push(resultsUrl(q)));
       }}
       aria-busy={pending}
@@ -151,6 +193,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
         <div className="search-combobox">
           <input
             id="address-search"
+            ref={input}
             name="q"
             type="search"
             value={value}
@@ -158,7 +201,8 @@ export function SearchForm({ query = "" }: { query?: string }) {
             maxLength={120}
             placeholder="Enter an address or property ID"
             autoComplete="off"
-            aria-describedby="search-help search-suggestion-status"
+            aria-describedby={`search-help search-suggestion-status${validationError ? " search-error" : ""}`}
+            aria-invalid={!!validationError}
             role="combobox"
             aria-autocomplete="list"
             aria-controls={listboxId}
@@ -173,12 +217,18 @@ export function SearchForm({ query = "" }: { query?: string }) {
                 setOpen(true);
             }}
             onBlur={() => {
-              window.setTimeout(() => setOpen(false), 100);
+              // Keep the mobile submit target stable until its click completes,
+              // but never let an old blur close a newly focused search.
+              window.setTimeout(() => {
+                if (document.activeElement !== input.current) setOpen(false);
+              }, 100);
             }}
             onChange={(event) => {
               const nextValue = event.currentTarget.value;
               const valid = !parseSearch(nextValue).error;
               setValue(nextValue);
+              rememberQuery(nextValue);
+              setValidationError(null);
               setDirty(true);
               setOpen(valid);
               setActiveIndex(-1);
@@ -271,6 +321,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
           {pending ? "Searching…" : "Search"}
         </button>
       </div>
+      {validationError && <p id="search-error" role="alert">{validationError}</p>}
       <p
         id="search-suggestion-status"
         className="visually-hidden"

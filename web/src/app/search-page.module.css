@@ -525,7 +525,7 @@
 
 .footerGrid {
   display: grid;
-  grid-template-columns: 1.3fr repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
 }
 
@@ -631,11 +631,16 @@
 .resultColumns {
   padding: 0 var(--space-3) var(--space-3);
   display: grid;
+  align-items: baseline;
   grid-template-columns: minmax(0, 1fr) var(--value-column) var(--space-6);
   gap: var(--space-4);
   color: var(--color-text-muted);
   font-size: var(--text-label);
   font-weight: var(--weight-semibold);
+}
+
+.externalTail {
+  white-space: nowrap;
 }
 
 .resultColumns > :nth-child(2) {
@@ -768,7 +773,7 @@
   }
 
   .footerGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .footerIdentity {
@@ -937,3 +942,6 @@
 }
 
 .page .homeFooter .footerBottom a[href] { color: inherit; text-decoration: underline; }
+
+.homeFooter { overflow-wrap: anywhere; }
+.footerGrid > div { min-width: 0; }
