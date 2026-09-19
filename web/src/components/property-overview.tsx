@@ -132,13 +132,28 @@ export function PropertyOverview({
   protestsUnavailable?: boolean;
   season?: SeasonContext | null;
 }) {
-  // Never substitute a different release for the active property profile.
-  const current = snapshots.find(
-    (s) =>
-      s.tax_year === p.tax_year &&
-      s.roll_stage === p.roll_stage &&
-      s.export_time_raw === p.export_time_raw,
-  );
+  // Follow this property's newest published record. parseHistory orders by
+  // year and release chronology, so later valid corrections take precedence
+  // without inferring certification or an outcome from today's date.
+  const current: Snapshot = snapshots.at(-1) ?? {
+    dataset_id: `active-${p.property_id}`,
+    tax_year: p.tax_year,
+    roll_stage: p.roll_stage,
+    export_date: p.export_time_raw?.slice(0, 10) ?? null,
+    export_time_raw: p.export_time_raw,
+    market_value: p.market_value,
+    assessed_value: p.assessed_value,
+    land_value: p.land_value,
+    improvement_value: p.improvement_value,
+    land_acres: p.land_acres,
+    neighborhood: null,
+    protest_flag: null,
+    arb_case_listed: false,
+    arb_agent_listed: false,
+    exemptions: [],
+    components: [],
+    entities: [],
+  };
   const previous = current ? annualBaseline(snapshots, current) : undefined;
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
@@ -147,8 +162,8 @@ export function PropertyOverview({
     current?.entities[0];
   const priorEntity = previous?.entities.find((e) => e.code === entity?.code);
   const annual = annualExplanation(current, previous, entity);
-  const marketChange = comparison(previous?.market_value, p.market_value);
-  const capChange = comparison(previous?.assessed_value, p.assessed_value);
+  const marketChange = comparison(previous?.market_value, current?.market_value);
+  const capChange = comparison(previous?.assessed_value, current?.assessed_value);
   const taxChange = comparison(
     priorEntity?.taxable_value,
     entity?.taxable_value,
@@ -185,14 +200,14 @@ export function PropertyOverview({
     <>
       <div className="profile-heading overview-heading">
         <div>
-          <p className="eyebrow">TCAD PROPERTY {p.property_id}</p>
+          <p className="eyebrow">PROPERTY {p.property_id}</p>
           <h1>{p.address}</h1>
           <p>{[p.city, p.postal_code].filter(Boolean).join(", ")}</p>
-          <p className="homeowner-intro">Your TCAD records, connected across time—with changes and useful next steps explained.</p>
+          <p className="homeowner-intro">Your Appraisal District records, connected across time—with the current assessment and useful context explained.</p>
         </div>
         <div className="overview-release">
           <span className="release-badge">
-            {p.tax_year} {p.roll_stage} snapshot
+            {current?.tax_year ?? p.tax_year} {current?.roll_stage ?? p.roll_stage} assessment
           </span>
           <p>
             {current?.export_date
@@ -220,11 +235,10 @@ export function PropertyOverview({
       <PropertyNavigation propertyId={p.property_id} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
+        <PropertySectionLink target="exemptions-heading">Cap &amp; exemptions</PropertySectionLink>
+        <PropertySectionLink target="features-heading">Value drivers</PropertySectionLink>
         <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
-        <PropertySectionLink target="market-adjustment-heading">Market adjustment</PropertySectionLink>
-        <PropertySectionLink target="history-heading">Value history</PropertySectionLink>
-        <PropertySectionLink target="representation-heading">Protest &amp; agent</PropertySectionLink>
-        <PropertySectionLink target="exemptions-heading">Exemptions</PropertySectionLink>
+        <PropertySectionLink target="history-heading">History</PropertySectionLink>
       </nav>
         <details className="homeowner-details overview-property-details" id="property-details">
           <summary id="property-facts-heading">View all property details</summary>
@@ -295,10 +309,10 @@ export function PropertyOverview({
             <p className="overview-muted">Start with market value, then account for any appraisal cap and the exemptions for each taxing authority.</p>
             <dl className="overview-metrics">
               <Metric
-                title="TCAD market value"
+                title="Appraisal District market value"
                 help={fieldHelp.market}
-                description="TCAD’s estimate of your property’s market value."
-                value={p.market_value}
+                description="The Appraisal District’s estimate of your property’s market value."
+                value={current?.market_value ?? p.market_value}
                 change={marketChange}
                 year={previous?.tax_year}
               />
@@ -306,7 +320,7 @@ export function PropertyOverview({
                 title="Value after appraisal cap"
                 help={fieldHelp.cap}
                 description="The value after any applicable appraisal cap, before exemptions."
-                value={p.assessed_value}
+                value={current?.assessed_value ?? p.assessed_value}
                 change={capChange}
                 year={previous?.tax_year}
               />
@@ -606,6 +620,21 @@ export function PropertyOverview({
             </p>
           </section>
           <HomeownerNextSteps address={p.address} />
+          <section className="overview-context" aria-labelledby="context-heading">
+            <div>
+              <p className="eyebrow">Put your assessment in context</p>
+              <h2 id="context-heading">See how this property fits nearby</h2>
+              <p>Review similar properties and neighborhood patterns without leaving this property behind.</p>
+            </div>
+            <div className="overview-context-actions">
+              <Link className="action-button" href={`/property/${p.property_id}/compare`}>Compare properties</Link>
+              <Link href={`/property/${p.property_id}/neighborhood`}>Explore the neighborhood</Link>
+            </div>
+          </section>
+          <section className="overview-donation" aria-labelledby="donation-heading">
+            <div><p className="eyebrow">Homeowner-supported</p><h2 id="donation-heading">Help keep ParcelSavvy open</h2><p>Property explanations remain available without a paywall. Optional support helps cover public-data processing, hosting and continued development.</p></div>
+            <div><Link className="action-button" href="/support">Make a donation</Link><small>Optional contributions are not charitable donations and are not tax-deductible.</small></div>
+          </section>
           <section className="overview-source">
             <details className="homeowner-details"><summary id="about-records-heading">About these records</summary>
             <p>These dated TCAD records may not reflect today’s property or protest status. Preliminary values can change; a missing protest entry does not establish whether a protest was filed, and an agent assignment does not confirm who handled the case.</p>

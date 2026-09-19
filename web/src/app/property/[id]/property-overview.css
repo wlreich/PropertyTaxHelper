@@ -744,3 +744,33 @@
 .property-navigation a.property-navigation-item { text-decoration: none; }
 .profile-shell .property-navigation a.property-navigation-item[aria-current="page"],
 .profile-shell .property-navigation a.property-navigation-item:hover { background: var(--color-brand-primary); color: var(--color-surface); }
+
+.overview-context,
+.overview-donation {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.5fr);
+  gap: var(--space-8);
+  align-items: center;
+  margin-top: var(--space-8);
+  padding: var(--space-8);
+  border-radius: var(--radius-card);
+}
+.overview-context { background: var(--color-surface-info); }
+.overview-context h2,
+.overview-donation h2 { margin-top: var(--space-2); font-size: var(--text-h2); }
+.overview-context p:not(.eyebrow),
+.overview-donation p:not(.eyebrow) { margin-top: var(--space-3); }
+.overview-context-actions { display: grid; gap: var(--space-3); text-align: center; }
+.overview-context-actions .action-button,
+.overview-donation .action-button { color: var(--color-surface); text-decoration: none; }
+.overview-donation {
+  border-left: var(--space-1) solid var(--color-brand-accent);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.overview-donation > div:last-child { display: grid; gap: var(--space-2); text-align: center; }
+.overview-donation small { color: var(--color-text-muted); line-height: var(--line-small); }
+@media (max-width: 700px) {
+  .overview-context,
+  .overview-donation { grid-template-columns: 1fr; padding: var(--space-6); }
+}

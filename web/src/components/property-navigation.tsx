@@ -6,9 +6,6 @@ export function PropertyNavigation({propertyId,active="overview"}:{propertyId:st
         {([{key:"overview",label:"Overview",href:`/property/${propertyId}`},{key:"compare",label:"Compare properties",href:`/property/${propertyId}/compare`},{key:"neighborhood",label:"Neighborhood",href:`/property/${propertyId}/neighborhood`}] as const).map(item=>(
           <li key={item.key}><Link className="property-navigation-item" href={item.href} aria-current={active===item.key?"page":undefined}>{item.label}</Link></li>
         ))}
-        {["Protest guide"].map(label => (
-          <li key={label}><span className="property-navigation-item" aria-disabled="true"><span>{label}</span><span className="property-navigation-status">Coming soon</span></span></li>
-        ))}
       </ul>
     </nav>
   );

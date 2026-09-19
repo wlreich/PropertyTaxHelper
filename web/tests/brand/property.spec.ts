@@ -37,12 +37,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   expect((await quickFacts.boundingBox())!.y).toBeLessThan((await page.locator("#season-heading").boundingBox())!.y);
   const tools = page.getByRole("navigation", {name:"Property tools"});
   await expect(tools.locator('[aria-current="page"]')).toHaveText("Overview");
-  await expect(tools.locator('[aria-disabled="true"]')).toHaveCount(1);
-  for (const label of ["Protest guide"]) {
-    await expect(tools.locator('[aria-disabled="true"]').filter({hasText:label})).toContainText("Coming soon");
-  }
-  // Planned destinations must not navigate to missing routes or enter the tab order.
-  await expect(tools.locator('[aria-disabled="true"] a, [aria-disabled="true"] button, [aria-disabled="true"][tabindex]')).toHaveCount(0);
+  await expect(tools.locator('[aria-disabled="true"]')).toHaveCount(0);
   const items = tools.locator(".property-navigation-item");
   const overviewBox = (await items.nth(0).boundingBox())!;
   const neighborhoodBox = (await items.nth(2).boundingBox())!;
@@ -55,7 +50,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(navigation).toContainText("On this page");
   expect((await tools.boundingBox())!.y).toBeGreaterThan((await quickFacts.boundingBox())!.y);
   expect((await tools.boundingBox())!.y).toBeLessThan((await navigation.boundingBox())!.y);
-  for (const [label, target] of [["Property details", "property-facts-heading"], ["Value history", "history-heading"], ["Protest & agent", "representation-heading"], ["Exemptions", "exemptions-heading"]]) {
+  for (const [label, target] of [["Cap & exemptions", "exemptions-heading"], ["Value drivers", "features-heading"], ["Property details", "property-facts-heading"], ["History", "history-heading"]]) {
     const link = navigation.getByRole("link", {name:label, exact:true});
     await link.focus();
     await page.keyboard.press("Enter");
@@ -131,7 +126,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await page.keyboard.press("Enter");
   await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
-    name: "TCAD market value",
+    name: "Appraisal District market value",
     exact: false,
   });
   await page.mouse.move(0, 0);
