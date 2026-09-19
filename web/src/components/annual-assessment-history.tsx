@@ -58,12 +58,12 @@ export function AnnualAssessmentHistory({rows, unavailable, protestsUnavailable}
                 <div className={`annual-chart-series annual-series-${kind}`} key={kind}>
                   <span className="visually-hidden">{row.year} certified {name}: </span>
                   <div className="annual-bar-track" aria-hidden="true"><span className="annual-bar" style={{width: `${(value ?? 0) / scale.maximum * 100}%`}} /></div>
-                  <span className="annual-bar-value">{amount(value)}</span>
+                  <span className="annual-bar-value" style={{left: `calc(${(value ?? 0) / scale.maximum * 100}% + var(--space-3))`}}>{amount(value)}</span>
                 </div>)}
             </div>
           </div>)}
         </div>
-        <div className="annual-chart-axis" aria-hidden="true">{scale.ticks.map(value => <span key={value}>{new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', notation:'compact', maximumFractionDigits:2}).format(value)}</span>)}</div>
+        <div className="annual-chart-axis" aria-hidden="true">{scale.ticks.map((value, i) => <span key={value} style={{left: `${i * 25}%`}}>{new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', notation:'compact', maximumFractionDigits:2}).format(value)}</span>)}</div>
         <p className="visually-hidden">Bars start at zero. Axis maximum: {currency(scale.maximum)}. Exact values are also in the annual table.</p>
       </figure> : <p>Certified values are not available to chart yet.</p>}
       {gap && <p className="annual-gap-summary">{gap}</p>}
