@@ -1,0 +1,2 @@
+# Preserve the generated PDF byte-for-byte; cross-reference spaces are required.
+web/public/guides/*.pdf binary

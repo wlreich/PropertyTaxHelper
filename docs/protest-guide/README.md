@@ -47,3 +47,26 @@ These checks are not a new comprehensive legal review or verification of a 2027 
 ## Scope and brand review
 
 Content only: page rendering belongs to PAR-14; printable PDF rendering belongs to PAR-15. No UI or visual check is claimed. Copy preserves the approved Appraisal District terminology, neutral agent discussion, confidentiality guidance, cap caveats and absence of promised outcomes. The founder's first-person ARB account is an explicit user-approved exception to the general brand preference against personal founder history; it remains identified as one person's experience.
+
+## Responsive page and printable PDF (PAR-14 / PAR-15)
+
+`/protest-guide` renders the entire public contract on the server. Native disclosures remain usable without JavaScript; enhancement opens hearing chapter 07 on desktop and keeps mobile chapters initially collapsed. Chapter fragments open the requested content on initial navigation, reload, and history navigation. The sticky desktop sidebar tracks the visible chapter. Home/footer links and the property tools link lead here; the `property` query parameter preserves a validated property-overview return link.
+
+The shared site shell, approved logo, Manrope/Inter fonts and semantic colors remain authoritative over the mockup's text wordmark and raw palette. Green emphasizes educational headings; functional links use Action Blue. All eight chapters retain complete text rather than mockup summaries. Tables scroll only inside labeled keyboard-focusable regions. The founder account remains the expressly approved, qualified exception documented above.
+
+Both PDF placements import `guide-download.ts`, which reads a content-hashed manifest for cache-safe links. The committed public asset is `web/public/guides/ParcelSavvy-Protest-Guide.pdf`: a complete, searchable US Letter PDF with linked contents, official citations, page numbers and the original reviewed date. This is not a browser-print substitute. A same-origin download filename and inline response support saving on desktop and mobile PDF viewing/sharing.
+
+To update the PDF after source edits, from the repository root:
+
+```sh
+python3 -m pip install -r web/scripts/guide-pdf-requirements.txt
+npm run guide:generate --prefix web
+npm run guide:pdf --prefix web
+npm run verify --prefix web
+python3 -m pip install pypdf==6.10.0
+python3 web/scripts/test-guide-pdf.py
+```
+
+Review every rendered PDF page after generation. Commit the PDF and `protest-guide-pdf.json` together. `guide:pdf:check` verifies content, renderer, dependency and font hashes plus the actual PDF hash; website verification rejects stale output without needing Python in the Vercel runtime. Python is only a maintainer/build-time generation dependency. The PDF uses the repository's licensed fonts; arrow glyphs unavailable in the Latin font subset use equivalent ASCII arrows. CI verifies every public paragraph/table cell and citation survived extraction, including the founder note and hypothetical examples, and rejects editorial notes.
+
+Run `npm run test:guide-browser --prefix web` after a production build for the focused 320/390/768/1440 px guide suite. The existing brand suite still covers home/search/property regressions. Reports are retained as GitHub Actions artifacts. PAR-16 remains the separate broader release-regression ticket.

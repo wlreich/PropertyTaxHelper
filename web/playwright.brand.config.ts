@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
-  testDir: './tests/brand', timeout: 30_000, fullyParallel: false,
+  testDir: './tests/brand', testIgnore: 'protest-guide.spec.ts', timeout: 30_000, fullyParallel: false,
   use: { baseURL: 'http://127.0.0.1:3058', browserName: 'chromium', colorScheme: 'light', reducedMotion: 'reduce' },
   projects: [375, 768, 1440].map(width => ({name: `width-${width}`, use: {viewport: {width, height: 1000}}})),
   reporter: [['list'], ['html', {open:'never',outputFolder:'brand-report'}]],

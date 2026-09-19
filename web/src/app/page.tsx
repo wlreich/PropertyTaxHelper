@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import PropertyLoading from "@/components/property-loading";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { SearchForm } from "@/components/search-form";
 import { SearchEntryLink } from "@/components/search-entry-link";
@@ -44,6 +46,7 @@ function HomeFooter() {
           <nav aria-label="Explore ParcelSavvy">
             <SearchEntryLink>Property search</SearchEntryLink>
             <Link href="/methodology">Data &amp; methodology</Link>
+            <Link href="/protest-guide">Protest Guide</Link>
             <Link href="/#questions">Homeowner questions</Link>
           </nav>
         </div>
@@ -84,7 +87,11 @@ function HomeFooter() {
   );
 }
 
-export default async function Home({
+export default function Home(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  return <Suspense fallback={<PropertyLoading />}><HomeContent {...props} /></Suspense>;
+}
+
+async function HomeContent({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

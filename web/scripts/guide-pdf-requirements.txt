@@ -1,0 +1,4 @@
+reportlab==4.4.9
+fonttools==4.61.1
+brotli==1.2.0
+markdown-it-py==4.2.0
