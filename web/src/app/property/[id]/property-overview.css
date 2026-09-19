@@ -771,10 +771,11 @@
 .current-assessment .definition-trigger:focus-visible { outline-color: var(--color-focus-on-dark); }
 .current-assessment .current-assessment-evidence { color: var(--color-surface-info); font-size: var(--text-small); margin-top: var(--space-2); }
 .current-assessment-season { border-top: var(--border-width) solid var(--color-border-strong); padding-top: var(--space-4); margin-top: var(--space-4); }
-.overview-context { margin-top: var(--space-6); padding: var(--space-8); border-radius: var(--radius-card); background: var(--color-surface); }
+.overview-context { overflow-wrap: anywhere; margin-top: var(--space-6); padding: var(--space-8); border-radius: var(--radius-card); background: var(--color-surface); }
 .overview-context h2 { font-size: var(--text-h2); }
 .overview-context > p { margin-top: var(--space-4); color: var(--color-text-muted); }
 .overview-context-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: var(--space-6); }
+.overview-context-actions > a { min-width: 0; max-width: 100%; }
 .overview-context-actions .action-button { color: var(--color-surface); text-decoration: none; white-space: normal; max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .overview-secondary-action { padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--color-action); border-radius: var(--radius-input); }
 .overview-donation { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-3) var(--space-6); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-6); margin-top: var(--space-6); }
