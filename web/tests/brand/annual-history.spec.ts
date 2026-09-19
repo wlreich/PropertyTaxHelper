@@ -17,6 +17,9 @@ test('PAR-11 approved annual reference, chart values, alignment and accessible i
   await expect(history.locator('.annual-chart')).toContainText('2025 certified Market value:');
   await expect(history.locator('.annual-chart')).toContainText('$1,365,039');
   await expect(history.locator('.annual-chart-axis span').first()).toHaveText('$0');
+  const ticks = await history.locator('.annual-chart-axis span').all();
+  const firstTick = (await ticks[0].boundingBox())!;
+  for (const tick of ticks) expect((await tick.boundingBox())!.height).toBe(firstTick.height);
   await expect(history).toContainText('widened from $112,899 in 2025 to $197,959 in 2026');
   await expect(history.getByRole('button',{name:'Show earlier years'})).toHaveCount(0);
   for(const forbidden of ['Two years','View full record history','coming soon','2025 preliminary source']) await expect(history).not.toContainText(forbidden);
@@ -42,6 +45,14 @@ test('PAR-11 approved annual reference, chart values, alignment and accessible i
   await history.screenshot({path:info.outputPath('par11-history-expanded.png')});
   await history.getByRole('button',{name:'Collapse 2025 details'}).focus(); await page.keyboard.press('Enter');
   await expect(detail).toBeHidden(); expect(await page.locator('.current-assessment').textContent()).toBe(hero);
+  await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+  const chartLabels = await history.locator('.annual-bar-value').all();
+  for (let i=0;i<chartLabels.length-1;i++) {
+    const label=(await chartLabels[i].boundingBox())!, next=(await chartLabels[i+1].boundingBox())!;
+    expect(label.y+label.height).toBeLessThanOrEqual(next.y);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.evaluate(()=>{document.documentElement.style.fontSize='';});
   await page.evaluate(()=>{document.documentElement.style.zoom='2';});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

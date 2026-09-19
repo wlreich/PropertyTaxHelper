@@ -4,7 +4,7 @@
 .annual-history { min-width: 0; }
 .annual-history > .eyebrow { color: var(--color-action); margin-bottom: var(--space-3); }
 .annual-history.property-section h2 { margin-bottom: var(--space-4); }
-.annual-chart { margin: var(--space-6) 0; font-size: var(--text-small); }
+.annual-chart { --annual-label-width: 8rem; margin: var(--space-6) 0; font-size: var(--text-small); }
 .annual-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); margin-bottom: var(--space-6); }
 .annual-legend > span { display: flex; align-items: center; gap: var(--space-2); }
 .annual-legend i { display: inline-block; width: var(--space-2); height: var(--space-2); flex-shrink: 0; border-radius: var(--radius-pill); }
@@ -14,12 +14,12 @@
 .annual-chart-year { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr); align-items: start; gap: var(--space-4); }
 .annual-chart-label { color: var(--color-text-muted); padding-top: var(--space-1); }
 .annual-chart-pair { display: grid; gap: var(--space-2); min-width: 0; }
-.annual-chart-series { position: relative; margin-right: calc(var(--value-column-mobile) + var(--space-3)); }
+.annual-chart-series { position: relative; min-height: max(var(--space-6), calc(var(--text-small) * var(--line-small))); margin-right: calc(var(--annual-label-width) + var(--space-3)); }
 .annual-bar-track { border-left: var(--border-width) solid var(--color-chart-grid); background: repeating-linear-gradient(to right, transparent 0, transparent calc(25% - var(--border-width)), var(--color-chart-grid) calc(25% - var(--border-width)), var(--color-chart-grid) 25%); }
 .annual-bar { display: block; height: var(--space-6); border-radius: var(--radius-none) var(--radius-input) var(--radius-input) var(--radius-none); }
-.annual-bar-value { position: absolute; top: 0; width: var(--value-column-mobile); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.annual-chart-axis { position: relative; min-height: var(--space-6); margin-top: var(--space-3); margin-left: calc(var(--space-16) + var(--space-4)); margin-right: calc(var(--value-column-mobile) + var(--space-3)); color: var(--color-text-muted); font-size: var(--text-label); }
-.annual-chart-axis span { position: absolute; transform: translateX(-50%); }
+.annual-bar-value { position: absolute; top: 0; width: var(--annual-label-width); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.annual-chart-axis { position: relative; min-height: max(var(--space-6), calc(var(--text-label) * var(--line-body))); margin-top: var(--space-3); margin-left: calc(var(--space-16) + var(--space-4)); margin-right: calc(var(--annual-label-width) + var(--space-3)); color: var(--color-text-muted); font-size: var(--text-label); }
+.annual-chart-axis span { position: absolute; width: max-content; white-space: nowrap; transform: translateX(-50%); }
 .annual-chart-axis span:first-child { transform: none; }
 .annual-chart-axis span:last-child { transform: translateX(-100%); }
 .annual-gap-summary { margin-block: var(--space-6); }
@@ -29,6 +29,7 @@
 .annual-table thead th:first-child { width: 12%; text-align: left; }
 .annual-value-row { border-bottom: var(--border-width) solid var(--color-border); }
 .annual-table tbody th { text-align: left; font-weight: var(--weight-normal); }
+.annual-table .annual-value-row th { padding-block: 0; }
 .annual-year-toggle, .annual-earlier { color: var(--color-action); background: var(--color-surface); border: var(--border-width) solid transparent; border-radius: var(--radius-input); min-height: var(--target-min); cursor: pointer; font-size: inherit; padding: var(--space-2); }
 .annual-year-toggle { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); max-width: 100%; }
 .annual-year-toggle:hover, .annual-earlier:hover { text-decoration: underline; }
