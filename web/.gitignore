@@ -44,3 +44,7 @@ next-env.d.ts
 # Brand browser reports (approve screenshot baselines separately)
 /brand-report/
 /brand-test-results/
+/home-report/
+/home-test-results/
+/smoke-report/
+/smoke-test-results/
