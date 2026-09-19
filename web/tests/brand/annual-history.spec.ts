@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 test('PAR-11 approved annual reference, chart values, alignment and accessible inline detail',async({page},info)=>{
   await page.goto('/property/736164');
   const history=page.getByRole('region',{name:'Your assessment over time'});
-  const hero=await page.locator('.current-assessment').innerText();
+  const hero=await page.locator('.current-assessment').textContent();
   await expect(history.locator('.annual-value-row')).toHaveCount(2);
   const current=history.locator('[data-year="2026"]');
   const prior=history.locator('[data-year="2025"]');
@@ -37,11 +37,11 @@ test('PAR-11 approved annual reference, chart values, alignment and accessible i
   await expect(detail).toContainText('2025 interim snapshot'); await expect(detail).toContainText('Jul 3, 2025');
   await expect(detail).toContainText('Jul 19, 2025'); await expect(detail).toContainText('Residence homestead');
   await expect(detail).toContainText('Home & improvements'); await expect(detail).toContainText('No protest found');
-  expect(await page.locator('.current-assessment').innerText()).toBe(hero);
+  expect(await page.locator('.current-assessment').textContent()).toBe(hero);
   expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   await history.screenshot({path:info.outputPath('par11-history-expanded.png')});
   await history.getByRole('button',{name:'Collapse 2025 details'}).focus(); await page.keyboard.press('Enter');
-  await expect(detail).toBeHidden(); expect(await page.locator('.current-assessment').innerText()).toBe(hero);
+  await expect(detail).toBeHidden(); expect(await page.locator('.current-assessment').textContent()).toBe(hero);
   await page.evaluate(()=>{document.documentElement.style.zoom='2';});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
@@ -53,14 +53,14 @@ test('PAR-11 one, five and six years, earlier-year control and stable current st
     await expect(history.locator('.annual-chart-year')).toHaveCount(count);
     await expect(history.getByRole('button',{name:'Show earlier years'})).toHaveCount(earlier?1:0);
     if(earlier) {
-      const hero=await page.locator('.current-assessment').innerText();
+      const hero=await page.locator('.current-assessment').textContent();
       await history.getByRole('button',{name:'Show earlier years'}).focus(); await page.keyboard.press('Enter');
       await expect(history.locator('.annual-value-row')).toHaveCount(6); await expect(history.locator('.annual-chart-year')).toHaveCount(6);
       expect(await history.locator('.annual-value-row').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-year')))).toEqual(['2026','2025','2024','2023','2022','2021']);
       await history.getByRole('button',{name:'Expand 2021 details'}).click();
       await expect(history.locator('#annual-details-2021')).toContainText('Apr 2, 2021');
       await history.getByRole('button',{name:'Collapse 2021 details'}).click();
-      expect(await page.locator('.current-assessment').innerText()).toBe(hero);
+      expect(await page.locator('.current-assessment').textContent()).toBe(hero);
       await history.screenshot({path:info.outputPath('par11-six-years.png')});
       await history.getByRole('button',{name:'Show latest five years'}).click();
       await expect(history.locator('.annual-value-row')).toHaveCount(5);
