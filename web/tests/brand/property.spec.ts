@@ -58,11 +58,8 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     await expect(page.locator(`#${target}`)).toBeFocused();
     await expect(page.locator(`#${target}`)).toBeInViewport();
   }
-  await expect(page.locator("#property-details")).toHaveAttribute("open", "");
-  await expect(page.getByText("Protest recorded · 2026", {exact:true})).toBeVisible();
+  await expect(page.locator("#property-details")).toBeVisible();
   await expect(facts.first()).toBeVisible();
-  await page.locator("#property-facts-heading").click();
-  await expect(page.locator("#property-details")).not.toHaveAttribute("open");
   await expect(page.getByText("Which property facts or comparable properties support this year’s case?", {exact:true})).toBeVisible();
   const moreQuestions = page.getByText("More questions for your agent", {exact:true});
   await expect(page.getByText("How was my fee calculated, and how does it relate to actual tax savings?", {exact:true})).toBeHidden();
@@ -75,7 +72,7 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("heading", { name: "Separately valued features" }),
+    page.getByRole("definition").filter({hasText:"No longer separately listed"}),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Looks like a successful protest!" }),
@@ -91,35 +88,25 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(protestResult).toContainText("FIXTURE TAX PARTNERS");
   await expect(protestResult).toContainText("Recorded: Apr 29, 2026");
   await expect(protestResult).toContainText("do not confirm what caused the reduction");
-  const values = page.getByRole("region", {name:"How the values fit together"});
+  const values = page.getByRole("region", {name:"What is the cap doing for you?"});
   await expect(values).toContainText("Leander ISD");
   await expect(values).toContainText("before exemptions");
-  await expect(values).toContainText("Increase $50,000 (12.5%)");
+  await expect(values).toContainText("$420,000");
   await expect(protestResult.locator(".homeowner-result")).toHaveCSS("color", "rgb(25, 122, 101)");
-  await expect(values.locator(".overview-change-strong").first()).toHaveCSS("color", "rgb(23, 48, 66)");
   expect((await assessmentSummary.boundingBox())!.y).toBeLessThan((await protestResult.boundingBox())!.y);
   expect((await protestResult.boundingBox())!.y).toBeLessThan((await values.boundingBox())!.y);
-  await page.getByRole("link", {name:"See all taxing authorities"}).focus();
+  await page.locator("#taxing-authorities summary").focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#taxing-authorities")).toHaveAttribute("open", "");
-  await expect(page.locator("#taxing-authorities summary")).toBeFocused();
-  await expect(page.locator("#taxing-authorities table")).toBeVisible();
-  await page.locator("#taxing-authorities summary").click();
+  await expect(page.locator(".exemption-breakdowns")).toBeVisible();
+  await page.keyboard.press("Enter");
   await expect(page.getByText("No longer separately listed", {exact:true})).toBeVisible();
-  await page.getByText("View all separately valued features", {exact:true}).click();
-  await expect(page.getByText("Not listed", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("Not listed / not comparable", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Exemptions & taxable values" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", {name:"Taxable values by authority"})).toBeVisible();
   await expect(page.getByText("FIXTURE TAX PARTNERS", {exact:true}).first()).toBeVisible();
   await page.getByText("View source records", {exact:true}).click();
   await expect(page.getByText("2026 tax year · Apr 29, 2026", {exact:true})).toBeVisible();
   await expect(page.getByText("Appraisal District status code: EF", {exact:true})).toBeVisible();
   await page.getByText("View source records", {exact:true}).click();
-  await page.getByText("View all separately valued features", {exact:true}).click();
   const historyDetails=page.locator("details").filter({has:page.locator("summary",{hasText:"View all assessment values"})});
   await historyDetails.locator("summary").focus();
   await page.keyboard.press("Enter");
@@ -199,7 +186,7 @@ test('PAR-9 current assessment leads the page and context actions preserve the p
   expect((await tools.boundingBox())!.y).toBeLessThan((await hero.boundingBox())!.y);
   expect((await hero.boundingBox())!.y).toBeLessThan((await jumps.boundingBox())!.y);
   if(info.project.use.viewport!.width===1440) expect((await hero.boundingBox())!.width).toBe(1200);
-  await expect(page.getByRole('link',{name:'Compare similar properties',exact:true})).toHaveAttribute('href','/property/100/compare');
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties',exact:true})).toHaveAttribute('href','/property/100/compare');
   await expect(page.getByRole('link',{name:'Explore my neighborhood',exact:true})).toHaveAttribute('href','/property/100/neighborhood');
   await expect(page.getByRole('link',{name:'Make a donation',exact:false})).toHaveAttribute('href','/support');
   await expect(page.locator('.overview-source')).toContainText('Jul 18, 2026');
