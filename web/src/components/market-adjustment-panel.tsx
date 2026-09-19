@@ -9,7 +9,7 @@ export function MarketAdjustmentPanel({data,propertyId,neighborhood=false}:{data
     <p className="eyebrow">{data.year} · MARKET AREA {data.neighborhood}</p>
     <h2 id="market-adjustment-heading" tabIndex={-1}>Neighborhood market adjustment</h2>
     <p><strong>Your home’s appraisal depends partly on where it is.</strong></p>
-    <p>TCAD starts by estimating what it would cost to rebuild your house, with a reduction for its age and condition. It then uses sales it selects from your neighborhood to adjust that starting estimate to better reflect what buyers are paying.</p>
+    <p>Appraisal District starts by estimating what it would cost to rebuild your house, with a reduction for its age and condition. It then uses sales it selects from your neighborhood to adjust that starting estimate to better reflect what buyers are paying.</p>
     <p>That neighborhood adjustment is expressed as a multiplier. For example, if the starting estimate is <strong>$200,000</strong>, a multiplier of <strong>1.50</strong> raises it to <strong>$300,000</strong>. Land is valued separately.</p>
     <p><strong>When the multiplier goes up, your appraisal can increase even if nothing about your home has changed.</strong> ParcelSavvy estimates how much that change alone added to or subtracted from your home’s preliminary appraisal.</p>
     <dl className="market-adjustment-metrics">
@@ -27,7 +27,7 @@ export function MarketAdjustmentPanel({data,propertyId,neighborhood=false}:{data
       {home?.preliminary_date&&<p>Your preliminary snapshot: {home.preliminary_date}{home.prior_preliminary_date?`; prior preliminary: ${home.prior_preliminary_date}`:''}.</p>}
       <p>This estimates the effect on modeled improvement value. It is not a change in land value, a tax bill, or potential tax savings. Building costs, depreciation, property details and overrides can also change the recorded value. The estimated effect can exceed the net annual increase when other changes offset it.</p>
       <p>Source files: {data.history.map(h=>h.filename).join(", ")||"No exact-code match"}.</p>
-      <p>Sources: TCAD annual market-adjustment schedules identified above and the published property snapshots. <a href="/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8">TCAD’s 2026 residential valuation manual, p. 8</a> describes the sales comparison used to set these adjustments; this analysis does not reconstruct the district’s selected sales or prove an appraisal is incorrect.</p>
+      <p>Sources: Appraisal District annual market-adjustment schedules identified above and the published property snapshots. <a href="/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8">Appraisal District’s 2026 residential valuation manual, p. 8</a> describes the sales comparison used to set these adjustments; this analysis does not reconstruct the district’s selected sales or prove an appraisal is incorrect.</p>
     </details>
   </section>;
 }

@@ -1,7 +1,9 @@
+import { CurrentAssessment } from "./current-assessment";
+import { selectCurrentAssessment } from "@/lib/current-assessment";
 import {MarketAdjustmentPanel} from './market-adjustment-panel';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
-import { AssessmentSummary, ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { ProtestResult, InterimChange, AssessmentSequence, FeatureHighlights, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
 import { TaxingAuthoritiesLink } from "./taxing-authorities-link";
@@ -96,7 +98,7 @@ function Metric({
 }
 const fieldHelp = {
   market:
-    "TCAD’s reported market value for this snapshot. It is not a tax bill or an independent sale-price estimate.",
+    "Appraisal District’s reported market value for this snapshot. It is not a tax bill or an independent sale-price estimate.",
   cap: "The assessed amount reported after the appraisal cap, before the taxing entity’s exemptions. It is distinct from taxable value.",
   taxable:
     "The amount remaining after this taxing entity’s applicable reductions and exemptions. Each taxing entity can have a different taxable value. This is not your tax bill.",
@@ -132,28 +134,7 @@ export function PropertyOverview({
   protestsUnavailable?: boolean;
   season?: SeasonContext | null;
 }) {
-  // Follow this property's newest published record. parseHistory orders by
-  // year and release chronology, so later valid corrections take precedence
-  // without inferring certification or an outcome from today's date.
-  const current: Snapshot = snapshots.at(-1) ?? {
-    dataset_id: `active-${p.property_id}`,
-    tax_year: p.tax_year,
-    roll_stage: p.roll_stage,
-    export_date: p.export_time_raw?.slice(0, 10) ?? null,
-    export_time_raw: p.export_time_raw,
-    market_value: p.market_value,
-    assessed_value: p.assessed_value,
-    land_value: p.land_value,
-    improvement_value: p.improvement_value,
-    land_acres: p.land_acres,
-    neighborhood: null,
-    protest_flag: null,
-    arb_case_listed: false,
-    arb_agent_listed: false,
-    exemptions: [],
-    components: [],
-    entities: [],
-  };
+  const current = selectCurrentAssessment(p, snapshots);
   const previous = current ? annualBaseline(snapshots, current) : undefined;
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
@@ -200,21 +181,10 @@ export function PropertyOverview({
     <>
       <div className="profile-heading overview-heading">
         <div>
-          <p className="eyebrow">PROPERTY {p.property_id}</p>
           <h1>{p.address}</h1>
-          <p>{[p.city, p.postal_code].filter(Boolean).join(", ")}</p>
-          <p className="homeowner-intro">Your Appraisal District records, connected across time—with the current assessment and useful context explained.</p>
+          <p>{[p.city, p.postal_code].filter(Boolean).join(", ")} · Appraisal District #{p.property_id}</p>
         </div>
-        <div className="overview-release">
-          <span className="release-badge">
-            {current?.tax_year ?? p.tax_year} {current?.roll_stage ?? p.roll_stage} assessment
-          </span>
-          <p>
-            {current?.export_date
-              ? `Exported ${dateLabel(current.export_date)}`
-              : (p.export_time_raw ?? "Export date not reported")}
-          </p>
-        </div>
+
       </div>
       {p.values_under_review && (
         <div className="notice">
@@ -228,80 +198,22 @@ export function PropertyOverview({
       <dl className="overview-quick-facts" aria-label="Key property facts">
         {[
           ["Living area", amount(facts.livingArea, " sq ft")],
-          ["Lot size", amount(p.land_acres, " acres")],
+          ["Lot size", amount(current.land_acres, " acres")],
           ["Year built", facts.yearBuilt ?? "Not reported"],
         ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
       <PropertyNavigation propertyId={p.property_id} />
+      <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={historyUnavailable || protestsUnavailable} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
         <PropertySectionLink target="exemptions-heading">Cap &amp; exemptions</PropertySectionLink>
-        <PropertySectionLink target="features-heading">Value drivers</PropertySectionLink>
+        <PropertySectionLink target="market-adjustment-heading">Value drivers</PropertySectionLink>
         <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
         <PropertySectionLink target="history-heading">History</PropertySectionLink>
       </nav>
-        <details className="homeowner-details overview-property-details" id="property-details">
-          <summary id="property-facts-heading">View all property details</summary>
-          <div className="overview-sidebar">
-          <section className="overview-recorded-facts">
-          <h2>Recorded property facts</h2>
-          <dl className="overview-facts">
-            {[
-              ["Living area", amount(facts.livingArea, " sq ft")],
-              ["Lot size", amount(p.land_acres, " acres")],
-              ["Year built", facts.yearBuilt ?? "Not reported"],
-              ["Bedrooms", amount(facts.bedrooms)],
-              ["Full bathrooms", amount(facts.fullBaths)],
-              ["Half bathrooms", amount(facts.halfBaths)],
-              ["Attached garage", amount(facts.garage, " sq ft")],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          </section>
-          <section>
-            <h3>Neighborhood</h3>
-            <p className="overview-code">
-              {current?.neighborhood ?? "Not reported"}
-            </p>
-            <p>TCAD groups properties here to study value patterns. Start here when looking for similar homes, then check size, age and construction.</p>
-            <details className="homeowner-details"><summary>Why this group matters</summary>
-              <p>Neighborhood adjustments can affect improvement values. Sharing a code is a useful starting point, not proof that two homes should have the same value.</p>
-            <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf">
-              TCAD appraisal methodology ↗
-            </a>
-            </details>
-          </section>
-          <section>
-            <h3>Construction class</h3>
-            <p className="overview-code">{facts.classCode ?? "Not reported"}</p>
-            {facts.classCode && constructionClasses[facts.classCode] && (
-              <p>{constructionClasses[facts.classCode]}</p>
-            )}
-            <details className="homeowner-details"><summary>About construction class</summary><p>This describes construction quality, not the home’s current condition. Separate buildings may have different classes.</p>
-            <a href="https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf">
-              TCAD class definitions ↗
-            </a>
-            </details>
-          </section>
-          <section>
-            <h3>Protest history</h3>
-            <p className="overview-evidence">{yearsWithProtest.length ? `Protest recorded · ${yearsWithProtest.join(", ")}` : "Review the available protest records."}</p>
-            <PropertySectionLink target="representation-heading">Protests & representation ↓</PropertySectionLink>
-          </section>
-          <p className="overview-sidebar-source">
-            {snapshots.length} available{" "}
-            {snapshots.length === 1 ? "snapshot" : "snapshots"}
-          </p>
-          </div>
-        </details>
       <div className="overview-layout">
         <div className="overview-content">
           <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
-          <AssessmentSummary current={current} previous={previous} initial={initial} />
           <InterimChange current={current} initial={initial} />
           <ProtestResult current={current} initial={initial} entity={entity} evidence={evidence} />
           <section className="overview-values" aria-labelledby="assessment-values-heading">
@@ -309,10 +221,10 @@ export function PropertyOverview({
             <p className="overview-muted">Start with market value, then account for any appraisal cap and the exemptions for each taxing authority.</p>
             <dl className="overview-metrics">
               <Metric
-                title="Appraisal District market value"
+                title="Market value"
                 help={fieldHelp.market}
                 description="The Appraisal District’s estimate of your property’s market value."
-                value={current?.market_value ?? p.market_value}
+                value={current.market_value}
                 change={marketChange}
                 year={previous?.tax_year}
               />
@@ -320,7 +232,7 @@ export function PropertyOverview({
                 title="Value after appraisal cap"
                 help={fieldHelp.cap}
                 description="The value after any applicable appraisal cap, before exemptions."
-                value={current?.assessed_value ?? p.assessed_value}
+                value={current.assessed_value}
                 change={capChange}
                 year={previous?.tax_year}
               />
@@ -336,7 +248,7 @@ export function PropertyOverview({
             </dl>
             {annual?.explanation && <p className="overview-note homeowner-value-context"><strong>{annual.headline}.</strong> {annual.explanation}</p>}
           </section>
-          {!current && (
+          {(historyUnavailable || snapshots.length === 0) && (
             <div className="notice">
               <h2>
                 {historyUnavailable
@@ -350,102 +262,97 @@ export function PropertyOverview({
               </p>
             </div>
           )}
-          <MarketAdjustmentPanel data={marketAdjustment} propertyId={p.property_id}/>
           <section
             className="overview-section"
-            aria-labelledby="history-heading"
+            aria-labelledby="exemptions-heading"
           >
             <div className="section-heading">
-              <h2 id="history-heading" tabIndex={-1}>Assessment history</h2>
+              <h2 id="exemptions-heading" tabIndex={-1}>Exemptions & taxable values</h2>
+              {current && (
+                <span className="release-badge">
+                  {exemptionCodes.length}{" "}
+                  {exemptionCodes.length === 1 ? "exemption" : "exemptions"}{" "}
+                  listed
+                </span>
+              )}
             </div>
-            <AssessmentSequence current={current} previous={previous} initial={initial} />
-            {[...new Set(snapshots.map(s => s.valuation_note).filter(Boolean))].map(note => <p key={note}>{note}</p>)}
-            {snapshots.length ? (
-              <details className="homeowner-details"><summary>View all assessment values</summary>
+            {exemptionCodes.length ? (
+              <ul className="overview-exemptions">
+                {exemptionCodes.map((code) => (
+                  <li key={code}>
+                    <TermDefinition term={`${exemptionName(code)} (${code})`}>
+                      An exemption recorded in this Appraisal District snapshot. Its effect
+                      can differ by taxing entity; amounts below are reductions
+                      in taxable value, not tax savings.
+                    </TermDefinition>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                {current
+                  ? "No exemptions listed in this snapshot."
+                  : "Exemption information unavailable."}
+              </p>
+            )}
+            {current && current.entities.length > 0 && (
+              <details className="homeowner-details" id="taxing-authorities"><summary id="taxing-authorities-heading">See exemptions by taxing authority</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
-                  <caption>Values as recorded in each TCAD export</caption>
+                  <caption>
+                    {snapshotLabel(current)} · {dateLabel(current.export_date)}
+                  </caption>
                   <thead>
                     <tr>
-                      <th scope="col">Value</th>
-                      {snapshots.map((s) => (
-                        <th key={s.dataset_id} scope="col">
-                          {snapshotLabel(s)}
-                          <span>{dateLabel(s.export_date)}</span>
-                        </th>
-                      ))}
+                      <th scope="col">Taxing entity</th>
+                      <th scope="col">Exemption amounts</th>
+                      <th scope="col">Taxable value</th>
+                      <th scope="col">
+                        Change vs. {previous?.tax_year ?? "prior year"}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      [
-                        "market_value",
-                        "assessed_value",
-                        "land_value",
-                        "improvement_value",
-                      ] as const
-                    ).map((key, i) => (
-                      <tr
-                        key={key}
-                        className={
-                          i === 0 ? "overview-row-highlight" : undefined
-                        }
-                      >
-                        <th scope="row">
-                          {
-                            [
-                              "Market value",
-                              "Value after cap",
-                              "Land value",
-                              "Improvement value",
-                            ][i]
-                          }
-                        </th>
-                        {snapshots.map((s) => (
-                          <td
-                            key={s.dataset_id}
-                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
-                          >
-                            {currency(s[key])}
-                          </td>
-                        ))}
+                    {current.entities.map((e) => (
+                      <tr key={e.code}>
+                        <th scope="row">{entityDisplayName(e)}</th>
+                        <td data-label="Exemption amounts">
+                          <EntityExemptions entity={e} />
+                        </td>
+                        <td data-label="Taxable value">
+                          {currency(e.taxable_value)}
+                        </td>
+                        <td
+                          data-label={`Change vs. ${previous?.tax_year ?? "prior year"}`}
+                        >
+                          <ChangeLabel
+                            change={comparison(
+                              previous?.entities.find((x) => x.code === e.code)
+                                ?.taxable_value,
+                              e.taxable_value,
+                            )}
+                          />
+                        </td>
                       </tr>
                     ))}
-                    {entity && (
-                      <tr>
-                        <th scope="row">
-                          Taxable · {entityDisplayName(entity)}
-                        </th>
-                        {snapshots.map((s) => (
-                          <td
-                            key={s.dataset_id}
-                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
-                          >
-                            {currency(
-                              s.entities.find((e) => e.code === entity.code)
-                                ?.taxable_value ?? null,
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
               </details>
-            ) : (
-              <p>No comparable snapshots available.</p>
             )}
+            <p className="overview-note">
+              Each entity has its own taxable value. These are tax bases, not
+              tax bills.
+            </p>
           </section>
-          {historical.current && historical.current.dataset_id !== current?.dataset_id && <ProtestResult current={historical.current} initial={historical.initial} evidence={evidence} historical />}
-          <Representation evidence={evidence} year={season?.config.tax_year ?? p.tax_year} unavailable={protestsUnavailable} />
+          <MarketAdjustmentPanel data={marketAdjustment?.year === current.tax_year ? marketAdjustment : null} propertyId={p.property_id}/>
           <section
             className="overview-section"
             aria-labelledby="features-heading"
           >
             <h2 id="features-heading" tabIndex={-1}>Separately valued features</h2>
             <p className="overview-muted">
-              Pool, spa and other improvement details recorded by TCAD.
+              Pool, spa and other improvement details recorded by Appraisal District.
             </p>
             <FeatureHighlights current={current} previous={previous} initial={initial} />
             {features.length ? (
@@ -536,110 +443,171 @@ export function PropertyOverview({
               <p>No comparable feature details available.</p>
             )}
           </section>
+        <details className="homeowner-details overview-property-details" id="property-details">
+          <summary id="property-facts-heading">View all property details</summary>
+          <div className="overview-sidebar">
+          <section className="overview-recorded-facts">
+          <h2>Recorded property facts</h2>
+          <dl className="overview-facts">
+            {[
+              ["Living area", amount(facts.livingArea, " sq ft")],
+              ["Lot size", amount(current.land_acres, " acres")],
+              ["Year built", facts.yearBuilt ?? "Not reported"],
+              ["Bedrooms", amount(facts.bedrooms)],
+              ["Full bathrooms", amount(facts.fullBaths)],
+              ["Half bathrooms", amount(facts.halfBaths)],
+              ["Attached garage", amount(facts.garage, " sq ft")],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          </section>
+          <section>
+            <h3>Neighborhood</h3>
+            <p className="overview-code">
+              {current?.neighborhood ?? "Not reported"}
+            </p>
+            <p>Appraisal District groups properties here to study value patterns. Start here when looking for similar homes, then check size, age and construction.</p>
+            <details className="homeowner-details"><summary>Why this group matters</summary>
+              <p>Neighborhood adjustments can affect improvement values. Sharing a code is a useful starting point, not proof that two homes should have the same value.</p>
+            <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf">
+              Appraisal District appraisal methodology ↗
+            </a>
+            </details>
+          </section>
+          <section>
+            <h3>Construction class</h3>
+            <p className="overview-code">{facts.classCode ?? "Not reported"}</p>
+            {facts.classCode && constructionClasses[facts.classCode] && (
+              <p>{constructionClasses[facts.classCode]}</p>
+            )}
+            <details className="homeowner-details"><summary>About construction class</summary><p>This describes construction quality, not the home’s current condition. Separate buildings may have different classes.</p>
+            <a href="https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf">
+              Appraisal District class definitions ↗
+            </a>
+            </details>
+          </section>
+          <section>
+            <h3>Protest history</h3>
+            <p className="overview-evidence">{yearsWithProtest.length ? `Protest recorded · ${yearsWithProtest.join(", ")}` : "Review the available protest records."}</p>
+            <PropertySectionLink target="representation-heading">Protests & representation ↓</PropertySectionLink>
+          </section>
+          <p className="overview-sidebar-source">
+            {snapshots.length} available{" "}
+            {snapshots.length === 1 ? "snapshot" : "snapshots"}
+          </p>
+          </div>
+        </details>
           <section
             className="overview-section"
-            aria-labelledby="exemptions-heading"
+            aria-labelledby="history-heading"
           >
             <div className="section-heading">
-              <h2 id="exemptions-heading" tabIndex={-1}>Exemptions & taxable values</h2>
-              {current && (
-                <span className="release-badge">
-                  {exemptionCodes.length}{" "}
-                  {exemptionCodes.length === 1 ? "exemption" : "exemptions"}{" "}
-                  listed
-                </span>
-              )}
+              <h2 id="history-heading" tabIndex={-1}>Assessment history</h2>
             </div>
-            {exemptionCodes.length ? (
-              <ul className="overview-exemptions">
-                {exemptionCodes.map((code) => (
-                  <li key={code}>
-                    <TermDefinition term={`${exemptionName(code)} (${code})`}>
-                      An exemption recorded in this TCAD snapshot. Its effect
-                      can differ by taxing entity; amounts below are reductions
-                      in taxable value, not tax savings.
-                    </TermDefinition>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>
-                {current
-                  ? "No exemptions listed in this snapshot."
-                  : "Exemption information unavailable."}
-              </p>
-            )}
-            {current && current.entities.length > 0 && (
-              <details className="homeowner-details" id="taxing-authorities"><summary id="taxing-authorities-heading">See exemptions by taxing authority</summary>
+            <AssessmentSequence current={current} previous={previous} initial={initial} />
+            {snapshots.length ? (
+              <details className="homeowner-details"><summary>View all assessment values</summary>
               <div className="overview-table-wrap">
                 <table className="overview-table">
-                  <caption>
-                    {snapshotLabel(current)} · {dateLabel(current.export_date)}
-                  </caption>
+                  <caption>Values as recorded in each Appraisal District export</caption>
                   <thead>
                     <tr>
-                      <th scope="col">Taxing entity</th>
-                      <th scope="col">Exemption amounts</th>
-                      <th scope="col">Taxable value</th>
-                      <th scope="col">
-                        Change vs. {previous?.tax_year ?? "prior year"}
-                      </th>
+                      <th scope="col">Value</th>
+                      {snapshots.map((s) => (
+                        <th key={s.dataset_id} scope="col">
+                          {snapshotLabel(s)}
+                          <span>{dateLabel(s.export_date)}</span>
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {current.entities.map((e) => (
-                      <tr key={e.code}>
-                        <th scope="row">{entityDisplayName(e)}</th>
-                        <td data-label="Exemption amounts">
-                          <EntityExemptions entity={e} />
-                        </td>
-                        <td data-label="Taxable value">
-                          {currency(e.taxable_value)}
-                        </td>
-                        <td
-                          data-label={`Change vs. ${previous?.tax_year ?? "prior year"}`}
-                        >
-                          <ChangeLabel
-                            change={comparison(
-                              previous?.entities.find((x) => x.code === e.code)
-                                ?.taxable_value,
-                              e.taxable_value,
-                            )}
-                          />
-                        </td>
+                    {(
+                      [
+                        "market_value",
+                        "assessed_value",
+                        "land_value",
+                        "improvement_value",
+                      ] as const
+                    ).map((key, i) => (
+                      <tr
+                        key={key}
+                        className={
+                          i === 0 ? "overview-row-highlight" : undefined
+                        }
+                      >
+                        <th scope="row">
+                          {
+                            [
+                              "Market value",
+                              "Value after cap",
+                              "Land value",
+                              "Improvement value",
+                            ][i]
+                          }
+                        </th>
+                        {snapshots.map((s) => (
+                          <td
+                            key={s.dataset_id}
+                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
+                          >
+                            {currency(s[key])}
+                          </td>
+                        ))}
                       </tr>
                     ))}
+                    {entity && (
+                      <tr>
+                        <th scope="row">
+                          Taxable · {entityDisplayName(entity)}
+                        </th>
+                        {snapshots.map((s) => (
+                          <td
+                            key={s.dataset_id}
+                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
+                          >
+                            {currency(
+                              s.entities.find((e) => e.code === entity.code)
+                                ?.taxable_value ?? null,
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
               </details>
+            ) : (
+              <p>No comparable snapshots available.</p>
             )}
-            <p className="overview-note">
-              Each entity has its own taxable value. These are tax bases, not
-              tax bills.
-            </p>
           </section>
+          {historical.current && historical.current.dataset_id !== current?.dataset_id && <ProtestResult current={historical.current} initial={historical.initial} evidence={evidence} historical />}
+          <Representation evidence={evidence} year={current.tax_year} unavailable={protestsUnavailable} />
           <HomeownerNextSteps address={p.address} />
           <section className="overview-context" aria-labelledby="context-heading">
-            <div>
-              <p className="eyebrow">Put your assessment in context</p>
-              <h2 id="context-heading">See how this property fits nearby</h2>
-              <p>Review similar properties and neighborhood patterns without leaving this property behind.</p>
-            </div>
+            <h2 id="context-heading">Put your assessment in context</h2>
+            <p>Compare homes with similar size, age, construction and land.{current.neighborhood ? ` Start with your Appraisal District neighborhood group, ${current.neighborhood}.` : ' Start with the available neighborhood records.'}</p>
             <div className="overview-context-actions">
-              <Link className="action-button" href={`/property/${p.property_id}/compare`}>Compare properties</Link>
-              <Link href={`/property/${p.property_id}/neighborhood`}>Explore the neighborhood</Link>
+              <Link className="action-button" href={`/property/${p.property_id}/compare`}>Compare similar properties</Link>
+              <Link className="overview-secondary-action" href={`/property/${p.property_id}/neighborhood`}>Explore my neighborhood</Link>
             </div>
-          </section>
-          <section className="overview-donation" aria-labelledby="donation-heading">
-            <div><p className="eyebrow">Homeowner-supported</p><h2 id="donation-heading">Help keep ParcelSavvy open</h2><p>Property explanations remain available without a paywall. Optional support helps cover public-data processing, hosting and continued development.</p></div>
-            <div><Link className="action-button" href="/support">Make a donation</Link><small>Optional contributions are not charitable donations and are not tax-deductible.</small></div>
+            <div className="overview-donation">
+              <h3>A clearer picture, for every homeowner.</h3>
+              <p>If this helped you understand your assessment, help keep ParcelSavvy free.</p>
+              <Link href="/support">Make a donation ↗</Link>
+            </div>
           </section>
           <section className="overview-source">
-            <details className="homeowner-details"><summary id="about-records-heading">About these records</summary>
-            <p>These dated TCAD records may not reflect today’s property or protest status. Preliminary values can change; a missing protest entry does not establish whether a protest was filed, and an agent assignment does not confirm who handled the case.</p>
+            <p>Latest assessment shown: {snapshotLabel(current)} record · {current.export_date ? dateLabel(current.export_date) : current.export_time_raw ?? "Export date not reported"}. Later Appraisal District corrections may exist.</p>
+            <details className="homeowner-details"><summary id="about-records-heading">Sources &amp; calculation details</summary>
+            <p>These dated Appraisal District records may not reflect today’s property or protest status. Preliminary values can change; a missing protest entry does not establish whether a protest was filed, and an agent assignment does not confirm who handled the case.</p>
             <p>
-              Later corrections may appear in TCAD’s live records. Export times
+              Later corrections may appear in Appraisal District’s live records. Export times
               are shown as supplied without an assumed timezone. Only available,
               comparable snapshots are shown; missing records are not treated as
               zero.
@@ -647,10 +615,10 @@ export function PropertyOverview({
             <p>Feature values are shown as recorded and may not add up to the main improvement total. A later missing record does not erase earlier evidence.</p>
             <p>Bold changes are at least $25,000, or at least 10% and $10,000. Size alone does not establish an error. Positive emphasis is reserved for a qualified preliminary-to-certified reduction with recorded protest evidence.</p>
             <a href="https://traviscad.org/propertysearch/">
-              Check TCAD’s current records ↗
+              Check Appraisal District’s current records ↗
             </a>
             <span> · </span>
-            <a href={p.source_url}>TCAD source ↗</a>
+            <a href={p.source_url}>Appraisal District source ↗</a>
             <span> · </span>
             <Link href={`/report-data-issue?property=${p.property_id}`}>Something looks wrong? Report a data issue</Link>
             </details>

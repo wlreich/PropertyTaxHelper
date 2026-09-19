@@ -27,7 +27,7 @@ export default async function PropertyPage({
   if (result.status === "not_found" || result.status === "invalid") notFound();
   return (
     <>
-      <SiteHeader />
+      <SiteHeader propertyOverview />
       <main
         id="main-content"
         className="main-shell profile-shell combined-profile"

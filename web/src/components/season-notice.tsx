@@ -2,7 +2,7 @@ import { dateLabel, type Snapshot, type ProtestObservation } from "@/lib/propert
 import { phaseNames, validDate, officialSource, type SeasonContext } from "@/lib/seasons";
 
 export function SeasonNotice({ season, current, recordYear, evidence = [] }: { season: SeasonContext | null; current?: Snapshot; recordYear?: number; evidence?: ProtestObservation[] }) {
-  if (!season) return <p className="overview-note">Season guidance is unavailable. The dated property records below remain available. <a href="https://traviscad.org/protests">Check TCAD for current filing information.</a></p>;
+  if (!season) return <p className="overview-note">Season guidance is unavailable. The dated property records below remain available. <a href="https://traviscad.org/protests">Check Appraisal District for current filing information.</a></p>;
   const { config, phase } = season;
   const sameYear = (current?.tax_year ?? recordYear) === config.tax_year;
   const protest = evidence.some(s => s.tax_year === config.tax_year && (s.protest_flag || s.arb_case_listed));
@@ -17,7 +17,7 @@ export function SeasonNotice({ season, current, recordYear, evidence = [] }: { s
     {phase !== "post" && <p>{protest ? `A protest is recorded for ${config.tax_year}. The available records do not establish its current hearing or decision status.` : `No protest is identified in the available ${config.tax_year} records. That does not establish whether you have filed.`}</p>}
     {sameYear && phase !== "preliminary" && current?.roll_stage === "preliminary" && <p><strong>No certified result is available for this property yet.</strong> A missing update is not an unsuccessful protest.</p>}
     {validDate(config.filing_deadline) && officialSource(config.deadline_source) && validDate(config.verified_on) && <p>General filing deadline: <strong>{dateLabel(config.filing_deadline)}</strong>. <a href={config.deadline_source!}>Official deadline information</a> · verified {dateLabel(config.verified_on)}. Check your notice for the deadline that applies to your property.</p>}
-    {!config.filing_deadline && <p><a href="https://traviscad.org/protests">Check TCAD’s current protest information</a> for filing requirements and your next steps.</p>}
+    {!config.filing_deadline && <p><a href="https://traviscad.org/protests">Check Appraisal District’s current protest information</a> for filing requirements and your next steps.</p>}
     {phase === "protest" && <a href="#next-heading">Review preparation steps</a>}
   </section>;
 }
