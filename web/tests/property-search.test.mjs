@@ -295,3 +295,42 @@ test('possible matches survive response validation and unknown modes fail closed
  assert.equal(r.status,'ok'); assert.equal(r.data.match_mode,'possible');
  assert.equal((await searchProperties('Prnit',0,config,async()=>Response.json({...search,match_mode:'unexpected'}))).status,'unavailable');
 });
+
+test('contextual Texas state normalization is shared by results and suggestions', async () => {
+  const { searchAddressQuery } = await import('../src/lib/property-search.ts');
+  for (const q of [
+    '1104 Paw Print, Leander, TX 78641',
+    '1104 Paw Print Leander TX 78641',
+    '1104 Paw Print, Leander, Texas 78641',
+    '1104 Paw Print Leander Texas 78641',
+  ]) {
+    assert.equal(searchAddressQuery(q), '1104 Paw Print Leander 78641');
+    assert.equal(parseSearch(q).error, null);
+    for (const lookup of [
+      (fetcher) => searchProperties(q, 0, config, fetcher),
+      (fetcher) => searchPropertySuggestions(q, config, fetcher),
+    ]) {
+      await lookup(async input => {
+        assert.equal(new URL(input).searchParams.get('p_query'), '1104 Paw Print Leander 78641');
+        return Response.json(search);
+      });
+    }
+  }
+  assert.equal(searchAddressQuery('1104 Paw Print Leander TX'), '1104 Paw Print Leander');
+  assert.equal(searchAddressQuery('1104 Paw Print, Houston, Texas 77001'), '1104 Paw Print Houston 77001');
+  for (const q of ['123 Texas St', '123 TX Rd', '123 Texas', '123 Texas 78701', '123 Leander Texas', '1104 Paw Print Leander CA 78641', '1104 Paw Print TX', '736302']) {
+    assert.equal(searchAddressQuery(q), q, q);
+  }
+});
+
+test('blank validation never calls the service and no-results advice matches the query', async () => {
+  const { noResultsGuidance } = await import('../src/lib/property-search.ts');
+  for (const q of ['', '   ', '\t\n']) {
+    assert.equal(parseSearch(q).error, 'Enter an address or property ID.');
+    const noRequest = async () => assert.fail('blank input must not search');
+    assert.equal((await searchProperties(q, 0, config, noRequest)).status, 'invalid');
+    assert.equal((await searchPropertySuggestions(q, config, noRequest)).status, 'invalid');
+  }
+  assert.equal(noResultsGuidance('999999999'), 'Check the property ID or try a street address.');
+  assert.match(noResultsGuidance('NoSuchStreet'), /spelling/);
+});

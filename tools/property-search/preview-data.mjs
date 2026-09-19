@@ -1,4 +1,5 @@
 import {seedMarketAdjustments} from './market-adjustment-fixture.mjs';
+import {seedHomeRegression} from './home-regression-fixture.mjs';
 import {seedAddressSearch} from './address-search-fixture.mjs';
 import {seedNeighborhood} from './neighborhood-fixture.mjs';
 // Local browser verification only. Synthetic records and authentication, loopback only.
@@ -11,6 +12,7 @@ const db=await fixtureDatabase({parklandFixtures:true});
 const actor='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', session='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
 await seedAddressSearch(db);
+await seedHomeRegression(db);
 await seedComparisons(db);
 await seedNeighborhood(db);
 await seedMarketAdjustments(db);

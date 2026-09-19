@@ -172,7 +172,7 @@ try {
   }
   assert.match(await page("/property/106"), /Some values need further review/);
   assert.match(await page("/property/103"), /Let’s try another address/);
-  assert.match(await page("/?q=NoSuchStreet"), /No matching addresses found/);
+  assert.match(await page("/?q=NoSuchStreet"), /No matching properties found/);
   assert.match(await page("/?q=ab"), /at least three letters or digits/);
   for (const html of [home, one, multi, first, second, last, profile, neighborhood, printable])
     assert.doesNotMatch(

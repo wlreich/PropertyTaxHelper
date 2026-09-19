@@ -46,7 +46,7 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.locator('.result-card')).toHaveCount(5);
   await expect(page.getByText('Parkland',{exact:true})).toHaveCount(0);
   await page.goto('/?q=NoSuchStreet');
-  await expect(page.getByRole('heading',{name:'No matching addresses found'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'No matching properties found.'})).toBeVisible();
 });
 
 test('search support action stays readable and opens checkout information',async({page},info)=>{

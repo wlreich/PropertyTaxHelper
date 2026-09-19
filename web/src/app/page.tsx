@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { SearchForm } from "@/components/search-form";
+import { SearchEntryLink } from "@/components/search-entry-link";
 import { Unavailable } from "@/components/site-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { TermDefinition } from "@/components/term-definition";
@@ -12,6 +13,7 @@ import {
   propertyType,
   propertyUrl,
   resultsUrl,
+  noResultsGuidance,
 } from "@/lib/property-search";
 import { searchProperties } from "@/lib/supabase/properties";
 
@@ -40,8 +42,8 @@ function HomeFooter() {
         <div>
           <h2>Explore</h2>
           <nav aria-label="Explore ParcelSavvy">
-            <Link href="/#property-search">Property search</Link>
-            <Link href="/#evidence">Data &amp; methodology</Link>
+            <SearchEntryLink>Property search</SearchEntryLink>
+            <Link href="/methodology">Data &amp; methodology</Link>
             <Link href="/#questions">Homeowner questions</Link>
           </nav>
         </div>
@@ -66,7 +68,7 @@ function HomeFooter() {
               target="_blank"
               rel="noreferrer"
             >
-              Official Appraisal District search ↗
+              Official Appraisal District <span className={styles.externalTail}>search ↗</span>
             </a>
           </nav>
         </div>
@@ -75,7 +77,7 @@ function HomeFooter() {
         <span>© 2026 Systems &amp; Sense LLC. All rights reserved.</span>
         <span>
           Official property records are available on{" "}
-          <a href={appraisalDistrict.propertySearchUrl} target="_blank" rel="noreferrer">TCAD’s website ↗</a>.
+          <a href={appraisalDistrict.propertySearchUrl} target="_blank" rel="noreferrer">TCAD’s <span className={styles.externalTail}>website ↗</span></a>.
         </span>
       </div>
     </footer>
@@ -106,7 +108,7 @@ export default async function Home({
             <BrandLogo />
           </Link>
           <nav className={styles.mainNav} aria-label="Main navigation">
-            <Link href="/#property-search">Search</Link>
+            <SearchEntryLink>Search</SearchEntryLink>
             <Link href="/#about">About</Link>
             <Link className={styles.supportNavLink} href="/#support">
               Support us
@@ -183,7 +185,7 @@ export default async function Home({
           )}
         </section>
 
-        {q && error && (
+        {typeof params.q === "string" && error && (
           <div className={`${styles.resultsShell} notice`} role="alert">
             <h2>Let’s narrow that down</h2>
             <p>{error}</p>
@@ -237,12 +239,12 @@ export default async function Home({
                 <h3>
                   {page
                     ? "You’ve reached the end of these results"
-                    : "No matching addresses found"}
+                    : "No matching properties found."}
                 </h3>
                 <p>
                   {page
                     ? "Return to the first page or try another address."
-                    : "Try just the street name, remove a unit number, or check the spelling. Some properties do not have a searchable address."}
+                    : noResultsGuidance(q)}
                 </p>
                 {page > 0 && (
                   <Link className="text-link" href={resultsUrl(q)}>
@@ -353,7 +355,7 @@ export default async function Home({
                   local neighborhood.
                 </p>
               </div>
-              <span>Current through Jul 18, 2026</span>
+              <span>Certified value export: Jul 18, 2026</span>
             </section>
 
             <section
@@ -466,12 +468,11 @@ export default async function Home({
                 <h2>Know your property. Understand your assessment.</h2>
                 <p>Start with an address or property ID.</p>
               </div>
-              <Link
+              <SearchEntryLink
                 className={`${styles.primaryLink} action-button`}
-                href="/#property-search"
               >
                 Search my property ↑
-              </Link>
+              </SearchEntryLink>
             </section>
           </>
         )}
