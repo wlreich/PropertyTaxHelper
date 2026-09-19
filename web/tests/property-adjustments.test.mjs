@@ -115,10 +115,11 @@ test('highest improvement and secondary values are counted once; incomplete cost
  const secondary=building({id:'second',reported_value:221996,detail_value:null,main_value:null,main_area:null,complete:false});
  const property={...other,costs:{...other.costs,improvements:[secondary,...other.costs.improvements]}};
  assert.equal(primaryBuilding(property.costs).id,'main');
- assert.equal(propertyAdjustments(home,property).lines.find(l=>l.factor==='Additional improvements').amount,null);
- assert.equal(propertyAdjustments(home,property).adjustedValue,null);
- assert.equal(propertyAdjustments(home,property).partialSubtotal,null);
- assert.match(propertyAdjustments(home,property).reviewReason,/additional improvement records/);
+ assert.equal(propertyAdjustments(home,property).lines.find(l=>l.factor==='Additional improvements').amount,-221996);
+ assert.equal(propertyAdjustments(home,property).adjustedValue,propertyAdjustments(home,other).adjustedValue-221996);
+ const unknown={...property,costs:{...property.costs,improvements:[{...secondary,reported_value:null},...other.costs.improvements]}};
+ assert.equal(propertyAdjustments(home,unknown).adjustedValue,null);
+ assert.equal(propertyAdjustments(home,unknown).lines.find(l=>l.factor==='Additional improvements').amount,null);
  assert.equal(propertyAdjustments({...home,costs:{...home.costs,improvements:[building({complete:false})]}},other).adjustedValue,null);
 });
 test('published schedules use the correct class and release, preserve year fallback and withhold unsupported years',()=>{
@@ -153,17 +154,31 @@ test('selected-source market land replaces incomplete snapshot land, and missing
  assert.equal(parseCostRecords({anchor_id:'a',source_id:'s',items:[{...source,market_land_value:-1}]},'a','s',2026),null);
  assert.equal(parseCostRecords({anchor_id:'a',source_id:'s',items:[{...source,market_land_value:undefined}]},'a','s',2026),null);
 });
-test('moving features between additional records cannot create a usable adjusted estimate',()=>{
- const second=building({id:'second',reported_value:627149,detail_value:352331,main_area:1492,main_value:246222});
- const original={...home,costs:{...home.costs,improvements:[building(),second]}};
- const regrouped={...original,costs:{...original.costs,improvements:[building({detail_value:748440,reported_value:1332223}),{...second,detail_value:295001,reported_value:525102}]}};
- for(const property of [original,regrouped]) {
-  const result=propertyAdjustments(property,other);
-  assert.equal(result.adjustedValue,null);
-  assert.equal(result.partialSubtotal,null);
-  assert.equal(adjustmentSummary(property,[result]).count,0);
-  assert.equal(property.costs.improvements.reduce((n,b)=>n+b.reported_value,0),1857325);
-  const line=result.lines.find(l=>l.factor==='Additional improvements');
-  assert.ok(line.inputs.some(i=>i.label.includes('living area')&&i.value===1492));
- }
+test('two dwellings retain TCAD detail ownership, secondary value and median participation',()=>{
+ const primary=building({reported_value:1100163,detail_value:618069,main_value:526700,main_area:3948.5});
+ const second=building({id:'second',reported_value:627149,detail_value:352331,main_area:1492,main_value:246222,
+  features:[{code:'1ST',description:'Main area',value:246222},{code:'604',description:'Pool',value:43771},{code:'447',description:'Spa',value:13559}]});
+ const property={...home,market_value:2088414,land_value:361102,costs:{...home.costs,improvements:[second,primary]}};
+ const result=propertyAdjustments(property,other);
+ assert.equal(result.lines.find(l=>l.factor==='Additional improvements').amount,627149);
+ assert.equal(result.lines.find(l=>l.factor==='Non-living details').amount,91369-(703618-567951));
+ assert.ok(result.adjustedValue>0);
+ assert.equal(adjustmentSummary(property,[result]).count,1);
+ assert.equal(adjustmentSummary(property,[result]).median,result.adjustedValue);
+ assert.equal(propertyAdjustments(other,property).lines.find(l=>l.factor==='Additional improvements').amount,-627149);
+ const withSecond={...other,costs:{...other.costs,improvements:[...other.costs.improvements,{...second,id:'casita',reported_value:221996}]}};
+ assert.equal(propertyAdjustments(property,withSecond).lines.find(l=>l.factor==='Additional improvements').amount,405153);
+ // Labels and order cannot reassign features between improvement IDs.
+ const renamed={...property,costs:{...property.costs,improvements:[primary,{...second,features:second.features.map(f=>({...f,description:'Casita'}))}]}};
+ assert.equal(propertyAdjustments(renamed,other).adjustedValue,result.adjustedValue);
+});
+test('source-record mapping reproduces the original nonzero TCAD secondary grid end to end',()=>{
+ const subject={...home,market_value:1611803,land_value:357492,costs:{...home.costs,improvements:[building({reported_value:1254311,detail_value:704669})]}};
+ const comparable={...other,market_value:1967632,land_value:435042,costs:{...other.costs,improvements:[
+  building({reported_value:1310594,detail_value:736289,main_value:564681,main_area:4418.5,year_built:2013,depreciation_year:2013}),
+  building({id:'secondary',reported_value:221996,detail_value:124717,main_value:124717,main_area:920,class_code:'R4',year_built:2015,depreciation_year:2015})]}};
+ const result=propertyAdjustments(subject,comparable);
+ assert.deepEqual(result.lines.map(l=>l.amount),[-77550,-1214,0,5646,-40230,-221996,0]);
+ assert.equal(result.total,-335344);
+ assert.equal(result.adjustedValue,1632288);
 });
