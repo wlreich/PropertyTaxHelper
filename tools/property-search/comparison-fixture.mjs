@@ -22,7 +22,7 @@ export async function seedComparisons(db) {
    await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status) values($1,$2,$3,0,repeat('e',64),'complete')`,[source,member,type]);
   let row=0;
   for(const [id,area,year] of [['100',2000,2014],['120',2000,2014],['121',2010,2015],['122',2080,2016],['123',2400,2000],['102',2000,2014],['103',2000,2014]]) {
-   const values=[['cost-land.txt',{land_hstd_val:'100000',land_non_hstd_val:'0',ag_market:'0'}],['cost-buildings.txt',{imprv_id:'1',imprv_val:'350000',imprv_type_cd:'01',imprv_state_cd:'A1',owner_name:'PRIVATE MUST NOT LEAK'}],['cost-details.txt',{imprv_id:'1',imprv_det_id:'1',imprv_det_val:'350000',imprv_det_area:String(area),imprv_det_class_cd:'R3',yr_built:String(year),depreciation_yr:String(year),imprv_det_type_cd:'1ST',imprv_det_type_desc:'Main area'}]];
+   const values=[['cost-land.txt',{land_hstd_val:'100000',land_non_hstd_val:'0',ag_market:'0',imprv_state_cd:'A1',land_state_cd:'A1',abs_subdv_cd:'GRAND02'}],['cost-buildings.txt',{imprv_id:'1',imprv_val:'350000',imprv_type_cd:'01',imprv_state_cd:'A1',owner_name:'PRIVATE MUST NOT LEAK'}],['cost-details.txt',{imprv_id:'1',imprv_det_id:'1',imprv_det_val:'350000',imprv_det_area:String(area),imprv_det_class_cd:'R3',yr_built:String(year),depreciation_yr:String(year),imprv_det_type_cd:'1ST',imprv_det_type_desc:'Main area'}]];
    for(const [member,fields] of values) await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,$2,$3,$4,$5,$6)`,[source,member,++row,id,source===anchor?'2026':'2025',fields]);
   }
  }

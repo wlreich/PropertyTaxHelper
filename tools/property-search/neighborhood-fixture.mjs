@@ -26,5 +26,10 @@ export async function seedNeighborhood(db) {
  }
  // All Property rows for a fixture agree on type. Duplicates remain harmless.
  await db.exec(`update tcad_ingest.records set fields=fields||'{"imprv_state_cd":"A1","land_state_cd":"A1"}'::jsonb where member_name in ('0.txt','PROP.TXT')`);
+ // Neighborhood fixtures replace comparison-only Property rows, avoiding
+ // contradictory duplicate type facts when individual tests change classification.
+ await db.exec("delete from tcad_ingest.records where member_name='cost-land.txt'");
+ // Synthetic split Property rows also carry consistent market-land components.
+ await db.exec(`update tcad_ingest.records set fields=fields||'{"land_hstd_val":"100000","land_non_hstd_val":"0","ag_market":"0"}'::jsonb where member_name in ('PROP.TXT','neighborhood-types.txt')`);
  return {anchor,pre};
 }
