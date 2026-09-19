@@ -129,12 +129,16 @@ test('both PDF controls deliver the same ungated versioned PDF, and property/hom
   await expect(page).toHaveURL(/\/property\/100$/);
 });
 
-test('native disclosures and PDF remain usable without JavaScript', async ({browser, baseURL}) => {
-  const context = await browser.newContext({javaScriptEnabled:false, viewport:{width:390,height:900}});
+test('native disclosures and PDF remain usable without JavaScript', async ({browser, baseURL, viewport}) => {
+  const context = await browser.newContext({javaScriptEnabled:false, viewport:viewport!});
   const page = await context.newPage();
   await page.goto(`${baseURL}/protest-guide`);
+  await expect(page.locator('#tax-system-toggle')).not.toHaveAttribute('aria-expanded');
   await page.locator('#tax-system-toggle').click();
   await expect(page.locator('#tax-system-content')).toBeVisible();
   await expect(page.locator('#tax-system-content')).toContainText('$2,220');
+  await bounds(page);
+  const pdf = await page.getByRole('link', {name:'Download printable PDF',exact:true}).first().getAttribute('href');
+  expect((await context.request.get(`${baseURL}${pdf}`)).headers()['content-type']).toContain('application/pdf');
   await context.close();
 });
