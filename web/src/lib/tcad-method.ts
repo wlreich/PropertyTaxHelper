@@ -1,6 +1,6 @@
 import { depreciationSchedules } from "./tcad-depreciation.ts";
 
-export const tcadMethod = {year:2026, version:"TCAD formulas · published age schedules · grouping safeguards v3", mainAreaFactor:1};
+export const tcadMethod = {year:2026, version:"TCAD formulas · published age schedules · record-based improvements v4", mainAreaFactor:1};
 export function estimatePercentGood(classCode:string|null, taxYear:number, effectiveYear:number|null, actualYear:number|null) {
   const hasEffectiveYear=effectiveYear!==null && Number.isInteger(effectiveYear) && effectiveYear>=1800;
   const year=hasEffectiveYear ? effectiveYear : actualYear;
