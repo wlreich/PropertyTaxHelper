@@ -4,6 +4,7 @@ on:
     paths:
       - "web/**"
       - "docs/brand/**"
+      - "docs/protest-guide/**"
       - "AGENTS.md"
       - "supabase/migrations/**"
       - "tools/property-search/**"

@@ -1,0 +1,49 @@
+# Shared protest guide content
+
+PAR-13 imports the complete approved Linear issue snapshot into `source-2026-09-19.md`. That file is the canonical editorial source, including internal notes. It must never be served as the public download.
+
+The public contract is `web/src/content/protest-guide.json`. Next.js consumers can import `protestGuide` and its readonly types from `web/src/content/protest-guide.ts`; a PDF process can read the same JSON without React or Linear access. No runtime network request or additional dependency is required.
+
+## Rendering contract
+
+1. Render the title, reviewed date and introduction.
+2. Render the eight chapters in array order, using `anchor` for chapter links and `number` for display.
+3. Render sections and their ordered blocks in order. Blocks contain trusted editorial GitHub-flavored Markdown: tables, numbered lists, quotes, links and emphasis must survive in both formats. Do not execute MDX or enable raw HTML. Block IDs identify locations within this version; chapter and section IDs are stable across versions.
+4. Insert `calendarStatus.markdown` immediately before section 03's blocks. This dated status is separate from the recurring calendar. `confirmedOperatingDates` is intentionally empty: no confirmed 2027 schedule is available. Never calculate or advertise a live filing window from the recurring table.
+5. Render `disclaimer` visibly after the chapters in both formats. It is source section 17, not an internal note.
+6. Preserve inline citations. `sourceLinks` also exposes citation labels and URLs at section, chapter and guide level, in source order (including repeated references).
+
+`reviewedDate` is the supplied research date, not the build date or a claim of legal review. `contentVersion` identifies editorial releases; `schemaVersion` identifies the contract shape. `sourceSha256` ties the export to the exact source snapshot. Renderers must consume this contract instead of keeping their own copies of the prose.
+
+## Maintenance
+
+Edit the canonical source, update version/research metadata in `web/scripts/generate-protest-guide.mjs` when appropriate, then run from `web/`:
+
+```sh
+npm run guide:generate
+npm run verify
+```
+
+Commit both source and generated output. `guide:check` rejects stale exports. Unit tests reconstruct every public section and compare it with the source, including the dated calendar paragraph. They also validate the mapping, links, exclusion boundary and incomplete-source failures. The generator deliberately fails if numbered sections or editorial delimiters change unexpectedly.
+
+Only the draft-review masthead, “About this draft” paragraph and final editorial notes are excluded. Public opening copy and all 17 source sections are retained. The hypothetical-example qualification remains in section 17 and in individual examples. No substantive claims were rewritten.
+
+## Implementation source check — September 19, 2026
+
+Targeted checks during implementation found no material discrepancy in the deadline statements reviewed:
+
+| Official source | Checked against the draft |
+| --- | --- |
+| [Travis protest process](https://traviscad.org/protests) | Ordinary May 15 / 30-day notice rule; evidence and informal sequence |
+| [Travis informal process](https://traviscad.org/informals) | One phone/video meeting; expected offer within 10 business days |
+| [Texas exemptions](https://comptroller.texas.gov/taxes/property-tax/exemptions/) | General application deadline before May 1; examples are hypothetical exemption amounts |
+| [Travis ARB hearings](https://traviscad.org/arbhearings) | Independent panel and District representative; typical local hearing season and short hearing format |
+| [Texas protests and appeals](https://comptroller.texas.gov/taxes/property-tax/protests/) | Court 60 days; SOAH notice 30 days and deposit within 90 days, subject to eligibility |
+| [Regular binding arbitration](https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php) | 60-day request deadline and eligibility/payment conditions |
+| [Limited binding arbitration](https://comptroller.texas.gov/taxes/property-tax/arbitration/limited-binding.php) | Procedural remedy and requested evidence disclosure distinction |
+
+These checks are not a new comprehensive legal review or verification of a 2027 schedule. Follow the source's annual maintenance notes before a later season. Current exemption amounts do not replace the explicitly hypothetical arithmetic examples.
+
+## Scope and brand review
+
+Content only: page rendering belongs to PAR-14; printable PDF rendering belongs to PAR-15. No UI or visual check is claimed. Copy preserves the approved Appraisal District terminology, neutral agent discussion, confidentiality guidance, cap caveats and absence of promised outcomes. The founder's first-person ARB account is an explicit user-approved exception to the general brand preference against personal founder history; it remains identified as one person's experience.
