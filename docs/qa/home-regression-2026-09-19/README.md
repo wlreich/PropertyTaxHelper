@@ -2,11 +2,17 @@
 
 Date: September 19, 2026. Requested implementation order: PAR-5 → PAR-6 → PAR-8 → PAR-7.
 
-Base commit: `a05c1b4` (main). Local branch: `codex/home-regression-par-5-6-8-7`.
+Original base commit: `a05c1b4` (main); integrated QA infrastructure from main `88cc8ab`. Published branch: `codex/home-regression-par-5-6-8-7`.
 
 ## Publication status
 
-Initial local checkpoint: automatic approval review blocked publication pending explicit approval. Wendy subsequently approved publishing this branch and its QA evidence to the public GitHub repository. Publication and browser verification are now proceeding; the results below remain the local checkpoint until a follow-up records completed browser checks. Do not mark the Linear issues Done before acceptance verification.
+Published in [PR #81](https://github.com/wlreich/PropertyTaxHelper/pull/81) after Wendy's explicit approval. Application/test commit: `2cdab228ec8a7afe363a1ef13ccb6cbe4f9d1e68`.
+
+Initial [Property search checks run](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457173398) passed 57/66 browser checks. Failures exposed a real delayed-blur focus race, enlarged-footer overflow, and test navigation synchronization/hidden-mobile-header assumptions. Fixes guard the delayed blur callback against refocused input, let the footer reflow, await submitted query navigation and test the header link only at widths where it is displayed. Keeping the delay preserves the mobile submit target until the click completes. The original [Home page regression run](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457173435) passed before the eight new acceptance tests were added to that matrix.
+
+Intermediate reruns: [Property search checks](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457717189), [Home page regression](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457717191). These intermediate runs passed the PAR-5, PAR-8 and PAR-7 cases, but caught a mobile submit-target regression from immediate blur and a missing navigation wait in the cleared-history test. Both were corrected in the application/test commit above.
+
+Final verification: [Property search checks](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457984316), [Home page regression](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457984340). Both passed on `2cdab228`: 66/66 brand/browser checks and 78/78 home regression checks. Build, lint, TypeScript, 68 unit tests, 33 SQL tests and rendered-page smoke also passed.
 
 ## Baseline reproduction
 
@@ -24,12 +30,12 @@ Baseline deployed commit was not verified. The local base commit above must not 
 
 ## Implemented changes
 
-| Issue | Changes | Verification still required |
+| Issue | Changes | Acceptance evidence |
 | --- | --- | --- |
-| PAR-5 | Shared contextual TX/Texas normalization at both server lookup boundaries; preserve city/ZIP constraints and legitimate Texas street names; inline trimmed blank validation; numeric-ID recovery guidance; service failures remain distinct. | Post-change browser suggestions, keyboard/mobile submission, blank no-request assertions, and no new console/hydration errors. |
-| PAR-6 | Input focus from all three home search-entry links; reduced-motion-aware scrolling; draft stored only in current history entry, including clear; close popup/reset selection on restoration. | Browser Back/Forward, in-app return, refresh, pagination, delayed-response/clear races, keyboard and reduced-motion/mobile behavior. |
-| PAR-8 | Dedicated /methodology using existing InformationPage; both footer variants link there; verified source inventory, values/caps/exemptions, comparison assumptions, recorded vs inferred protest evidence, no tax-savings promises; home date scoped to certified export. | Rendered accessibility/mobile/heading navigation, click-through and Back checks against the new build. |
-| PAR-7 | Align header text using the shared baseline; keep external arrow with final word while allowing the label to wrap; retain tooltip hit target. | Text alignment ≤1 px, value alignment, tooltip pointer/keyboard/Escape, responsive widths and 200% enlargement; after screenshots. |
+| PAR-5 | Shared contextual TX/Texas normalization at both server lookup boundaries; preserve city/ZIP constraints and legitimate Texas street names; inline trimmed blank validation; numeric-ID recovery guidance; service failures remain distinct. | Passed: variants/ID, negatives, typo, units, suggestions and keyboard submit, blank focus/no-request, query-specific guidance at 375/768/1440. Existing app-error/accessibility checks also passed. |
+| PAR-6 | Input focus from all three home search-entry links; reduced-motion-aware scrolling; draft stored only in current history entry, including clear; close popup/reset selection on restoration. | Passed: keyboard/mouse selections, Back/Forward, in-app return, refresh, pagination, cleared history, delayed-response/clear races, keyboard and reduced-motion mobile-width behavior. |
+| PAR-8 | Dedicated /methodology using existing InformationPage; both footer variants link there; verified source inventory, values/caps/exemptions, comparison assumptions, recorded vs inferred protest evidence, no tax-savings promises; home date scoped to certified export. | Passed: footer click-through and Back from home/results, sections/report link, axe and no overflow at 375/768/1440. Desktop/mobile screenshots reviewed. |
+| PAR-7 | Align header text using the shared baseline; keep external arrow with final word while allowing the label to wrap; retain tooltip hit target. | Passed: text tops within 1 px, tooltip pointer/keyboard/Escape, grouped final word/arrow and no overflow across 320/375/390/768/1024/1363/1440, including 200% root font size. Currency alignment/focus and screenshots reviewed. |
 
 ## Executed checks
 
@@ -58,13 +64,13 @@ The normalized strings below were passed to existing deployed search functions. 
 
 The local SQL test separately confirms the typo is returned with `match_mode=possible`.
 
-## Repeatable browser suite, not yet executed
+## Repeatable browser suite
 
 `web/tests/brand/home-regression.spec.ts` adds eight tests to the existing `npm run test:brand-browser` suite. The existing pull-request workflow installs Chromium and captures reports/screenshots. Tests cover real local SQL fixtures, controlled delayed suggestion responses, clear and supersession, query/history, page-two return, focus, methodology, tooltip, measured text alignment, wrapping/overflow, and 200% text enlargement. Configured projects use 375, 768 and 1440 CSS px with reduced motion; the layout test additionally checks 320, 390, 1024 and 1363 px.
 
-No new browser tests have run. Responsive emulation is not real-device validation. Real iOS/Android browser and assistive-technology checks remain unavailable in this environment. No latency SLA is claimed.
+The new tests have run in CI; the initial failures and reruns are recorded above. PR runs use Chromium at 375/768/1440. Firefox desktop and WebKit mobile-width projects are configured for main/nightly/manual runs but have not been verified on this branch. Responsive emulation is not real-device validation. Real iOS/Android browser and assistive-technology checks remain unavailable in this environment. No latency SLA is claimed.
 
-After approval: push this branch, open the PR, run the existing workflow, fix any failures, verify the preview against live records, capture after screenshots, update issue-specific evidence, and merge/deploy only after required checks pass under the repository's standing authorization.
+The branch preview at https://property-tax-helper-git-codex-home-regressi-c0a98b-wlreich-3996.vercel.app redirects to Vercel sign-in. Manual branch-preview verification against live records is blocked in the current session; deployment protection was not changed. Fixture CI is independent of that restriction. Merge/deploy only after required checks pass under the repository's standing authorization.
 
 ## PAR-8 copy provenance and limits
 
@@ -79,4 +85,14 @@ The inventory is explicitly dated September 19, 2026. Future ingestion should up
 
 ## Brand review
 
-Uses existing logos, font system, semantic tokens, InformationPage and shared search controls. Keeps the approved home layout and compact result rows. Copy is homeowner-focused and distinguishes facts, inference, estimated inputs and taxes. No intentional brand exception. Automated brand checks passed; post-change browser visual/accessibility approval remains pending.
+Uses existing logos, font system, semantic tokens, InformationPage and shared search controls. Keeps the approved home layout and compact result rows. Copy is homeowner-focused and distinguishes facts, inference, estimated inputs and taxes. No intentional brand exception. Automated brand, browser accessibility and responsive checks passed; desktop/mobile methodology and result/reflow screenshots reviewed. Real-device and assistive-technology checks remain blocked as described above.
+
+## After screenshots
+
+Captured in Chromium against the built app and synthetic SQL fixtures at http://127.0.0.1:3058, commit `539c28f`. The later focus/test synchronization correction does not change these styles. Fixture financial values are fictional.
+
+![After: aligned headings and grouped footer arrow at 1363 × 936 CSS px](after-results-1363.png)
+
+![After: 320 CSS px with 200% root text size, full-page capture](after-enlarged-320.png)
+
+All seven responsive widths and enlarged variants are available in the [CI screenshot artifact](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35457717189/artifacts/10588624043), alongside methodology screenshots at 375/768/1440. Reviewed desktop and narrow/enlarged captures show aligned currency values, visible keyboard focus, wrapped footer labels, and no orphan arrow or clipped/overlapping text.
