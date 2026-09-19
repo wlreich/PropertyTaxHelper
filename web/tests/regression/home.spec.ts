@@ -37,7 +37,7 @@ test('S01: exact ID, source labels, property drilldown and results Back', async 
 test('S02: invalid and overlong URL queries show validation without result cards', async ({ page }) => {
   for (const query of ['ab', 'A'.repeat(121), 'one two three four five six seven eight nine']) {
     await page.goto(`/?q=${encodeURIComponent(query)}`);
-    await expect(page.getByRole('alert')).toContainText('Let’s narrow that down');
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('Let’s narrow that down');
     await expect(page.locator('.result-card')).toHaveCount(0);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
   }
