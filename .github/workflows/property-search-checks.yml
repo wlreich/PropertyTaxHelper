@@ -30,6 +30,10 @@ jobs:
         run: npm ci --prefix web
       - name: Check website and brand
         run: npm run verify --prefix web
+      - name: Verify complete printable guide content
+        run: |
+          python3 -m pip install pypdf==6.10.0 markdown-it-py==4.2.0
+          python3 web/scripts/test-guide-pdf.py
       - name: Install local database test engine
         run: npm ci --prefix tools/property-search --ignore-scripts
       - name: Test annual market-factor parser
@@ -43,6 +47,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check keyboard access, accessibility and responsive layouts
         run: npm run test:brand-browser --prefix web
+      - name: Check protest guide and PDF delivery
+        run: npm run test:guide-browser --prefix web
       - name: Preserve browser reports and review screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,4 +57,6 @@ jobs:
           path: |
             web/brand-report
             web/brand-test-results
+            web/guide-report
+            web/guide-test-results
           if-no-files-found: ignore

@@ -44,6 +44,7 @@ function HomeFooter() {
           <nav aria-label="Explore ParcelSavvy">
             <SearchEntryLink>Property search</SearchEntryLink>
             <Link href="/methodology">Data &amp; methodology</Link>
+            <Link href="/protest-guide">Protest Guide</Link>
             <Link href="/#questions">Homeowner questions</Link>
           </nav>
         </div>

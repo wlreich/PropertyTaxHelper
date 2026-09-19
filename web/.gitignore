@@ -48,3 +48,6 @@ next-env.d.ts
 /home-test-results/
 /smoke-report/
 /smoke-test-results/
+
+/guide-report/
+/guide-test-results/
