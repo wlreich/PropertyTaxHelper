@@ -30,6 +30,30 @@ Browser regression: `web/tests/brand/property-sections.spec.ts`. The reference
 property uses a frozen public-data fixture; conditional and layout-stress cases
 are explicitly synthetic. Run with the brand browser suite at 375/768/1440 px.
 
+## PAR-11 annual history
+
+`annual-history.ts` groups normalized valuation snapshots and protest observations
+by actual tax year. It selects the latest certified record and earliest eligible,
+dated preliminary record before that certification, preserving the publisher's
+property-specific exclusions. Annual changes require the immediately preceding
+year's dated certified record; gaps never substitute an older year or a within-year
+comparison. Unknown amounts/dates remain unavailable and a zero prior amount has
+no invented percentage change.
+
+`AnnualAssessmentHistory` keeps the current assessment untouched while expanding
+yearly details. Certified market and assessed bars share a zero-based dynamic
+scale. Preliminary-only years appear in the table without certified bars. Up to
+five loaded years appear initially, with earlier chart/table entries expandable
+on the same page. Mobile rows retain table semantics and explicit field labels.
+Source timestamps, authority exemptions, and dated protest/agent evidence remain
+available within each year. No archive ingestion or database rule changes are
+part of this feature.
+
+The frozen `par11-reference-history.json` captures the public history RPC for
+property 736164 on September 19, 2026, including May 8's eligible 2025 preliminary
+record and July 3's excluded interim record. Additional fixture IDs are synthetic.
+Regression: `annual-history.test.mjs` and `brand/annual-history.spec.ts`.
+
 ## Data and privacy
 
 `property_profile` remains the source of active-release headline values. The new

@@ -1,4 +1,4 @@
-import {par9Reference} from './par9-reference-fixture.mjs';
+import {par11Fixture} from './par11-fixture.mjs';
 import {par10Fixture} from './par10-fixture.mjs';
 import {seedMarketAdjustments} from './market-adjustment-fixture.mjs';
 import {seedHomeRegression} from './home-regression-fixture.mjs';
@@ -41,7 +41,7 @@ createServer((req,res)=>{
    const call=async(sql,values=[]) => (await db.query(sql,values)).rows[0].result;
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
-   const visualFixture=args.p_id==='736164'?par9Reference:par10Fixture(args.p_id);
+   const visualFixture=par11Fixture(args.p_id) ?? par10Fixture(args.p_id);
    if(visualFixture && ['property_overview_bundle','property_market_adjustment','property_profile','property_history'].includes(route)) {
     const reference={property_overview_bundle:visualFixture.overview,property_market_adjustment:visualFixture.adjustment,property_profile:visualFixture.overview.profile,property_history:visualFixture.overview.history};
     return send(200,reference[route]);

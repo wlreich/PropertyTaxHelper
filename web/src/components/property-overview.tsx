@@ -5,15 +5,15 @@ import { ValueDrivers, RecordedPropertyDetails } from './property-value-details'
 import { capModel } from '@/lib/property-sections';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
-import { ProtestResult, InterimChange, AssessmentSequence, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { ProtestResult, InterimChange, Representation, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
 import { priorSeasonResult } from "@/lib/homeowner-insights";
 import { SeasonNotice } from "./season-notice";
 import type { SeasonContext } from "@/lib/seasons";
-import { currency } from "@/lib/property-search";
+import { AnnualAssessmentHistory } from "./annual-assessment-history";
+import { annualHistory } from "@/lib/annual-history";
 import {
-  entityDisplayName,
   annualBaseline,
   preliminaryBaseline,
   dateLabel,
@@ -108,91 +108,7 @@ export function PropertyOverview({
           <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id))} propertyId={p.property_id} />
           <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
-          <section
-            className="overview-section"
-            aria-labelledby="history-heading"
-          >
-            <div className="section-heading">
-              <h2 id="history-heading" tabIndex={-1}>Assessment history</h2>
-            </div>
-            <AssessmentSequence current={current} previous={previous} initial={initial} />
-            {snapshots.length ? (
-              <details className="homeowner-details"><summary>View all assessment values</summary>
-              <div className="overview-table-wrap">
-                <table className="overview-table">
-                  <caption>Values as recorded in each Appraisal District export</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Value</th>
-                      {snapshots.map((s) => (
-                        <th key={s.dataset_id} scope="col">
-                          {snapshotLabel(s)}
-                          <span>{dateLabel(s.export_date)}</span>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(
-                      [
-                        "market_value",
-                        "assessed_value",
-                        "land_value",
-                        "improvement_value",
-                      ] as const
-                    ).map((key, i) => (
-                      <tr
-                        key={key}
-                        className={
-                          i === 0 ? "overview-row-highlight" : undefined
-                        }
-                      >
-                        <th scope="row">
-                          {
-                            [
-                              "Market value",
-                              "Value after cap",
-                              "Land value",
-                              "Improvement value",
-                            ][i]
-                          }
-                        </th>
-                        {snapshots.map((s) => (
-                          <td
-                            key={s.dataset_id}
-                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
-                          >
-                            {currency(s[key])}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                    {entity && (
-                      <tr>
-                        <th scope="row">
-                          Taxable · {entityDisplayName(entity)}
-                        </th>
-                        {snapshots.map((s) => (
-                          <td
-                            key={s.dataset_id}
-                            data-label={`${snapshotLabel(s)} · ${dateLabel(s.export_date)}`}
-                          >
-                            {currency(
-                              s.entities.find((e) => e.code === entity.code)
-                                ?.taxable_value ?? null,
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              </details>
-            ) : (
-              <p>No comparable snapshots available.</p>
-            )}
-          </section>
+          <AnnualAssessmentHistory rows={annualHistory(snapshots, evidence)} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable} />
           {historical.current && historical.current.dataset_id !== current?.dataset_id && <ProtestResult current={historical.current} initial={historical.initial} evidence={evidence} historical />}
           <Representation evidence={evidence} year={current.tax_year} unavailable={protestsUnavailable} />
           <HomeownerNextSteps address={p.address} />
