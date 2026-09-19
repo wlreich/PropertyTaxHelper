@@ -49,7 +49,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
 });
 
 test('additional improvements contribute to estimates without review flags',async({page},info)=>{
- await page.goto('/property/100/compare?view=adjusted&selected=123');
+ await page.goto('/property/123/compare?view=adjusted&selected=120');
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
  await expect(adjusted).toContainText('1 of 1 selected properties have estimated adjusted values');
  await expect(adjusted).not.toContainText('Needs review');
