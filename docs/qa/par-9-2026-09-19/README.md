@@ -68,7 +68,7 @@ Visual review: the navy hero, headline, metric columns, reference amounts, conte
 Application commit: `4d2c6db37493a527e3c7949c364d6702a112f0e3`.
 
 - [Property search checks — run 35462190382](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35462190382): **passed**. Includes format, brand, lint, 72 unit tests, build, typecheck, market-factor parser tests, 33 database tests, rendered-page smoke and **75 Chromium browser tests**. The 375px / 200% zoom regression now passes.
-- [Home regression — run 35461815748](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35461815748): **81 passed**, on `3f99650350c8ac98fa0744501b4a56970312e949`. The subsequent application change only adds wrapping to the property context card; the evidence publication triggers a fresh run on the final PR head.
+- [Home regression — run 35461815748](https://github.com/wlreich/PropertyTaxHelper/actions/runs/35461815748): **81 passed**, on `3f99650350c8ac98fa0744501b4a56970312e949`. The subsequent application change only adds wrapping to the property context card; GitHub reports the Home page regression workflow was manually disabled at 18:43 UTC, so no home run was triggered for later commits. That setting was preserved; the 81-test pass is evidence for the earlier commit, not a final-head home run.
 - Vercel reported the recovery branch deployment successful. This is build/deployment status, not authenticated browser verification.
 
 This evidence commit adds documentation and screenshots only. Current PR checks are the authoritative status for its final head; prior failed runs remain historical evidence of the issues corrected above.
