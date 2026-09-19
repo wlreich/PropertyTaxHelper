@@ -6,7 +6,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await expect(panel).toContainText('+$112,000');
  await expect(panel).toContainText('Original preliminary improvement values');
  await expect(panel).toContainText('1.46× → 1.78×');
- await page.getByRole('navigation',{name:'Property sections'}).getByRole('link',{name:'Market adjustment',exact:true}).click();
+ await page.getByRole('navigation',{name:'Property sections'}).getByRole('link',{name:'Value drivers',exact:true}).click();
  await expect(page).toHaveURL(/#market-adjustment-heading$/);
  await page.goto('/property/100/neighborhood');
  await expect(panel).toContainText('Median estimated effect across matched homes');

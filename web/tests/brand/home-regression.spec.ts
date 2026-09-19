@@ -221,3 +221,14 @@ test('PAR-7 text alignment, responsive footer, enlarged text and tooltip', async
     await page.evaluate(()=>{document.documentElement.style.fontSize='';});
   }
 });
+
+
+test('initial pageshow cannot clear suggestions for a query already being typed', async ({page}) => {
+  await page.goto('/');
+  const search=page.getByRole('combobox');
+  await search.fill('1104 Paw Print');
+  await expect(page.getByRole('option')).toHaveCount(1);
+  await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted:false})));
+  await expect(search).toHaveValue('1104 Paw Print');
+  await expect(page.getByRole('option')).toHaveCount(1);
+});
