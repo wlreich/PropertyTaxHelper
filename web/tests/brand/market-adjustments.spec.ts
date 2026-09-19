@@ -19,7 +19,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
   expect(response.ok()).toBe(true);expect(response.headers()['content-type']).toContain('application/pdf');
   expect((await response.body()).subarray(0,5).toString()).toBe('%PDF-');
  }
- await expect(panel.getByRole('link',{name:'TCAD’s 2026 residential valuation manual, p. 8'})).toHaveAttribute('href','/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8');
+ await expect(panel.getByRole('link',{name:'Appraisal District’s 2026 residential valuation manual, p. 8'})).toHaveAttribute('href','/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8');
  await expect(panel).toContainText('2026_Market_Adjustments.pdf');
  expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
  expect(await panel.locator('.market-adjustment-history').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);

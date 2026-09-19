@@ -765,7 +765,7 @@
 .current-assessment-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); margin: var(--space-6) 0; }
 .current-assessment-metrics > div { min-width: 0; }
 .current-assessment-metrics dt, .current-assessment-metrics dd { font-size: var(--text-small); }
-.current-assessment-metrics dt { text-transform: uppercase; }
+.current-assessment-metrics dt { text-transform: uppercase; min-height: var(--target-min); display: flex; align-items: center; }
 .current-assessment .current-assessment-number { font-family: var(--font-heading); font-size: var(--text-h2); font-variant-numeric: tabular-nums; margin-top: var(--space-2); overflow-wrap: anywhere; }
 .current-assessment .definition-trigger { color: var(--color-surface); }
 .current-assessment .definition-trigger:focus-visible { outline-color: var(--color-focus-on-dark); }
