@@ -58,7 +58,7 @@ test('adjusted medians use complete comparisons only, exclude subject and duplic
 
 // Anonymous numerical fixtures from TCAD's 2026 worked grids.
 import {calculateTcadAdjustments,estimatePercentGood} from '../src/lib/tcad-method.ts';
-import {parseCostRecords,primaryBuilding} from '../src/lib/tcad-costs.ts';
+import {parseCostRecords,primaryBuilding,withCosts} from '../src/lib/tcad-costs.ts';
 const s={market:1611803,land:357492,area:4410,classCode:'R3',mainRcn:573291/.91,mainRcnld:573291,percentGood:91,nonliving:131378,secondary:0,mass:1.78};
 const examples=[
  [4418.5,90,564681,736289,1967632,435042,221996,-1214,5646,-40230,-335344,1632288],
@@ -100,8 +100,8 @@ test('sales grids use supplied adjusted sale prices and reproduce both indicated
  assert.equal(calculateTcadAdjustments(s,s,'sales').start,null);
 });
 const building=(changes={})=>({id:'main',type_code:'01',state_code:'A1',reported_value:1230176,detail_value:691110,main_value:573291,main_area:4410,class_code:'R3',year_built:2014,depreciation_year:2014,floors:2,complete:true,features:[{code:'1ST',description:'Main area',value:573291},{code:'GAR',description:'Garage and other non-living details',value:117819}],...changes});
-const home={...subject,property_type:'R',neighborhood:'N1',costs:{property_id:'1',tax_year:2026,improvements:[building()]}};
-const other={...comparable,market_value:1337500,land_value:215978,property_type:'R',neighborhood:'N1',costs:{property_id:'2',tax_year:2026,improvements:[building({reported_value:1252440,detail_value:703618,main_value:567951,main_area:4414.5,year_built:2013,depreciation_year:2013})]}};
+const home={...subject,property_type:'R',neighborhood:'N1',costs:{property_id:'1',tax_year:2026,market_land_value:250000,improvements:[building()]}};
+const other={...comparable,market_value:1337500,land_value:215978,property_type:'R',neighborhood:'N1',costs:{property_id:'2',tax_year:2026,market_land_value:215978,improvements:[building({reported_value:1252440,detail_value:703618,main_value:567951,main_area:4414.5,year_built:2013,depreciation_year:2013})]}};
 test('corrected release estimate does not reintroduce a removed feature',()=>{
  const current=propertyAdjustments({...home,land_value:357492},other);
  assert.equal(current.adjustedValue,1466203);
@@ -115,15 +115,22 @@ test('highest improvement and secondary values are counted once; incomplete cost
  const secondary=building({id:'second',reported_value:221996,detail_value:null,main_value:null,main_area:null,complete:false});
  const property={...other,costs:{...other.costs,improvements:[secondary,...other.costs.improvements]}};
  assert.equal(primaryBuilding(property.costs).id,'main');
- assert.equal(propertyAdjustments(home,property).lines.find(l=>l.factor==='Additional improvements').amount,-221996);
+ assert.equal(propertyAdjustments(home,property).lines.find(l=>l.factor==='Additional improvements').amount,null);
+ assert.equal(propertyAdjustments(home,property).adjustedValue,null);
+ assert.equal(propertyAdjustments(home,property).partialSubtotal,null);
+ assert.match(propertyAdjustments(home,property).reviewReason,/additional improvement records/);
  assert.equal(propertyAdjustments({...home,costs:{...home.costs,improvements:[building({complete:false})]}},other).adjustedValue,null);
 });
-test('percent good estimates label interpolation, year fallback, cross-class proxy and future calibration',()=>{
+test('published schedules use the correct class and release, preserve year fallback and withhold unsupported years',()=>{
  assert.equal(estimatePercentGood('R3',2026,2014,2000).value,91);
  assert.equal(estimatePercentGood('R3',2026,null,2013).value,90);
  assert.equal(estimatePercentGood('R3',2026,2016,2016).value,93);
- assert.match(estimatePercentGood('R2',2026,1900,1900).basis,/proxy.*extrapolated/);
- assert.match(estimatePercentGood('R3',2027,2014,2014).basis,/2026 calibration/);
+ assert.equal(estimatePercentGood('R2',2026,1900,1900).value,80);
+ assert.equal(estimatePercentGood('R4',2026,1948,1948).value,70);
+ assert.match(estimatePercentGood('R2',2026,1900,1900).basis,/231035/);
+ assert.match(estimatePercentGood('R2',2025,1900,1900).basis,/225656/);
+ assert.match(estimatePercentGood('R3',2025,null,2013).basis,/Actual year built/);
+ assert.equal(estimatePercentGood('R3',2027,2014,2014),null);
  assert.equal(estimatePercentGood('R3',2026,null,null),null);
  assert.equal(estimatePercentGood('R3',2026,2027,2027),null);
  assert.equal(estimatePercentGood('XX',2026,2014,2014),null);
@@ -136,4 +143,27 @@ test('cost parser binds releases, rejects duplicates, and removes unapproved fie
  assert.equal(parseCostRecords({...envelope,items:[record,record]},'a','s',2026),null);
  const parsed=parseCostRecords(envelope,'a','s',2026);
  assert.ok(parsed);assert.equal(JSON.stringify(parsed).includes('PRIVATE'),false);
+});
+
+test('selected-source market land replaces incomplete snapshot land, and missing input stays unknown',()=>{
+ const source={...home.costs,market_land_value:2165525};
+ assert.equal(withCosts({...home,land_value:95000},source).land_value,2165525);
+ assert.equal(withCosts(home,{...source,market_land_value:null}).land_value,null);
+ assert.equal(withCosts(home,undefined).land_value,null);
+ assert.equal(parseCostRecords({anchor_id:'a',source_id:'s',items:[{...source,market_land_value:-1}]},'a','s',2026),null);
+ assert.equal(parseCostRecords({anchor_id:'a',source_id:'s',items:[{...source,market_land_value:undefined}]},'a','s',2026),null);
+});
+test('moving features between additional records cannot create a usable adjusted estimate',()=>{
+ const second=building({id:'second',reported_value:627149,detail_value:352331,main_area:1492,main_value:246222});
+ const original={...home,costs:{...home.costs,improvements:[building(),second]}};
+ const regrouped={...original,costs:{...original.costs,improvements:[building({detail_value:748440,reported_value:1332223}),{...second,detail_value:295001,reported_value:525102}]}};
+ for(const property of [original,regrouped]) {
+  const result=propertyAdjustments(property,other);
+  assert.equal(result.adjustedValue,null);
+  assert.equal(result.partialSubtotal,null);
+  assert.equal(adjustmentSummary(property,[result]).count,0);
+  assert.equal(property.costs.improvements.reduce((n,b)=>n+b.reported_value,0),1857325);
+  const line=result.lines.find(l=>l.factor==='Additional improvements');
+  assert.ok(line.inputs.some(i=>i.label.includes('living area')&&i.value===1492));
+ }
 });

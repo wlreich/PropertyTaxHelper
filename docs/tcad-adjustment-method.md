@@ -4,7 +4,7 @@ ParcelSavvy follows TCAD's 2026 Sale and Equity Grids calculations, checked agai
 
 ## Record mapping
 
-Use the selected source dataset and year for every input. Choose the highest-valued Improvement using `imprv_val`. Detail codes `1ST`, `2ND`, `3RD` supply its main area, class and year. Detail `imprv_det_val` is depreciated cost before the neighborhood multiplier, not replacement cost new. Sum remaining details for non-living features. Sum other Improvement totals for the secondary adjustment; those totals already include their multipliers. Do not price the same feature in both groups.
+Use the selected source dataset and year for every input. Choose the highest-valued Improvement using `imprv_val`. Detail codes `1ST`, `2ND`, `3RD` supply its main area, class and year. Detail `imprv_det_val` is depreciated cost before the neighborhood multiplier, not replacement cost new. Sum remaining details for non-living features. Sum other Improvement totals for the secondary inventory display; those totals already include their multipliers. The formula engine retains the published secondary formula for worked-grid regression, but property estimates with additional valued, unknown-valued or living-area improvement records are withheld pending grouping validation. Do not price the same feature in both groups.
 
 Recover the primary neighborhood multiplier as Improvement value / summed detail values, rounded to four decimals. Use the raw Improvement total rather than the property's final improvement assessment, which may have an appraisal override.
 
@@ -26,12 +26,13 @@ The equity starting value is the reported market assessment. Sales calculations 
 
 ## Explicit approximations
 
-- The export does not supply percent good. Estimate from construction class and age using the age/percent-good pairs in TCAD's worked examples. Prefer depreciation year, otherwise actual year built. Assume average condition and no additional depreciation factors. Grade Factor A is not treated as condition A.
-- R3 observations: age 6:96%, 8:95%, 11:92%, 12:91%, 13:90%, 15:88%, 16:88%. R4 observations: 12:90%, 22:79%. R5 observation: 11:90%.
-- Age zero:100% is an assumption. Interpolate between observations. Beyond observed ages, extrapolate using the average slope between first and last nonzero-age observations (R5 uses age zero). Bound estimates to 20–100%. The 20% floor is an approximation, not a documented TCAD minimum. R1/R2/R6 use R3 as an explicitly labeled proxy. These sparse examples are not a complete district schedule and do not establish individual property condition.
+- The export does not supply percent good or physical condition. Use the selected year's published class/age table with condition A (average) explicitly assumed. Prefer depreciation year, otherwise actual year built. Grade Factor A is not physical condition A. Other depreciation factors remain unmodeled.
+- `web/src/lib/tcad-depreciation.ts` contains 912 class/age rows, independently extracted from the supplied 2025 and 2026 Pricing Schedules PDFs. `tools/extract-depreciation.py` reproduces it and embeds source SHA-256, schedule IDs, association pages and source pages. Each class uses its official association; no cross-class proxy, interpolation or extrapolation. Ages beyond individual rows use the published terminal 999 band. Unsupported source years return unknown.
+- 2025 association 225694 (PDF page 1855): R6→225652, R5→225653, R4→225654, R3→225655, R1/R2→225656. 2026 association 231078 (page 1478): R6→231031, R5→231032, R4→231033, R3→231034, R1/R2→231035. The alternate unassociated R3 schedule is not used.
 - Reconstruct main RCN as main RCNLD / (estimated percent good / 100). Use a 100% main-area factor, matching the worked cases.
 - Where a neighborhood factor cannot be recovered, equal factors may be assumed within the same reported market area. Different market areas need recovered factors.
-- The 2026 calibration remains identified when used for another tax year. Calibration data is centralized in `web/src/lib/tcad-method.ts`.
+- Comparison market land is `land_hstd_val + land_non_hstd_val + ag_market` from the selected source's Property record. Never substitute `ag_use`. Missing, negative or conflicting components return unknown; identical duplicate rows are not summed. This bounded RPC correction does not rewrite historical snapshots or other pages' land projections.
+- Multiple-record grouping remains unvalidated. A positive/unknown secondary value or secondary living area withholds non-living/additional adjustment lines, the adjusted total, partial subtotal, and median contribution. Preserve the source inventory and living areas. Do not subtract the audit's $44,717 sensitivity from a property value.
 
 Corrections follow their release: a feature removed in newer source records does not reappear in newer estimates, and historical records remain unchanged. An empty complete secondary inventory means no secondary improvement is recorded, not a physical inspection. Missing core costs remain unknown. Totals and medians require every applicable line, with one clear disclaimer above the grid and assumptions inside expandable details.
 

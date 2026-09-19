@@ -58,3 +58,22 @@ test('adjustment projection is bounded, source-specific, and hides private prope
  await db.exec('delete from public.property_search_state; set role anon');
  assert.equal((await cost()).items.length,0);
 });
+
+test('market land includes agricultural market value, binds the release and rejects ambiguous or missing components',async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
+ const {anchor,old}=await seedComparisons(db);
+ const set=async(source,fields)=>db.query("update tcad_ingest.records set fields=$2 where dataset_id=$1 and member_name='cost-land.txt' and prop_id='120'",[source,fields]);
+ const get=async(source=anchor)=>(await db.query('select public.property_comparison_costs($1,$2,ARRAY[\'120\']) r',[anchor,source])).rows[0].r.items[0].market_land_value;
+ const values={land_hstd_val:'0',land_non_hstd_val:'95000',ag_market:'2070525',ag_use:'2337',owner_name:'PRIVATE'};
+ await set(anchor,values);
+ assert.equal(await get(),2165525);assert.equal(await get(old),100000);
+ await db.exec('set role anon');assert.equal(await get(),2165525);await db.exec('reset role');
+ for(const bad of [null,'','-1','invalid']){await set(anchor,{...values,ag_market:bad});assert.equal(await get(),null);}
+ await set(anchor,{...values,ag_market:'0'});assert.equal(await get(),95000);
+ await set(anchor,values);
+ await db.query("insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields) values($1,'cost-land.txt',999,'120','2026',$2)",[anchor,values]);
+ assert.equal(await get(),2165525);
+ await db.query("update tcad_ingest.records set fields=fields||'{\"ag_market\":\"1\"}'::jsonb where dataset_id=$1 and member_name='cost-land.txt' and row_number=999",[anchor]);
+ assert.equal(await get(),null);
+});

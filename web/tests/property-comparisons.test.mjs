@@ -34,3 +34,15 @@ test('invalid comparison requests do not reach database; response parser strips 
  assert.equal(parseComparison({...raw,subject:{...base,market_value:-1}},'100'),null);
  assert.equal(parseComparison({...raw,releases:[]},'100'),null);
 });
+
+test('failed cost projection never falls back to incomplete snapshot land',async()=>{
+ const release={dataset_id:'11111111-1111-4111-8111-111111111111',tax_year:2026,roll_stage:'certified',export_date:'2026-07-18'};
+ const raw={available:true,status:'ok',anchor_id:release.dataset_id,release,releases:[release],subject:base,candidates:[comp('120',400000)],selected:[comp('120',400000)],matches:[],candidate_limit_reached:false,search_has_more:false};
+ const fetcher=async url=>new Response(JSON.stringify(new URL(String(url)).pathname.endsWith('/property_comparisons')?raw:null),{status:200});
+ const result=await getComparisons('100',null,['120'],'',0,{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fixture'},fetcher);
+ assert.equal(result.status,'ok');
+ assert.equal(result.data.subject.land_value,null);
+ assert.equal(result.data.selected[0].land_value,null);
+ assert.equal(result.data.candidates[0].land_value,null);
+ assert.equal(result.data.selected[0].market_value,400000);
+});
