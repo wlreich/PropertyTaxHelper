@@ -209,7 +209,7 @@ export function preliminaryBaseline(snapshots: Snapshot[], current: Snapshot) {
 }
 export const snapshotLabel = (s: Snapshot) => `${s.tax_year} ${s.preliminary_baseline_eligible === false ? "interim snapshot" : s.roll_stage}`;
 export function dateLabel(date: string | null) {
-  if (!date) return "Export date not reported";
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) return "Export date not reported";
   const [year, month, day] = date.split("-").map(Number);
   return new Intl.DateTimeFormat("en-US", {
     month: "short",

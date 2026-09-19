@@ -1,0 +1,27 @@
+import { currency } from '@/lib/property-search';
+import { currentAssessmentStory } from '@/lib/current-assessment';
+import { snapshotLabel, type Snapshot, type ProtestObservation } from '@/lib/property-history';
+import type { SeasonContext } from '@/lib/seasons';
+import { TermDefinition } from './term-definition';
+
+function AnnualChange({ change, year }: { change: ReturnType<typeof currentAssessmentStory>['annual']; year?: number }) {
+  if (!change) return <>Prior-year comparison unavailable</>;
+  if (change.dollars === 0) return <>Unchanged vs. {year}</>;
+  return <>{change.dollars > 0 ? '↑' : '↓'} {currency(Math.abs(change.dollars))}{change.percent !== null && <> · {Math.abs(change.percent).toFixed(1)}%</>} vs. {year}</>;
+}
+export function CurrentAssessment({current,snapshots,evidence,season,unavailable}: {current:Snapshot;snapshots:Snapshot[];evidence:ProtestObservation[];season:SeasonContext|null;unavailable:boolean}) {
+  const story = currentAssessmentStory(current,snapshots,evidence,season,unavailable);
+  return <section className="current-assessment" aria-labelledby="current-assessment-heading">
+    <p className="current-assessment-label">Current assessment <span>/</span> {snapshotLabel(current)}</p>
+    <h2 id="current-assessment-heading">{story.headline}</h2>
+    <p>{story.narrative}</p>
+    <dl className="current-assessment-metrics">
+      <div><dt><TermDefinition term="Appraisal District market value">The Appraisal District’s recorded estimate of market value. It is not a tax bill or an independent sale-price estimate.</TermDefinition></dt><dd className="current-assessment-number">{currency(current.market_value)}</dd><dd><AnnualChange change={story.annual} year={story.previous?.tax_year}/></dd></div>
+      <div><dt>{story.capped ? 'Assessed value after cap' : 'Assessed value before exemptions'}</dt><dd className="current-assessment-number">{currency(current.assessed_value)}</dd><dd><AnnualChange change={story.assessed} year={story.previous?.tax_year}/></dd></div>
+      <div><dt>{story.proposed && story.proposed.dollars > 0 ? 'Increase from proposed' : 'Reduction from proposed'}</dt><dd className="current-assessment-number">{story.proposed ? currency(Math.abs(story.proposed.dollars)) : current.roll_stage === 'certified' ? 'Not available' : 'Pending'}</dd><dd>{story.proposed ? story.proposed.dollars === 0 ? 'Proposed and certified values match' : `${story.proposed.percent !== null ? `${Math.abs(story.proposed.percent).toFixed(1)}% ${story.proposed.dollars < 0 ? 'lower' : 'higher'}. ` : ''}Value change, not tax savings.` : current.roll_stage === 'certified' ? 'Comparable preliminary value unavailable' : 'Certified result unavailable'}</dd></div>
+    </dl>
+    <p className="current-assessment-evidence">{story.protest} · {story.agents.length ? `Agent${story.agents.length > 1 ? 's' : ''}: ${story.agents.map(a=>a.name).join(' · ')}` : 'Agent not identified'}</p>
+    {(story.agents.length > 0 || story.proposed && story.proposed.dollars < 0) && <p className="current-assessment-evidence">The records do not establish what caused a reduction or who handled the case.</p>}
+    {story.seasonNote && <p className="current-assessment-season">{story.seasonNote}</p>}
+  </section>;
+}

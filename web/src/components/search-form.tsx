@@ -59,6 +59,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
   const router = useRouter();
   const listboxId = useId();
   const input = useRef<HTMLInputElement>(null);
+  const editedBeforeRestore = useRef(false);
   const cache = useRef(new Map<string, Omit<SuggestionState, "status">>());
   const [pending, startTransition] = useTransition();
   const [value, setValue] = useState(query);
@@ -80,13 +81,17 @@ export function SearchForm({ query = "" }: { query?: string }) {
       setSuggestions(idleSuggestions);
       setValidationError(null);
     };
-    restore();
+    // Hydration or the initial pageshow must not erase a query already being typed.
+    if (!editedBeforeRestore.current) restore();
+    const restoreCachedPage = (event: PageTransitionEvent) => {
+      if (event.persisted) restore();
+    };
     if (window.location.hash === "#property-search") input.current?.focus({ preventScroll: true });
     window.addEventListener("popstate", restore);
-    window.addEventListener("pageshow", restore);
+    window.addEventListener("pageshow", restoreCachedPage);
     return () => {
       window.removeEventListener("popstate", restore);
-      window.removeEventListener("pageshow", restore);
+      window.removeEventListener("pageshow", restoreCachedPage);
     };
   }, []);
 
@@ -224,6 +229,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
               }, 100);
             }}
             onChange={(event) => {
+              editedBeforeRestore.current = true;
               const nextValue = event.currentTarget.value;
               const valid = !parseSearch(nextValue).error;
               setValue(nextValue);

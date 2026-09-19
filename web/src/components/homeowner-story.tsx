@@ -100,7 +100,7 @@ export function Representation({evidence,year,unavailable}:{evidence:ProtestObse
       <ul className="overview-protest-observations">{evidence.map(s=><li key={`${s.dataset_id}:${s.tax_year}`}>
         <strong>{s.tax_year} tax year · {dateLabel(s.export_date)}</strong>
         <span>{s.protest_flag && s.arb_case_listed ? "Protest flag and ARB case listed" : s.arb_case_listed ? "ARB case listed" : s.protest_flag ? "Protest flag recorded" : "Agent assignment recorded"}</span>
-        {s.arb_status_codes.length>0 && <span>TCAD status code: {s.arb_status_codes.join(", ")}</span>}
+        {s.arb_status_codes.length>0 && <span>Appraisal District status code: {s.arb_status_codes.join(", ")}</span>}
         <span>{s.arb_agent_name ?? (s.arb_agent_listed ? "Agent assignment recorded; name unavailable" : "Agent not identified")}</span>
       </li>)}</ul><p className="overview-note">Status codes are shown as supplied; their definitions have not been verified.</p>
     </details>}
@@ -120,13 +120,13 @@ export function HomeownerNextSteps({address}:{address:string}) {
       <li><PropertySectionLink target="property-facts-heading">Check the basics</PropertySectionLink><span>Living area, land size and construction class: does the record describe your home?</span></li>
       <li><PropertySectionLink target="features-heading">Review separately valued features</PropertySectionLink><span>Look for an incorrect pool, spa or other detail. Gather dated photos or documents for anything you question.</span></li>
       <li><PropertySectionLink target="exemptions-heading">Check your exemptions</PropertySectionLink><span>Review what is recorded and the taxable value for each taxing authority.</span></li>
-      <li><strong>Look for a fair comparison</strong><span>Start with the same TCAD neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
+      <li><strong>Look for a fair comparison</strong><span>Start with the same Appraisal District neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
     </ol>
     {street && <><Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link><p className="overview-note">Searches addresses on your street. Use the results as a starting point, then compare the property details.</p></>}
     <details className="homeowner-details"><summary>Could I prepare my own protest?</summary>
       <p>Start by identifying a specific issue you can support: an incorrect property detail, documented condition, or a well-chosen comparison. Organize the evidence and the value you believe it supports.</p>
       <p><TermDefinition term="Sales and assessment comparisons">Sales help evaluate market value. Assessment comparisons examine how similar properties are appraised. They support different questions; keep the evidence separate.</TermDefinition></p>
-      <p><a className="homeowner-text-link" href="https://traviscad.org/protests/">Read TCAD’s protest process and current requirements ↗</a></p>
+      <p><a className="homeowner-text-link" href="https://traviscad.org/protests/">Read Appraisal District’s protest process and current requirements ↗</a></p>
     </details>
   </section>;
 }

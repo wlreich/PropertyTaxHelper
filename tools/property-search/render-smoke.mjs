@@ -126,10 +126,10 @@ try {
   assert.match(profile, /Assessment history/);
   assert.match(profile, /Protest recorded · 2026/);
   assert.match(profile, /2026 tax year · Apr 29, 2026/);
-  assert.match(profile, /TCAD status code: EF/);
+  assert.match(profile, /Appraisal District status code: EF/);
   assert.match(profile, /FIXTURE TAX PARTNERS/);
   assert.match(profile, /Looks like a successful protest!/);
-  assert.match(profile, /Your certified market value/);
+  assert.match(profile, /Current assessment/);
   assert.match(profile, /Agent listed for 2026/);
   assert.match(profile, /How the values fit together/);
   assert.match(profile, /See all taxing authorities/);

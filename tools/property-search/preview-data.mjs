@@ -1,3 +1,4 @@
+import {par9Reference} from './par9-reference-fixture.mjs';
 import {seedMarketAdjustments} from './market-adjustment-fixture.mjs';
 import {seedHomeRegression} from './home-regression-fixture.mjs';
 import {seedAddressSearch} from './address-search-fixture.mjs';
@@ -39,6 +40,10 @@ createServer((req,res)=>{
    const call=async(sql,values=[]) => (await db.query(sql,values)).rows[0].result;
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
+   if(args.p_id==='736164' && ['property_overview_bundle','property_market_adjustment','property_profile','property_history'].includes(route)) {
+    const reference={property_overview_bundle:par9Reference.overview,property_market_adjustment:par9Reference.adjustment,property_profile:par9Reference.overview.profile,property_history:par9Reference.overview.history};
+    return send(200,reference[route]);
+   }
    if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
    else if(route==='property_market_adjustment')result=await call('select public.property_market_adjustment($1) result',[args.p_id]);
    else if(route==='property_neighborhood_v4')result=await call('select public.property_neighborhood_v4($1,$2) result',[args.p_id,args.p_source??null]);
