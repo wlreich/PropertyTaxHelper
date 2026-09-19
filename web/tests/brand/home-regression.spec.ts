@@ -17,6 +17,7 @@ test('PAR-5 full addresses, IDs, typo recovery, unit and street variants', async
     await expect(page.getByRole('option')).toHaveCount(1);
     await expect(page.getByRole('option')).toContainText('736302');
     await search.press('Enter');
+    await expect(page).toHaveURL(url => url.searchParams.get('q') === q);
     await expect(page.locator('.result-card')).toHaveCount(1);
     await expect(page.locator('.result-card')).toHaveAttribute('href', /\/property\/736302\?/);
   }
@@ -25,6 +26,7 @@ test('PAR-5 full addresses, IDs, typo recovery, unit and street variants', async
     await expect(page.getByRole('status')).toContainText('No matching properties found.');
     await expect(page.getByRole('option')).toHaveCount(0);
     await search.press('Enter');
+    await expect(page).toHaveURL(url => url.searchParams.get('q') === q);
     await expect(page.getByRole('heading', { name: 'No matching properties found.', exact: true })).toBeVisible();
     if (q === '999999999') await expect(page.locator('.empty-state')).toContainText('Check the property ID or try a street address.');
     if (q === 'NoSuchStreet') await expect(page.locator('.empty-state')).toContainText('check the spelling');
@@ -36,6 +38,7 @@ test('PAR-5 full addresses, IDs, typo recovery, unit and street variants', async
   for (const q of ['1905 West 36th Street Unit B', '1905 W 36 St #B']) {
     await search.fill(q);
     await search.press('Enter');
+    await expect(page).toHaveURL(url => url.searchParams.get('q') === q);
     await expect(page.locator('.result-card')).toHaveCount(1);
     await expect(page.locator('.result-card')).toHaveAttribute('href', /\/property\/799047\?/);
   }
@@ -62,7 +65,9 @@ test('PAR-5 blank inputs do not request suggestions or navigate', async ({ page 
 test('PAR-6 search links focus input; Back, Forward and clear preserve only the draft', async ({ page }) => {
   await page.goto('/');
   const search = page.getByRole('combobox');
-  for (const name of ['Search my property ↑', 'Property search', 'Search']) {
+  const searchLinks = ['Search my property ↑', 'Property search'];
+  if (page.viewportSize()!.width > 480) searchLinks.push('Search');
+  for (const name of searchLinks) {
     await page.getByRole('link', { name, exact: true }).press('Enter');
     await expect(search).toBeFocused();
     await page.keyboard.type('1102 Paw');
@@ -206,10 +211,10 @@ test('PAR-7 text alignment, responsive footer, enlarged text and tooltip', async
       const r = document.createRange(); r.selectNodeContents(el); return Array.from(r.getClientRects()).map(x=>x.top);
     });
     expect(new Set(lastWord).size).toBe(1);
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect(await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,class:el.className,right:el.getBoundingClientRect().right}))), `overflow at ${width}px`).toEqual([]);
     await page.screenshot({path:info.outputPath(`results-${width}.png`),fullPage:true});
     await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect(await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,class:el.className,right:el.getBoundingClientRect().right}))), `overflow at ${width}px`).toEqual([]);
     await page.screenshot({path:info.outputPath(`enlarged-${width}.png`),fullPage:true});
     await page.evaluate(()=>{document.documentElement.style.fontSize='';});
   }

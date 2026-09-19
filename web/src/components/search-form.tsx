@@ -217,7 +217,7 @@ export function SearchForm({ query = "" }: { query?: string }) {
                 setOpen(true);
             }}
             onBlur={() => {
-              window.setTimeout(() => setOpen(false), 100);
+              setOpen(false);
             }}
             onChange={(event) => {
               const nextValue = event.currentTarget.value;

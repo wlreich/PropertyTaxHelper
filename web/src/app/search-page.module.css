@@ -525,7 +525,7 @@
 
 .footerGrid {
   display: grid;
-  grid-template-columns: 1.3fr repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
 }
 
@@ -773,7 +773,7 @@
   }
 
   .footerGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .footerIdentity {
@@ -942,3 +942,6 @@
 }
 
 .page .homeFooter .footerBottom a[href] { color: inherit; text-decoration: underline; }
+
+.homeFooter { overflow-wrap: anywhere; }
+.footerGrid > div { min-width: 0; }

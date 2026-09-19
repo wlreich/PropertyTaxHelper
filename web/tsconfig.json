@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "brand-report", "brand-test-results", "home-report", "home-test-results", "smoke-report", "smoke-test-results"]
 }

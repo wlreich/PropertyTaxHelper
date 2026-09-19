@@ -1,0 +1,119 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- alert: ParcelSavvy | Understand your assessment
+- banner:
+  - link "ParcelSavvy home" [active]:
+    - /url: /
+    - img "ParcelSavvy"
+  - navigation "Main navigation":
+    - link "Search":
+      - /url: /#property-search
+    - link "About":
+      - /url: /#about
+    - link "Support us":
+      - /url: /#support
+  - generic: TRAVIS COUNTY, TEXAS
+  - generic: "County Appraisal District: Travis Central Appraisal District (TCAD)"
+- main:
+  - region "What happened to your property appraisal?":
+    - paragraph: Property assessments, explained
+    - heading "What happened to your property appraisal?" [level=1]
+    - paragraph: See how the Appraisal District valued your home, what changed, and how your property compares.
+    - generic: Property address or property ID
+    - combobox "Property address or property ID"
+    - button "Search"
+    - status
+    - paragraph: A partial address works, too.
+    - complementary "An example appraisal story":
+      - paragraph: Example only
+      - paragraph: Fictional values to show what you can explore.
+      - heading "An example appraisal story" [level=2]
+      - generic: 2026 certified market value
+      - strong: $612,000
+      - paragraph: ↓ $38,000 below preliminary
+      - term: Protest record
+      - definition: Found
+      - term: Compared with prior year
+      - definition: $21,000 lower
+      - paragraph: Search to see your own property.
+  - region "Current assessment release":
+    - strong: 2026 certified results are available
+    - paragraph: Compare preliminary and certified values, see available protest records, and understand what happened across your local neighborhood.
+    - generic: Current through Jul 18, 2026
+  - region "Start with the questions you actually have.":
+    - paragraph: Designed for homeowners
+    - heading "Start with the questions you actually have." [level=2]
+    - paragraph: Clear answers, visible source dates, and candid limits—without requiring you to become a property-tax expert first.
+    - list:
+      - generic: "?"
+      - text: Did my home’s value change after the first appraisal notice?
+      - generic: "?"
+      - text: Was a protest filed for my home, and was its value lowered?
+      - generic: "?"
+      - text: How does my home’s value compare with similar homes?
+      - generic: "?"
+      - text: What happened to home values in my local neighborhood?
+      - generic: "?"
+      - text: Are my home’s details and property tax exemptions correct?
+  - region "Useful property information shouldn’t disappear behind a paywall.":
+    - paragraph: Homeowner-supported
+    - heading "Useful property information shouldn’t disappear behind a paywall." [level=2]
+    - paragraph: ParcelSavvy keeps its core homeowner tools available without requiring a subscription. If the site helped you understand your appraisal, optional support can help cover public-data processing, hosting, and continued development.
+    - paragraph: Use everything first. Support it only if you find it valuable.
+    - complementary:
+      - heading "Help keep ParcelSavvy open" [level=3]
+      - paragraph: A small contribution can help maintain the data and build the next homeowner tools. Access will not depend on payment.
+      - link "Support ParcelSavvy":
+        - /url: /support
+      - generic: Optional contributions are not charitable donations and are not tax-deductible.
+  - region "Independent by design. Built for homeowners.":
+    - heading "Independent by design. Built for homeowners." [level=2]
+    - paragraph: ParcelSavvy brings public appraisal records together so you can understand your assessment and decide what to explore next.
+    - list:
+      - heading "Independent perspective" [level=3]
+      - paragraph: We are not affiliated with the Appraisal District. We help explain its public records.
+      - heading "Answers in plain language" [level=3]
+      - paragraph: See what changed, how nearby homes compare, and where the records leave questions.
+      - heading "You decide what comes next" [level=3]
+      - paragraph: Explore the information at your own pace. No pressure to protest and no promises of savings.
+  - heading "Know your property. Understand your assessment." [level=2]
+  - paragraph: Start with an address or property ID.
+  - link "Search my property ↑":
+    - /url: /#property-search
+- contentinfo:
+  - paragraph: ParcelSavvy.org
+  - paragraph: Independent property-assessment context for Travis County homeowners. Values reflect selected public Appraisal District releases and are not a tax bill.
+  - heading "Explore" [level=2]
+  - navigation "Explore ParcelSavvy":
+    - link "Property search":
+      - /url: /#property-search
+    - link "Data & methodology":
+      - /url: /#evidence
+    - link "Homeowner questions":
+      - /url: /#questions
+  - heading "ParcelSavvy" [level=2]
+  - navigation "About ParcelSavvy":
+    - link "About ParcelSavvy":
+      - /url: /#about
+    - link "Contact":
+      - /url: /contact
+    - button "Suggest a feature or metric"
+    - link "Report a data issue":
+      - /url: /report-data-issue
+    - link "Support ParcelSavvy":
+      - /url: /support
+  - heading "Legal & access" [level=2]
+  - navigation "Legal and access":
+    - link "Privacy policy":
+      - /url: /privacy
+    - link "Terms of use":
+      - /url: /terms
+    - link "Accessibility":
+      - /url: /accessibility
+    - link "Official Appraisal District search ↗":
+      - /url: https://traviscad.org/propertysearch/
+  - generic: © 2026 Systems & Sense LLC. All rights reserved.
+  - text: Official property records are available on
+  - link "TCAD’s website ↗":
+    - /url: https://traviscad.org/propertysearch/
+  - text: .
