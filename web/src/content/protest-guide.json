@@ -1,0 +1,891 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "2026-09-19.1",
+  "reviewedDate": "2026-09-19",
+  "title": "ParcelSavvy Homeowner Protest Guide",
+  "sourceSha256": "f61472fb26a5e7c1e7258cc5e17ef28907847b3e1dd4bdd5f7e9bc998f277967",
+  "introduction": [
+    {
+      "id": "introduction-block-1",
+      "markdown": "Your appraisal deserves a look every year. A homestead exemption and an appraisal cap can help, but neither tells you whether the Appraisal District got your home’s value right.\n\nThis guide explains the numbers on your notice, how to decide whether to protest, and how to build a clear case yourself or work effectively with an agent. You do not need to become an appraiser. You do need to meet the deadline and explain what the evidence supports.\n\nWe use “Appraisal District” throughout. In Travis County, that means the Travis Central Appraisal District. The Appraisal Review Board, or ARB, is a separate body that hears disputes.\n\n**Start here:** Find your current notice, confirm your filing deadline, check your exemptions and property details, and compare your value with relevant sales and similar properties. If you have grounds to disagree, file on time while you finish your research."
+    }
+  ],
+  "calendarStatus": {
+    "asOfDate": "2026-09-19",
+    "sourceSection": 3,
+    "placement": "before-section-03",
+    "markdown": "Use this as a planning calendar. Your own notice and hearing instructions control your case. As of this draft, the ordinary 2026 filing deadline has passed. These dates should not be presented as an open 2026 filing window or a confirmed 2027 schedule.",
+    "confirmedOperatingDates": []
+  },
+  "chapters": [
+    {
+      "id": "tax-system",
+      "anchor": "tax-system",
+      "number": "01",
+      "title": "How the Texas property tax system works",
+      "sections": [
+        {
+          "id": "section-01",
+          "sourceSection": 1,
+          "title": "How Texas property taxes fit together",
+          "blocks": [
+            {
+              "id": "section-01-block-1",
+              "markdown": "Several organizations touch your property tax bill, and they do different jobs. The Appraisal District values property and administers exemptions. The ARB resolves appraisal disputes. Local taxing entities, including school districts, cities, counties and special districts, adopt their tax rates. The tax office bills and collects for the entities it serves. Texas does not impose a state property tax. [Texas property tax system](<https://traviscad.org/propertytaxsystem>)\n\nThe Appraisal District estimates what your property would sell for as of January 1. That is its **market value**. An applicable appraisal limitation can produce a lower **net appraised value**. Exemptions then reduce the amount subject to each entity’s tax, producing **taxable value**. Different exemptions can mean different taxable values for the same home. [Understanding the values on your notice](<https://traviscad.org/protests>)\n\n**A simplified example for one taxing entity**\n\n| Step | Example | What happens |\n| -- | -- | -- |\n| Market value | $700,000 | Estimated January 1 sale value |\n| Apply an eligible cap | $605,000 | Example net appraised value after the limitation |\n| Subtract this entity’s exemption | −$50,000 | Hypothetical exemption for this example |\n| Taxable value | $555,000 | Amount this entity taxes |\n| Apply its rate | $0.40 per $100 | $555,000 ÷ 100 × $0.40 |\n| Tax for this entity | $2,220 | Repeat for the other taxing entities |\n\nThis example is arithmetic, not a statement of current exemption amounts or tax rates. Actual bills may also involve tax ceilings and other adjustments.\n\nA protest can address the value or another protestable Appraisal District decision. It does not change the tax rate. Concerns about budgets and rates belong in the taxing entities’ public budget and rate-setting process. Your spring appraisal notice is not your fall tax bill. [Who handles property tax questions](<https://traviscad.org/propertytaxsystem>)"
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Texas property tax system",
+              "url": "https://traviscad.org/propertytaxsystem"
+            },
+            {
+              "label": "Understanding the values on your notice",
+              "url": "https://traviscad.org/protests"
+            },
+            {
+              "label": "Who handles property tax questions",
+              "url": "https://traviscad.org/propertytaxsystem"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Texas property tax system",
+          "url": "https://traviscad.org/propertytaxsystem"
+        },
+        {
+          "label": "Understanding the values on your notice",
+          "url": "https://traviscad.org/protests"
+        },
+        {
+          "label": "Who handles property tax questions",
+          "url": "https://traviscad.org/propertytaxsystem"
+        }
+      ]
+    },
+    {
+      "id": "annual-review",
+      "anchor": "annual-review",
+      "number": "02",
+      "title": "Why review and protest every year",
+      "sections": [
+        {
+          "id": "section-02",
+          "sourceSection": 2,
+          "title": "Why protesting belongs in your annual routine",
+          "blocks": [
+            {
+              "id": "section-02-block-1",
+              "markdown": "**Do not let the cap make the decision for you.** Review your appraisal every year and protest when the evidence supports a lower value, unequal appraisal or another correctable issue. Hiring someone to handle that review is a perfectly reasonable way to do it.\n\nA value can deserve a challenge even if it went down from last year. The useful question is whether this year’s value is supported. A smaller overstatement is still worth examining.\n\nMass appraisal applies common methods across many homes. Your property may have a condition problem, an incorrect characteristic or an unusual site that a broad model does not fully capture. That is a reason to check the work, not proof that all model values are inflated. The District’s own report describes using neighborhood analysis, property characteristics and market calibration. [2026 Mass Appraisal Report](<https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf>)"
+            },
+            {
+              "id": "section-02-block-2",
+              "markdown": "### What the homestead cap actually does\n\nFor a qualifying residence homestead with an active limitation, the capped appraised value generally cannot exceed the lower of current market value or last year’s appraised value plus 10%, plus the market value of qualifying new improvements. The limitation generally starts the year after the owner qualifies. Ordinary repairs and maintenance are not new improvements for this rule. The 10% restriction applies to appraised value, not to market value or the final tax bill. [Comptroller explanation of the homestead limitation](<https://comptroller.texas.gov/taxes/property-tax/valuing-property.php>)\n\nThe cap limits how fast appraised value can rise. It does not independently verify the starting value. That is why annual review matters."
+            },
+            {
+              "id": "section-02-block-3",
+              "markdown": "### Three outcomes that look similar but are not\n\nAssume last year’s capped appraised value was $500,000, the cap remains active, and there are no new improvements. This year’s cap ceiling is $550,000. All amounts below are before exemptions.\n\n| Outcome | Final market value | This year’s appraised value | Next year’s 110% ceiling |\n| -- | -- | -- | -- |\n| No reduction | $700,000 | $550,000 | $605,000 |\n| Reduction that stays above the cap | $620,000 | $550,000 | $605,000 |\n| Reduction below the cap | $530,000 | $530,000 | $583,000 |\n\nThese are worked examples applying the cap rule. Next year’s actual appraised value also depends on that year’s market value, continued eligibility and any qualifying new improvements.\n\nIn the middle row, the $80,000 market-value reduction produces no current appraised-value reduction and does not lower next year’s cap base. Calling $80,000 multiplied by a tax rate “tax savings” would be misleading.\n\nIn the last row, the supported market value falls below the cap. That reduces this year’s appraised value by $20,000 and lowers the starting point used for next year’s ceiling. If that entire $20,000 also reduced taxable value across entities with a combined 2% rate, the illustrative current tax savings would be $400."
+            },
+            {
+              "id": "section-02-block-4",
+              "markdown": "### What if the market is falling\n\nSuppose market value falls from $700,000 to $620,000 while the prior capped appraised value was $500,000. This year’s appraised value can still rise to $550,000. The market went down, but the cap was still catching up.\n\nA reduction that stays above the cap can still correct an unsupported market value or property record. But it does not guarantee future savings. Next year brings another valuation, and the ARB’s decision applies to the year under protest. [Annual scope of ARB decisions](<https://comptroller.texas.gov/taxes/property-tax/protests/>)\n\n**Our recommendation:** Make annual review routine. Use a protest to pursue a supportable result. Judge the outcome using market value, appraised value, taxable value and fees separately. The cap is useful. It is not a substitute for reading the notice."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "2026 Mass Appraisal Report",
+              "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+            },
+            {
+              "label": "Comptroller explanation of the homestead limitation",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/valuing-property.php"
+            },
+            {
+              "label": "Annual scope of ARB decisions",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "2026 Mass Appraisal Report",
+          "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+        },
+        {
+          "label": "Comptroller explanation of the homestead limitation",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/valuing-property.php"
+        },
+        {
+          "label": "Annual scope of ARB decisions",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+        }
+      ]
+    },
+    {
+      "id": "timeline-deadlines",
+      "anchor": "timeline-deadlines",
+      "number": "03",
+      "title": "Timeline and deadlines",
+      "sections": [
+        {
+          "id": "section-03",
+          "sourceSection": 3,
+          "title": "The Travis County calendar",
+          "blocks": [
+            {
+              "id": "section-03-block-1",
+              "markdown": "| When | What happens | What you should do |\n| -- | -- | -- |\n| January 1 | General valuation date | Preserve evidence of the property’s condition at this date |\n| Spring, commonly April | Proposed values and appraisal notices | Read the notice and verify property details and exemptions |\n| Generally April 30 | Ordinary exemption application deadline | Check eligibility and apply; some late applications are permitted |\n| Usually May 15, or 30 days after the notice is mailed, whichever is later | Ordinary protest filing deadline | File and save confirmation; use the deadline on your notice |\n| After filing and evidence processing | Informal review | Exchange evidence, ask questions and evaluate any offer |\n| Commonly June through August locally | ARB hearings | Prepare for your assigned hearing date and format |\n| After the written ARB order | Appeal deadlines begin | Save the order and its delivery record immediately |\n| Late summer and fall | Taxing entities adopt rates; tax bills follow | Review proposed rates and then the actual bill |\n| Generally January 31 of the following year | Ordinary payment deadline | Check the tax office’s deadline, including weekend or holiday adjustments |\n\nSources: [Travis protest filing](<https://traviscad.org/protests>), [Local ARB season](<https://traviscad.org/arbhearings>), [Exemption application deadlines](<https://comptroller.texas.gov/taxes/property-tax/exemptions/>), [Texas property tax calendar](<https://comptroller.texas.gov/taxes/property-tax/calendars/>).\n\nThe protest deadline and evidence preparation are separate tasks. Do not wait for an agent, a realtor’s report or an open records response before protecting the filing deadline. A phone call asking about your value is not a substitute for filing a protest. [Filing and informal review](<https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf>)\n\nIf you miss a deadline, act promptly. Late protests and correction procedures have specific conditions. They are not a general extension available to everyone. Ask the District about the procedure that fits your situation and seek qualified advice for a disputed deadline. [Late-filed protests](<https://comptroller.texas.gov/taxes/property-tax/protests/>)"
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Travis protest filing",
+              "url": "https://traviscad.org/protests"
+            },
+            {
+              "label": "Local ARB season",
+              "url": "https://traviscad.org/arbhearings"
+            },
+            {
+              "label": "Exemption application deadlines",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/"
+            },
+            {
+              "label": "Texas property tax calendar",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/calendars/"
+            },
+            {
+              "label": "Filing and informal review",
+              "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+            },
+            {
+              "label": "Late-filed protests",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Travis protest filing",
+          "url": "https://traviscad.org/protests"
+        },
+        {
+          "label": "Local ARB season",
+          "url": "https://traviscad.org/arbhearings"
+        },
+        {
+          "label": "Exemption application deadlines",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/"
+        },
+        {
+          "label": "Texas property tax calendar",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/calendars/"
+        },
+        {
+          "label": "Filing and informal review",
+          "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+        },
+        {
+          "label": "Late-filed protests",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+        }
+      ]
+    },
+    {
+      "id": "working-with-agent",
+      "anchor": "working-with-agent",
+      "number": "04",
+      "title": "Working with an agent",
+      "sections": [
+        {
+          "id": "section-04",
+          "sourceSection": 4,
+          "title": "Choosing between an agent and DIY",
+          "blocks": [
+            {
+              "id": "section-04-block-1",
+              "markdown": "An agent can save you research time, manage filings and represent you in the protest process. DIY gives you direct control of the evidence and decisions. Either approach can work. Consider your available time, comfort presenting evidence, property complexity and the contract’s cost.\n\nAn unusual property, substantial value dispute or possible appeal may justify professional help. A clear factual error or a straightforward set of comparable homes may be manageable yourself. You can also do much of the property research and give it to your agent.\n\nAsk who will actually handle the work. Where applicable, verify the consultant’s TDLR license or the attorney’s professional standing. Different professions have different licensing rules and exemptions; a missing property tax consultant license alone does not settle whether a person is authorized to practice. [Texas property tax consultant regulation](<https://www.tdlr.texas.gov/ptc/>)"
+            },
+            {
+              "id": "section-04-block-2",
+              "markdown": "### Understand the fee before the result arrives\n\nRead for a percentage of savings, a flat fee, a minimum charge, or a combination. Ask what the contract means by “savings,” which tax rate it uses, how it treats exemptions and caps, and whether the amount is reconciled to the final bill. Treat the examples below as fictional contract comparisons, not market pricing.\n\nAssume a $50,000 reduction in market value. Where stated, it also reduces taxable value by $50,000 across all entities. Use an illustrative combined rate of 2%.\n\n| Hypothetical contract and result | Current tax savings | Agent fee | Savings after fee |\n| -- | -- | -- | -- |\n| 35% of actual tax savings; taxable value falls $50,000 | $1,000 | $350 | $650 |\n| $250 flat fee; taxable value falls $50,000 | $1,000 | $250 | $750 |\n| 35% of actual tax savings; cap keeps taxable value unchanged | $0 | $0 if no minimum or other charge | $0 |\n| 35% of market reduction × 2%; taxable value unchanged | $0 | $350 if the contract requires it | −$350 |\n\nA fee for work that does not reduce the current bill is not automatically improper. The issue is whether you understand the agreement and value the service. A flat fee can be payable even with no reduction. Future savings should not be treated as money already saved."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Texas property tax consultant regulation",
+              "url": "https://www.tdlr.texas.gov/ptc/"
+            }
+          ]
+        },
+        {
+          "id": "section-05",
+          "sourceSection": 5,
+          "title": "Questions to ask an agent",
+          "blocks": [
+            {
+              "id": "section-05-block-1",
+              "markdown": "You do not need to interrogate anyone. Ask for clear answers before signing, and keep them with the agreement.\n\n 1. **What do you handle?** Filing, informal review, ARB hearing, exemptions, record corrections and post-ARB appeals may have different scopes and charges.\n 2. **How do you define savings?** Ask for a worked example using your actual homestead cap and exemptions, including a reduction that remains above the cap.\n 3. **Which rate do you use?** Is the fee based on last year’s rate, an estimate or the final current-year rate? Is there a true-up?\n 4. **What can I owe with no tax reduction?** Ask about minimums, retainers, subscriptions, flat fees and administrative expenses.\n 5. **Who reviews my property and appears for me?** Ask how your photos, repair estimates and unusual property features enter the analysis.\n 6. **Will you evaluate market value and unequal appraisal?** Ask what evidence will support each applicable ground.\n 7. **Can you accept an offer without asking me?** Understand settlement authority and how quickly you must respond.\n 8. **What will I receive afterward?** Request the submitted evidence, any settlement, the final order, a fee calculation and a clear explanation of actual versus estimated tax savings.\n 9. **Does the agreement renew?** Check cancellation dates, notice requirements and future-year commitments.\n10. **How do I change representatives?** Ask separately about ending the service agreement and revoking the District’s agent appointment. Completing one may not complete the other.\n\nUse the District’s current agent appointment form when authorizing representation. Review its scope and notice-delivery choices before signing. [Appointment of Agent form](<https://comptroller.texas.gov/forms/50-162.pdf>)\n\n**Evaluate your agent on your case.** Ask whether the evidence was property-specific, both relevant grounds were considered, and decisions were explained. A neighborhood’s average reduction or an agent’s raw success percentage does not prove what should have happened to your home. Different starting values, caps and property conditions can produce very different outcomes."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Appointment of Agent form",
+              "url": "https://comptroller.texas.gov/forms/50-162.pdf"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Texas property tax consultant regulation",
+          "url": "https://www.tdlr.texas.gov/ptc/"
+        },
+        {
+          "label": "Appointment of Agent form",
+          "url": "https://comptroller.texas.gov/forms/50-162.pdf"
+        }
+      ]
+    },
+    {
+      "id": "diy-evidence",
+      "anchor": "diy-evidence",
+      "number": "05",
+      "title": "Build a strong DIY case",
+      "sections": [
+        {
+          "id": "section-06",
+          "sourceSection": 6,
+          "title": "Start a DIY protest with a clear question",
+          "blocks": [
+            {
+              "id": "section-06-block-1",
+              "markdown": "The two common value arguments answer different questions:\n\n**Market value:** What would this property reasonably have sold for as of January 1? Relevant closed sales, your own recent arm’s-length purchase and documented property condition can help answer it.\n\n**Unequal appraisal:** Is this property appraised higher than a reasonable set of comparable properties after appropriate adjustments? This concerns appraisal comparisons, not just sales prices. A neighbor’s lower tax bill is not enough because exemptions and caps differ. [Comptroller taxpayer guidance](<https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf>)\n\nWhen appropriate, identify both grounds on the protest. Include any separate issue, such as a denied exemption, that you intend to raise. Be truthful and specific. Filing preserves the opportunity to present your case; it does not establish the result."
+            },
+            {
+              "id": "section-06-block-2",
+              "markdown": "### Your first research session\n\n* Save the notice, the current property record and last year’s final record. Record the tax year and download date.\n* Check living area, lot size, construction class, year built, condition, separate structures, pools and other features. A garage or porch should not quietly become living area.\n* Check exemptions and whether the cap is active. New owners should verify their own eligibility and timing rather than assume the seller’s treatment continues.\n* Write down the two or three strongest issues you can document.\n* File through an authorized channel and retain confirmation. Travis offers an online portal, mail and in-person delivery. [Local filing instructions](<https://traviscad.org/protests>)\n\nConstruction class describes building quality; condition describes how well the structure has held up. “Older” does not automatically mean “lower class.” Compare the actual record with the District’s published descriptions. [Residential class and condition guidelines](<https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf>)\n\n**Pick a supportable requested value.** Do not start with your preferred tax bill and reverse-engineer a house value. If sales support one figure and adjusted appraisal comparisons support another, label the two analyses and explain each. Averaging incompatible methods can hide the argument you need to make."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Comptroller taxpayer guidance",
+              "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+            },
+            {
+              "label": "Local filing instructions",
+              "url": "https://traviscad.org/protests"
+            },
+            {
+              "label": "Residential class and condition guidelines",
+              "url": "https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf"
+            }
+          ]
+        },
+        {
+          "id": "section-07",
+          "sourceSection": 7,
+          "title": "Evidence that helps and arguments that usually do not",
+          "blocks": [
+            {
+              "id": "section-07-block-1",
+              "markdown": "Your strongest evidence connects a verifiable fact to the property’s value or the protested issue. The hearing is short. Make that connection easy to follow.\n\n**Correct a factual error.** Pair the District’s entry with a survey, plan, measurement or dated photograph. Explain the correction you request and how the error affects the analysis.\n\n**Document a condition problem.** Show where it is, when it existed and why a buyer would care. Combine dated photographs with a qualified inspection, engineer’s report or itemized repair estimate when available. A crack without context is a photograph of a crack.\n\n**Use a recent purchase carefully.** A closing statement and contract can support an arm’s-length sale, with context for concessions, included personal property, unusual terms and changes since the sale. Redact unrelated account and identity information.\n\n**Support comparisons.** Include addresses or property IDs, sources, dates, physical characteristics, the selection criteria and your adjustments. Let someone reproduce your arithmetic.\n\nThe Comptroller identifies photographs, repair records, sale documentation, surveys and engineering information among potentially useful evidence. The ARB cannot set your value according to your personal financial hardship or your dissatisfaction with tax rates. [Preparing an ARB case](<https://comptroller.texas.gov/taxes/property-tax/protests/>)"
+            },
+            {
+              "id": "section-07-block-2",
+              "markdown": "### Improve the argument\n\n* “My taxes are unaffordable.” → For a value case, show why the appraisal is wrong. Separately ask the tax office about payment relief and check exemptions.\n* “My neighbor pays less.” → Compare similar homes’ appraisal values before owner-specific caps and exemptions, with adjustments.\n* “The whole market is down.” → Connect local transactions and timing to your home’s January 1 value.\n* “An online estimate is lower.” → Identify the underlying comparable properties and whether their characteristics are accurate.\n* “My kitchen is dated.” → Document the difference from the renovated homes used as comparisons and support its market effect."
+            },
+            {
+              "id": "section-07-block-3",
+              "markdown": "### Repairs are evidence rather than automatic deductions\n\nA $30,000 repair estimate does not automatically produce a $30,000 value reduction. The District may already have allowed for condition, the scope may include upgrades, or buyers may react differently from the repair cost. Explain the effect and avoid counting the same problem again in a condition adjustment.\n\nFocus on conditions present on January 1. Later photographs can document an earlier condition if you explain the connection. Damage that first occurred later may involve a separate remedy rather than changing the January 1 facts."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Preparing an ARB case",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+            }
+          ]
+        },
+        {
+          "id": "section-08",
+          "sourceSection": 8,
+          "title": "Getting useful sales information",
+          "blocks": [
+            {
+              "id": "section-08-block-1",
+              "markdown": "Start with the District’s evidence for your protest. You can also ask the realtor who helped you buy your home, a realtor you know, or a local broker whether they can prepare a comparable market analysis for your property tax review.\n\nAsk for a report that supports **your property and tax year**, not a download of every sale in the ZIP code. Request closed sales near the valuation date, relevant property details, concessions if available, and permission to use the supplied material in your protest."
+            },
+            {
+              "id": "section-08-block-2",
+              "markdown": "### A request you can send\n\n“I’m reviewing my \\[year\\] property appraisal for \\[address\\]. Could you help me identify a small set of comparable closed sales relevant to its January 1 value? Homes with similar location, size, age, construction quality, condition and lot characteristics would be most useful. If possible, please include closing dates, sale prices, concessions and notes about renovations or unusual features. Please let me know any fee, required agreement, and what your brokerage and MLS rules allow me to submit to the Appraisal District or ARB.”\n\nThe realtor should confirm permitted use under current brokerage and MLS rules. Knowing a realtor, being a former client or signing a generic authorization does not by itself establish permission to redistribute MLS material. The local MLS restricts public display of sold prices, and listing photographs have separate rights. [Local MLS compliance guidance](<https://www.unlockmls.com/compliance>), [Photograph permissions](<https://www.unlockmls.com/photography-guidelines>)\n\nKeep private reports within their permitted use. Do not post the report publicly or upload it for publication on ParcelSavvy merely because you received it for a protest. Ask the provider how permitted hearing submission interacts with record retention or confidentiality.\n\n**If you cannot obtain MLS data:** Use the District evidence request, your own transaction records and public appraisal records for an unequal-appraisal analysis. Public asking prices can provide context, but do not label an asking price as a closed sale. A listing tells you what someone hoped to receive; a verified closing tells you what the transaction actually produced."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Local MLS compliance guidance",
+              "url": "https://www.unlockmls.com/compliance"
+            },
+            {
+              "label": "Photograph permissions",
+              "url": "https://www.unlockmls.com/photography-guidelines"
+            }
+          ]
+        },
+        {
+          "id": "section-09",
+          "sourceSection": 9,
+          "title": "Choosing good comparable sales",
+          "blocks": [
+            {
+              "id": "section-09-block-1",
+              "markdown": "A good comparable resembles the home a buyer would consider as an alternative to yours. The closest house is not always the best match, and the cheapest one is not automatically the right one.\n\nStart with a manageable group, such as three to five strong sales. That is a practical starting point, not a legal minimum or maximum. Expand the geography or time period when needed and explain why.\n\nLook for similarity in:\n\n* Location and market appeal, including school assignment, traffic, views and access.\n* Living area, layout, construction quality, effective age and renovation level.\n* Lot size and usable area, slope, drainage, easements and other site limitations.\n* Pools, separate dwellings, guesthouses and other material improvements.\n* Sale timing and terms, including whether the transaction reflects ordinary market behavior.\n\nThese selection principles are consistent with the District’s neighborhood analysis, which considers location, size, age, quality, condition and market sales. [2026 residential appraisal methods](<https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf>)\n\n**Write your selection rule before choosing your favorites.** For example: “Detached homes in the same market area, similar quality and age, roughly comparable size, with verified sales close to January 1.” Then explain departures. Include a less favorable sale if it is genuinely comparable and address it honestly."
+            },
+            {
+              "id": "section-09-block-2",
+              "markdown": "### Price per square foot is a screening tool\n\nSale price divided by living area includes the value of the whole property in the numerator. A large lot, a second dwelling or a pool can distort the apparent price of the main house’s space. Smaller homes can also sell for more per square foot than larger homes.\n\nUse price per square foot to spot questions. Do not multiply the lowest number in the neighborhood by your living area and treat the result as a completed valuation."
+            },
+            {
+              "id": "section-09-block-3",
+              "markdown": "### Keep an honest comparison sheet\n\nFor each sale, record the address, property ID, closing date, verified price, source, living area, lot size, quality, age, condition, major features and known limitations. Mark missing information as unknown. A blank adjustment should never silently mean the properties are identical."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "2026 residential appraisal methods",
+              "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+            }
+          ]
+        },
+        {
+          "id": "section-10",
+          "sourceSection": 10,
+          "title": "Understanding the District’s adjustments",
+          "blocks": [
+            {
+              "id": "section-10-block-1",
+              "markdown": "An adjustment asks what a comparable might have sold for if it were more like your property. In a sales comparison, adjust the comparable toward the subject home: a superior feature generally calls for a subtraction; an inferior feature generally calls for an addition. Timing and transaction terms may require separate treatment. Adjustment amounts should reflect market evidence, not an unsupported rule of thumb. [General appraisal guidance on adjustments](<https://selling-guide.fanniemae.com/sel/b4-1.3-09/adjustments-comparable-sales>) explains this principle; it is lending guidance, not a separate set of Travis ARB rules."
+            },
+            {
+              "id": "section-10-block-2",
+              "markdown": "### A worked example\n\nAssume a comparable sold for $650,000. Every adjustment below is hypothetical and would need market support in a real case.\n\n| Item | Adjustment to comparable | Running value |\n| -- | -- | -- |\n| Verified sale price | Starting point | $650,000 |\n| Sale timing | −$10,000 | $640,000 |\n| Comparable has a pool and subject does not | −$25,000 | $615,000 |\n| Comparable is smaller than subject | +$20,000 | $635,000 |\n| Comparable is more renovated | −$15,000 | $620,000 |\n\nThe example indicates $620,000 for the subject based on this one adjusted sale. It does not establish a value by itself. Compare the other reliable indications and explain why some deserve more weight."
+            },
+            {
+              "id": "section-10-block-3",
+              "markdown": "### How this connects to Travis County\n\nThe District’s 2026 report describes a residential method that applies a market factor to depreciated improvement cost, then adds land. It also describes an automated sales-comparison model in selected areas that uses the median adjusted sale indication. A property’s notice and its protest sales grid can therefore involve different analytical steps. Ask which method produced your value. [2026 Mass Appraisal Report](<https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf>)\n\nFor each material adjustment, ask: What property difference does it address? What data supports the amount? Is it already counted elsewhere? Is the direction correct? Are you using the same year and the same definitions?\n\nDo not replace a living-area adjustment with the home’s total sale price per square foot. Land, main dwelling, separate dwelling and amenities must be handled consistently. Identify separate structures from the underlying records instead of assuming that every nonliving-area feature is another dwelling.\n\n**A neighborhood factor is a reason to ask for support.** Request the applicable factor and the sales or analysis behind it. A large change is not, by itself, proof of error. Your case becomes stronger when you connect the factor or its inputs to evidence about your particular home."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "General appraisal guidance on adjustments",
+              "url": "https://selling-guide.fanniemae.com/sel/b4-1.3-09/adjustments-comparable-sales"
+            },
+            {
+              "label": "2026 Mass Appraisal Report",
+              "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Comptroller taxpayer guidance",
+          "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+        },
+        {
+          "label": "Local filing instructions",
+          "url": "https://traviscad.org/protests"
+        },
+        {
+          "label": "Residential class and condition guidelines",
+          "url": "https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf"
+        },
+        {
+          "label": "Preparing an ARB case",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+        },
+        {
+          "label": "Local MLS compliance guidance",
+          "url": "https://www.unlockmls.com/compliance"
+        },
+        {
+          "label": "Photograph permissions",
+          "url": "https://www.unlockmls.com/photography-guidelines"
+        },
+        {
+          "label": "2026 residential appraisal methods",
+          "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+        },
+        {
+          "label": "General appraisal guidance on adjustments",
+          "url": "https://selling-guide.fanniemae.com/sel/b4-1.3-09/adjustments-comparable-sales"
+        },
+        {
+          "label": "2026 Mass Appraisal Report",
+          "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+        }
+      ]
+    },
+    {
+      "id": "informal-review-records",
+      "anchor": "informal-review-records",
+      "number": "06",
+      "title": "Informal review and information requests",
+      "sections": [
+        {
+          "id": "section-11",
+          "sourceSection": 11,
+          "title": "Use the informal review to learn and resolve",
+          "blocks": [
+            {
+              "id": "section-11-block-1",
+              "markdown": "Travis currently offers one informal meeting per property, by phone or video. File the protest and ensure your evidence has been recorded first. The portal supports scheduling and evidence exchange. The District says an offer should generally follow within 10 business days after the discussion; check your actual messages and deadlines. An unresolved protest can proceed to the ARB. [Current informal process](<https://traviscad.org/informals>)\n\nPrepare as though this is your best opportunity to resolve the issue. You may not need a formal hearing if the evidence supports an acceptable agreement."
+            },
+            {
+              "id": "section-11-block-2",
+              "markdown": "### A useful agenda\n\n1. State the requested value and the two strongest reasons.\n2. Confirm that the appraiser has the same property facts and evidence you do.\n3. Ask which sales, equity comparisons and model inputs support the District’s position.\n4. Work through the largest differences or adjustments.\n5. Ask what additional evidence would change the conclusion.\n6. Confirm the next step and save the written offer.\n\nGood questions include: “Why is that renovated home a strong match?” “Where is the adjustment for its separate dwelling?” “Which sale dates support this time factor?” “Does this proposed market reduction change my net appraised value?”\n\nKeep notes identifying each answer and its source. You are testing the explanation, not trying to win an argument about whether the appraiser is a good person."
+            },
+            {
+              "id": "section-11-block-3",
+              "markdown": "### Evaluate an offer before accepting it\n\nCheck the proposed market value, the effect of your cap and exemptions, unresolved record errors, and any agent fee. Ask whether the agreement resolves all protest grounds and ends your ability to pursue the disputed issues that year. Do not assume you can accept an offer now and ask the ARB for more later. Written settlements can foreclose further review. [Settlement and arbitration eligibility](<https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php>)\n\nIf you decline, keep preparing and monitor the hearing notice. An informal offer is not a guarantee of the ARB’s result."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Current informal process",
+              "url": "https://traviscad.org/informals"
+            },
+            {
+              "label": "Settlement and arbitration eligibility",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+            }
+          ]
+        },
+        {
+          "id": "section-12",
+          "sourceSection": 12,
+          "title": "Request evidence through the right channel",
+          "blocks": [
+            {
+              "id": "section-12-block-1",
+              "markdown": "There are two useful routes. Your protest evidence request concerns the case against your property. A public information request can seek broader existing records, such as model schedules. One should not delay the other or your filing deadline."
+            },
+            {
+              "id": "section-12-block-2",
+              "markdown": "### First request your protest evidence\n\nMake an explicit written evidence request early and save proof. Requested District information generally must be delivered at least 14 days before the hearing for the District to use it. Raise late disclosure promptly and request the applicable remedy; it does not automatically reduce your value. [Travis hearing procedures](<https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf>)\n\n**Suggested request:** “I am the owner of \\[address and property ID\\], with a protest pending for \\[year\\]. Under Texas Tax Code Section 41.461, please provide the information you intend to introduce at my hearing, including the comparable sales and appraisal grids, property characteristics and adjustment information. Under Government Code Section 552.149(b), I also request the information considered but not planned for introduction and relevant comparable sales from a reasonable number of transactions. Please identify the applicable access and confidentiality requirements. My hearing is \\[date, if known\\]. Please confirm how and when the records will be delivered.”"
+            },
+            {
+              "id": "section-12-block-3",
+              "markdown": "### Then request specific broader records if needed\n\nThe Texas Public Information Act covers existing records. It does not require the District to create a new analysis, answer an appraisal questionnaire or do legal research for you. Check published records first and use the District’s designated request channel. [Attorney General request guidance](<https://www.texasattorneygeneral.gov/open-government/members-public/how-request-public-information>), [District public records and request portal](<https://traviscad.org/publicinformation>)\n\n**Suggested request:** “Please provide existing records for tax year \\[year\\] and neighborhood or market area \\[code\\] showing the residential market adjustment factors applied, their effective versions, supporting ratio-study summaries, applicable land schedules, and definitions of the class, condition and depreciation codes used for property \\[ID\\]. Electronic copies in their existing format are preferred. This request seeks existing records, not a new analysis. Please identify withheld material and its legal basis, release reasonably separable non-exempt material, and provide an estimate before incurring charges above $25.”\n\nKeep the scope narrow. Start with one year and one neighborhood unless a broader comparison is necessary. Respond promptly to clarification or cost-estimate messages."
+            },
+            {
+              "id": "section-12-block-4",
+              "markdown": "### Confidential sales records need special care\n\nSome privately supplied sales data is excepted from general public disclosure. Section 552.149(b) gives an owner or agent access to specified evidence and relevant sales for the protest, but the information remains confidential and cannot be disclosed to unauthorized people. Access for your case is not permission to publish a neighborhood sales database. [2026 Public Information Act Handbook, section 552.149](<https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf>)\n\nPublic records must be produced promptly, but “10 business days” is not a universal promise that every record will arrive by then. Availability notices, exceptions and review procedures can affect timing. An outstanding request does not extend your protest or appeal deadline. [Public Information Act timing](<https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf>)"
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Travis hearing procedures",
+              "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+            },
+            {
+              "label": "Attorney General request guidance",
+              "url": "https://www.texasattorneygeneral.gov/open-government/members-public/how-request-public-information"
+            },
+            {
+              "label": "District public records and request portal",
+              "url": "https://traviscad.org/publicinformation"
+            },
+            {
+              "label": "2026 Public Information Act Handbook, section 552.149",
+              "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+            },
+            {
+              "label": "Public Information Act timing",
+              "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Current informal process",
+          "url": "https://traviscad.org/informals"
+        },
+        {
+          "label": "Settlement and arbitration eligibility",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+        },
+        {
+          "label": "Travis hearing procedures",
+          "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+        },
+        {
+          "label": "Attorney General request guidance",
+          "url": "https://www.texasattorneygeneral.gov/open-government/members-public/how-request-public-information"
+        },
+        {
+          "label": "District public records and request portal",
+          "url": "https://traviscad.org/publicinformation"
+        },
+        {
+          "label": "2026 Public Information Act Handbook, section 552.149",
+          "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+        },
+        {
+          "label": "Public Information Act timing",
+          "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "arb-hearing",
+      "anchor": "arb-hearing",
+      "number": "07",
+      "title": "Your ARB hearing",
+      "sections": [
+        {
+          "id": "section-13",
+          "sourceSection": 13,
+          "title": "Build a packet the ARB can follow",
+          "blocks": [
+            {
+              "id": "section-13-block-1",
+              "markdown": "Aim for a short core packet with supporting material behind it. The following is a suggested structure, not a required form or page count.\n\n1. **One-page summary.** Address, property ID, tax year, grounds, noticed value, requested value and your two or three strongest points. Give exhibit references.\n2. **Property facts and corrections.** A short description, disputed record entries and documents supporting corrections.\n3. **Market evidence.** A small set of relevant sales, selection criteria, source details, adjustments and the conclusion supported by them.\n4. **Unequal-appraisal evidence.** Comparable properties for the same tax year, the appropriate values before owner-specific limitations, justified adjustments and the resulting median comparison.\n5. **Condition and site evidence.** Labeled photos, surveys and estimates tied to January 1.\n6. **Response to District evidence.** The specific comp, input or adjustment you dispute, why it matters and the supporting exhibit.\n7. **Appendix.** Source records and other supporting documents someone might need to check your calculations.\n\nNumber every page and exhibit. Put the requested value on the summary. Separate verified facts from estimates. If an adjustment is approximate, say so and show the basis. A packet should make your reasoning easier to examine, not harder to find.\n\nFor a simplified equity example, suppose three reasonably selected comparable appraisals, adjusted to the subject, are $510,000, $525,000 and $540,000. Their median is $525,000. If the subject’s comparable appraisal figure is $560,000, the $35,000 difference gives you a specific argument to support. The arithmetic alone does not prove that the selections or adjustments are appropriate."
+            },
+            {
+              "id": "section-13-block-2",
+              "markdown": "### Where ParcelSavvy fits\n\nUse ParcelSavvy to identify properties worth investigating, inspect recorded characteristics, review available value history and build a focused comparison list. Verify the tax year, source date and key facts against the underlying District records before submission.\n\nNeighborhood summaries provide context. They do not automatically establish the correct value of your particular property. A comparison needs defensible selections and adjustments. Label ParcelSavvy calculations as your supporting analysis, not an official District appraisal or a guaranteed ARB methodology.\n\nDo not treat an inferred protest flag as a confirmed hearing outcome. A preliminary-to-final reduction can suggest review activity without proving who caused it or why. A recorded agent association does not prove that agent produced the entire reduction.\n\n**Practical example:** If a comparison home has a separate dwelling, verify the building records and account for it consistently. Otherwise, a seemingly simple price-per-square-foot comparison may be comparing one home with two."
+            }
+          ],
+          "sourceLinks": []
+        },
+        {
+          "id": "section-14",
+          "sourceSection": 14,
+          "title": "What an in person ARB hearing is like",
+          "blocks": [
+            {
+              "id": "section-14-block-1",
+              "markdown": "The ARB is an independent citizen body. The local website describes hearings lasting about 15 to 20 minutes, so plan a concise presentation. Your appointment can still involve waiting. [Travis ARB overview](<https://traviscad.org/arbhearings>)\n\nFollow your hearing notice. Travis defaults to telephone when no format is selected. In-person hearings are at 850 East Anderson Lane, Austin. For a three-member panel, bring five paper sets: three for members, one for the District and yours. [Local hearing procedures](<https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf>)"
+            },
+            {
+              "id": "section-14-block-2",
+              "markdown": "### Know who is in the room\n\nThe Appraisal District will have a representative at the hearing to present and support its valuation. The ARB panel is the independent decision maker: it hears both sides, reviews the evidence and determines the protest. [Who participates in the hearing](<https://traviscad.org/arbhearings>)\n\nExpect the District’s representative to explain and defend the District’s analysis. They may question your comparisons, challenge your adjustments or emphasize evidence supporting their position. Prepare to present your own case rather than rely on that representative to help make it. Even when you believe the math is clear, agreement may not follow.\n\n**Your audience is the panel.** You do not need the District’s representative to concede a point for the panel to consider it. Stay calm, identify the specific disagreement and point to the exhibit that supports your explanation. If the discussion shifts away from your strongest evidence, bring the panel back to it politely: “I’d like to draw your attention to Exhibit 2, because it addresses that comparison directly.”\n\n**From the founder’s own hearing:** “I was surprised by how firmly the District’s representative defended its valuation even when I believed my evidence showed a clear problem. The representative offered potential settlements during the hearing, but those offers differed from both the value I requested and the panel’s eventual decision. My takeaway: be ready to explain your evidence to the panel even if the District’s representative does not agree with you.” This is one homeowner’s experience; representatives’ approaches and hearing outcomes vary."
+            },
+            {
+              "id": "section-14-block-3",
+              "markdown": "### Prepare for the room\n\nArrive with your hearing notice, organized packet, notes and a pen. Allow time for check-in. Have a readable copy of every exhibit you plan to discuss. Do not depend on a live website or a phone screen to carry the presentation.\n\nAfter opening procedures and the oath, the owner chooses which side presents first. Both sides present, question witnesses and respond before panel deliberation. Address the panel respectfully. [Hearing sequence](<https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf>)"
+            },
+            {
+              "id": "section-14-block-4",
+              "markdown": "### A short opening you can adapt\n\n“I’m requesting a market value of $\\[amount\\] for \\[year\\]. My strongest evidence is \\[brief description\\]. Exhibit 1 shows \\[fact\\]. Exhibit 2 shows the comparable sales and the adjustments I made. The main issue with the District’s analysis is \\[specific issue\\]. I’ll explain how those facts support the value I’m requesting.”\n\nFor an unequal-appraisal ground, state that ground and the adjusted appraisal comparison separately. Do not describe assessed values as sale prices.\n\nPractice a three-minute opening so you have time for questions and responses. This is a preparation suggestion, not a promised speaking allowance. If challenged, identify the source or acknowledge what you do not know. You do not earn extra credibility by defending a number you cannot explain."
+            },
+            {
+              "id": "section-14-block-5",
+              "markdown": "### If a settlement offer comes up\n\nAn offer may come during the hearing, as it did in the founder’s experience above. Evaluate it against your evidence, the value you can support and the effect on your taxable value. Ask exactly what value and issues the offer resolves and whether accepting it will end the hearing or limit further review.\n\nAn offer tells you what the District is willing to propose. It does not tell you what the panel will decide. Continuing to a decision carries uncertainty; the founder’s experience is not a promise that rejecting an offer produces a better result. If you continue, use your remaining presentation time to explain the evidence supporting your requested value."
+            },
+            {
+              "id": "section-14-block-6",
+              "markdown": "### Before you leave\n\nRecord the stated determination and any follow-up instructions. Save the formal order when it arrives and track its delivery date. Do not calculate appeal deadlines from your memory of the hearing alone.\n\nFor a remote or affidavit hearing, read the current evidence and declaration requirements in advance; uploading files alone may not satisfy them. If you cannot attend, request a permitted change promptly. Simply missing the hearing can jeopardize the protest and later appeal rights. [Attendance and alternatives](<https://traviscad.org/arbhearings>)"
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Travis ARB overview",
+              "url": "https://traviscad.org/arbhearings"
+            },
+            {
+              "label": "Local hearing procedures",
+              "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+            },
+            {
+              "label": "Who participates in the hearing",
+              "url": "https://traviscad.org/arbhearings"
+            },
+            {
+              "label": "Hearing sequence",
+              "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+            },
+            {
+              "label": "Attendance and alternatives",
+              "url": "https://traviscad.org/arbhearings"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Travis ARB overview",
+          "url": "https://traviscad.org/arbhearings"
+        },
+        {
+          "label": "Local hearing procedures",
+          "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+        },
+        {
+          "label": "Who participates in the hearing",
+          "url": "https://traviscad.org/arbhearings"
+        },
+        {
+          "label": "Hearing sequence",
+          "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+        },
+        {
+          "label": "Attendance and alternatives",
+          "url": "https://traviscad.org/arbhearings"
+        }
+      ]
+    },
+    {
+      "id": "decisions-appeals",
+      "anchor": "decisions-appeals",
+      "number": "08",
+      "title": "After the decision",
+      "sections": [
+        {
+          "id": "section-15",
+          "sourceSection": 15,
+          "title": "After the ARB decision",
+          "blocks": [
+            {
+              "id": "section-15-block-1",
+              "markdown": "Save the order, evidence and delivery record immediately. Check that the property record reflects the result, then review the eventual tax bill and any agent invoice. If an escrow account pays your taxes, ask the servicer when an updated bill or refund will affect its analysis.\n\nIf you disagree with the order, different appeal routes have different requirements. These are alternatives to evaluate, not steps everyone must take in sequence.\n\n| Route | General filing window after receiving the order | Main consideration |\n| -- | -- | -- |\n| Regular binding arbitration | 60 days | Eligible value or unequal-appraisal disputes; deposit and tax-payment conditions |\n| State district court | 60 days | File a petition for review; assess legal cost and payment requirements with counsel |\n| State Office of Administrative Hearings | 30 days for notice of appeal | Certain properties valued over $1 million; additional eligibility and deposit rules |\n\nFor regular binding arbitration, the current general value threshold is $5 million for non-homestead property; a qualifying residence homestead has no value ceiling. The deposit depends on the case. A qualifying award nearer the owner’s stated value than the ARB value can return the deposit less a $50 administrative fee. Do not assume every reduction returns the deposit. [Regular binding arbitration](<https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php>)\n\nCourt appeals generally require a petition within 60 days and compliance with tax-payment rules. The SOAH route has a 30-day notice deadline and a $1,500 deposit due within 90 days, where eligible. Get case-specific advice before choosing a route. [Court and SOAH appeals](<https://comptroller.texas.gov/taxes/property-tax/protests/>)\n\n**A procedural complaint is different.** Limited binding arbitration addresses specified procedural failures, including certain evidence-access issues. It has separate notice and filing deadlines that can arise before the value appeal window. For example, the Comptroller describes a five-business-day notice requirement for an alleged violation and an 11-to-30-day filing window after delivery of that notice. Read the complete requirements promptly. [Limited binding arbitration](<https://comptroller.texas.gov/taxes/property-tax/arbitration/limited-binding.php>)\n\nAn appeal is not a general payment holiday. Verify and satisfy the applicable payment requirements before delinquency. Ask a qualified Texas property tax attorney about a disputed deadline, settlement, payment condition or court appeal."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Regular binding arbitration",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+            },
+            {
+              "label": "Court and SOAH appeals",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+            },
+            {
+              "label": "Limited binding arbitration",
+              "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/limited-binding.php"
+            }
+          ]
+        },
+        {
+          "id": "section-16",
+          "sourceSection": 16,
+          "title": "Keep an annual property file",
+          "blocks": [
+            {
+              "id": "section-16-block-1",
+              "markdown": "Future you will appreciate a folder that is more specific than “tax stuff final FINAL.”\n\nSave the notice, filing confirmation, evidence request, District packet, your packet, correspondence, settlement or order, tax bill and agent invoice. Keep a brief note of corrected facts and unresolved questions. Use filenames that include the property ID, tax year and document date.\n\nEach spring, verify your exemptions again. A residence homestead exemption, the homestead appraisal cap and an age- or disability-related tax ceiling are different protections. A ceiling may apply to particular entities, not necessarily your entire bill. Ask about all exemptions for which you may qualify. [Travis homestead and related exemptions](<https://traviscad.org/homesteadexemptions>)"
+            },
+            {
+              "id": "section-16-block-2",
+              "markdown": "### A checklist before the hearing\n\n* My protest is filed and I saved the confirmation.\n* I know the hearing’s date, format, location and evidence instructions.\n* My requested value is supported by the evidence.\n* My comparables and sources are identified by tax year and date.\n* I can explain my adjustments and any missing data.\n* I reviewed the District’s evidence and prepared concise responses.\n* My exhibits are numbered and my copies or electronic submissions are ready.\n* I understand any offer before accepting it."
+            },
+            {
+              "id": "section-16-block-3",
+              "markdown": "### A checklist after the result\n\n* Save the agreement or written order and its delivery date.\n* Calendar any appeal deadline immediately.\n* Verify the final market, appraised and taxable values separately.\n* Check the bill and any agent fee against the actual result and contract.\n* Carry forward useful records, while rechecking next year’s facts."
+            }
+          ],
+          "sourceLinks": [
+            {
+              "label": "Travis homestead and related exemptions",
+              "url": "https://traviscad.org/homesteadexemptions"
+            }
+          ]
+        }
+      ],
+      "sourceLinks": [
+        {
+          "label": "Regular binding arbitration",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+        },
+        {
+          "label": "Court and SOAH appeals",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+        },
+        {
+          "label": "Limited binding arbitration",
+          "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/limited-binding.php"
+        },
+        {
+          "label": "Travis homestead and related exemptions",
+          "url": "https://traviscad.org/homesteadexemptions"
+        }
+      ]
+    }
+  ],
+  "disclaimer": {
+    "id": "section-17",
+    "sourceSection": 17,
+    "title": "About this guide and its limits",
+    "blocks": [
+      {
+        "id": "section-17-block-1",
+        "markdown": "ParcelSavvy provides general educational information and tools to help homeowners understand property appraisal records and prepare questions. It is independent of the Appraisal District, the ARB and local taxing entities.\n\nThis guide is not legal, tax or appraisal advice and does not create an attorney-client or agent relationship. Using ParcelSavvy does not file a protest, appoint a representative or preserve a deadline. Procedures and laws can change; follow the official notices and current requirements for your case.\n\nExamples are hypothetical. Estimates, comparisons and inferred activity can be incomplete or differ from current official records. Verify material facts before relying on them. No reduction, tax savings, agent performance or hearing outcome is guaranteed. Consult a qualified professional when your situation requires individual advice.\n\nRespect confidentiality, privacy and the permitted use of sales reports, photographs and other third-party material. Permission to receive information does not necessarily include permission to publish it."
+      }
+    ],
+    "sourceLinks": []
+  },
+  "sourceLinks": [
+    {
+      "label": "Texas property tax system",
+      "url": "https://traviscad.org/propertytaxsystem"
+    },
+    {
+      "label": "Understanding the values on your notice",
+      "url": "https://traviscad.org/protests"
+    },
+    {
+      "label": "Who handles property tax questions",
+      "url": "https://traviscad.org/propertytaxsystem"
+    },
+    {
+      "label": "2026 Mass Appraisal Report",
+      "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+    },
+    {
+      "label": "Comptroller explanation of the homestead limitation",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/valuing-property.php"
+    },
+    {
+      "label": "Annual scope of ARB decisions",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+    },
+    {
+      "label": "Travis protest filing",
+      "url": "https://traviscad.org/protests"
+    },
+    {
+      "label": "Local ARB season",
+      "url": "https://traviscad.org/arbhearings"
+    },
+    {
+      "label": "Exemption application deadlines",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/"
+    },
+    {
+      "label": "Texas property tax calendar",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/calendars/"
+    },
+    {
+      "label": "Filing and informal review",
+      "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+    },
+    {
+      "label": "Late-filed protests",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+    },
+    {
+      "label": "Texas property tax consultant regulation",
+      "url": "https://www.tdlr.texas.gov/ptc/"
+    },
+    {
+      "label": "Appointment of Agent form",
+      "url": "https://comptroller.texas.gov/forms/50-162.pdf"
+    },
+    {
+      "label": "Comptroller taxpayer guidance",
+      "url": "https://traviscad.org/wp-content/uploads/TAXPAYER-ASSISTANCE-PAMPHLET_96-295.pdf"
+    },
+    {
+      "label": "Local filing instructions",
+      "url": "https://traviscad.org/protests"
+    },
+    {
+      "label": "Residential class and condition guidelines",
+      "url": "https://traviscad.org/wp-content/uploads/Single-Family-Construction.pdf"
+    },
+    {
+      "label": "Preparing an ARB case",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+    },
+    {
+      "label": "Local MLS compliance guidance",
+      "url": "https://www.unlockmls.com/compliance"
+    },
+    {
+      "label": "Photograph permissions",
+      "url": "https://www.unlockmls.com/photography-guidelines"
+    },
+    {
+      "label": "2026 residential appraisal methods",
+      "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+    },
+    {
+      "label": "General appraisal guidance on adjustments",
+      "url": "https://selling-guide.fanniemae.com/sel/b4-1.3-09/adjustments-comparable-sales"
+    },
+    {
+      "label": "2026 Mass Appraisal Report",
+      "url": "https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf"
+    },
+    {
+      "label": "Current informal process",
+      "url": "https://traviscad.org/informals"
+    },
+    {
+      "label": "Settlement and arbitration eligibility",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+    },
+    {
+      "label": "Travis hearing procedures",
+      "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+    },
+    {
+      "label": "Attorney General request guidance",
+      "url": "https://www.texasattorneygeneral.gov/open-government/members-public/how-request-public-information"
+    },
+    {
+      "label": "District public records and request portal",
+      "url": "https://traviscad.org/publicinformation"
+    },
+    {
+      "label": "2026 Public Information Act Handbook, section 552.149",
+      "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+    },
+    {
+      "label": "Public Information Act timing",
+      "url": "https://www.texasattorneygeneral.gov/sites/default/files/files/divisions/open-government/PIA-Handbook-2026.pdf"
+    },
+    {
+      "label": "Travis ARB overview",
+      "url": "https://traviscad.org/arbhearings"
+    },
+    {
+      "label": "Local hearing procedures",
+      "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+    },
+    {
+      "label": "Who participates in the hearing",
+      "url": "https://traviscad.org/arbhearings"
+    },
+    {
+      "label": "Hearing sequence",
+      "url": "https://traviscad.org/wp-content/uploads/Travis-Appraisal-Review-Board-Formal-Hearing-Procedures.pdf"
+    },
+    {
+      "label": "Attendance and alternatives",
+      "url": "https://traviscad.org/arbhearings"
+    },
+    {
+      "label": "Regular binding arbitration",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/index.php"
+    },
+    {
+      "label": "Court and SOAH appeals",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/protests/"
+    },
+    {
+      "label": "Limited binding arbitration",
+      "url": "https://comptroller.texas.gov/taxes/property-tax/arbitration/limited-binding.php"
+    },
+    {
+      "label": "Travis homestead and related exemptions",
+      "url": "https://traviscad.org/homesteadexemptions"
+    }
+  ]
+}
