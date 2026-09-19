@@ -29,11 +29,16 @@ test('PAR-10 reference sections: authority arithmetic, dynamic features, accessi
   }
   expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const guidanceCopy=await page.locator('.cap-guidance p').last().boundingBox();
+  const guidanceAction=await cap.getByRole('link',{name:'Compare similar properties'}).boundingBox();
+  expect(guidanceAction!.y).toBeGreaterThanOrEqual(guidanceCopy!.y+guidanceCopy!.height);
+  await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement) document.activeElement.blur();});
   for(const [name,section] of [['cap',cap],['drivers',drivers],['details',facts]] as const) {
     const path=info.outputPath(`par10-${name}.png`); await section.screenshot({path}); await info.attach(`PAR-10 ${name}`,{path,contentType:'image/png'});
   }
   await page.evaluate(()=>{document.documentElement.style.zoom='2';});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const zoomLayout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,overflowing:Array.from(document.querySelectorAll('.property-section *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>`${e.tagName}.${e.className}`).slice(0,15)}));
+  expect(zoomLayout.scrollWidth,JSON.stringify(zoomLayout)).toBeLessThanOrEqual(zoomLayout.width);
 });
 
 test('PAR-10 conditional states do not promise an active cap or turn missing amounts into zero',async({page})=>{
