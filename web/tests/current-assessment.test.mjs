@@ -46,4 +46,5 @@ test('hero separates recorded and inferred protest, agent attribution, rising/fa
   assert.match(falling.headline,/fell/);
   const unavailable=currentAssessmentStory(final,[old],[],null,true);
   assert.equal(unavailable.protest,'Protest records temporarily unavailable');
+  assert.match(currentAssessmentStory(final,fixtureHistory.snapshots,[],null,true).protest,/protest records temporarily unavailable/);
 });

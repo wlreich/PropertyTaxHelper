@@ -17,7 +17,12 @@ test("taxable-only reduction stays distinct from unchanged market value and prot
   await expect(page.getByRole('heading',{name:'Looks like a successful protest!'})).toHaveCount(0);
   expect((await new AxeBuilder({page}).include('.current-assessment').include('.overview-insight').analyze()).violations).toEqual([]);
   await page.evaluate(()=>{document.documentElement.style.zoom='2';});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  const zoomLayout = await page.evaluate(()=>({
+    width: window.innerWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+    overflowing: Array.from(document.querySelectorAll('body *')).filter(element=>element.getBoundingClientRect().right>window.innerWidth+1).map(element=>`${element.tagName}.${element.className}`).slice(0,20),
+  }));
+  expect(zoomLayout.scrollWidth, JSON.stringify(zoomLayout)).toBeLessThanOrEqual(zoomLayout.width);
   await page.evaluate(()=>{document.documentElement.style.zoom='1';});
   const capture=info.outputPath('taxable-only-result.png');
   await result.screenshot({path:capture});

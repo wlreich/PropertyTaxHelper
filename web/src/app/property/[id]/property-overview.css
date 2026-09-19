@@ -775,7 +775,7 @@
 .overview-context h2 { font-size: var(--text-h2); }
 .overview-context > p { margin-top: var(--space-4); color: var(--color-text-muted); }
 .overview-context-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: var(--space-6); }
-.overview-context-actions .action-button { color: var(--color-surface); text-decoration: none; }
+.overview-context-actions .action-button { color: var(--color-surface); text-decoration: none; white-space: normal; max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .overview-secondary-action { padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--color-action); border-radius: var(--radius-input); }
 .overview-donation { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-3) var(--space-6); border-top: var(--border-width) solid var(--color-border); padding-top: var(--space-6); margin-top: var(--space-6); }
 .overview-donation h3 { grid-column: 1 / -1; font-size: var(--text-h3); }
@@ -788,6 +788,7 @@
 }
 
 .overview-site-header { height: auto; min-height: var(--header-height); gap: var(--space-4); flex-wrap: wrap; padding-block: var(--space-4); }
+.overview-site-header .brand { min-width: 0; max-width: 100%; }
 .overview-site-header nav { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-small); }
 .overview-site-header nav a { min-height: var(--target-min); display: inline-flex; align-items: center; color: var(--color-action); }
 
