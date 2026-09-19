@@ -20,7 +20,7 @@ The private Figma reference screenshot was inspected but is not republished here
 
 ## Published-data check
 
-Read the existing public RPCs under the anonymous database role for property 736164 (3709 LAJITAS), without modifying the database. The 2026 certified record dated July 18 reports market $1,575,313 and assessed $1,377,354. The 2025 certified baseline reports $1,365,039 and $1,252,140 respectively. Changes are +$210,274 / 15.4% and +$125,214 / 10.0%. The eligible April 2, 2026 preliminary market value matches certification, so the proposed-to-certified reduction is $0. These agree with the Figma example. Full public RPC responses were retained only temporarily for local verification, not committed.
+Read the existing public RPCs under the anonymous database role for property 736164 (3709 LAJITAS), without modifying the database. The 2026 certified record dated July 18 reports market $1,575,313 and assessed $1,377,354. The 2025 certified baseline reports $1,365,039 and $1,252,140 respectively. Changes are +$210,274 / 15.4% and +$125,214 / 10.0%. The eligible April 2, 2026 preliminary market value matches certification, so the proposed-to-certified reduction is $0. These agree with the Figma example. A narrow frozen fixture for this single public property is in `tools/property-search/par9-reference-fixture.mjs` for repeatable browser comparison. It includes only published profile/history fields and this property’s market adjustment; no owners, credentials or bulk records. The complete RPC response remains temporary. This is a replay of captured public data, not a claim that the protected deployed preview was browser-tested.
 
 ## Local validation
 

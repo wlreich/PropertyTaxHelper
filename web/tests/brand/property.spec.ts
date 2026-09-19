@@ -210,3 +210,23 @@ test('PAR-9 current assessment leads the page and context actions preserve the p
   await expect(page.getByRole('link',{name:'Back to search results'})).toHaveAttribute('href','/?q=Parkdemo&page=1&all=1');
   await expect(page.locator('.current-assessment')).toContainText('Comparable preliminary value unavailable');
 });
+
+
+test('PAR-9 approved Figma reference property 736164', async ({page},info) => {
+  await page.goto('/property/736164');
+  await expect(page.getByRole('heading',{level:1})).toHaveText('3709 LAJITAS');
+  const hero=page.locator('.current-assessment');
+  await expect(hero).toContainText('Your market value rose. Your cap softened the increase.');
+  await expect(hero).toContainText('$1,575,313');
+  await expect(hero).toContainText('$1,377,354');
+  await expect(hero).toContainText('↑ $210,274 · 15.4% vs. 2025');
+  await expect(hero).toContainText('↑ $125,214 · 10.0% vs. 2025');
+  await expect(hero).toContainText('Proposed and certified values match');
+  await expect(hero).toContainText('No protest found in available records');
+  await expect(hero).toContainText('Agent not identified');
+  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await hero.screenshot({path:info.outputPath('reference-736164-hero.png')});
+  await page.locator('.overview-context').screenshot({path:info.outputPath('reference-736164-context.png')});
+  await page.screenshot({path:info.outputPath('reference-736164-page.png'),fullPage:true});
+});
