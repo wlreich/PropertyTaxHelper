@@ -123,7 +123,7 @@ try {
   assert.match(await page("/property/505?q=Parkdemo&page=1&all=1"), /href="\/\?q=Parkdemo&amp;page=1&amp;all=1"/);
   assert.equal(cards(await page("/?q=505")),1);
   const profile = await page("/property/100?q=Oak&page=1");
-  assert.match(profile, /Assessment history/);
+  assert.match(profile, /Your assessment over time/);
   assert.match(profile, /Protest recorded/);
   assert.match(profile, /2026 tax year · Apr 29, 2026/);
   assert.match(profile, /Appraisal District status code: EF/);
@@ -134,7 +134,7 @@ try {
   assert.match(profile, /What is the cap doing for you/);
   assert.match(profile, /View exemption details/);
   assert.match(profile, /Browse my street/);
-  assert.match(profile, /View all assessment values/);
+  assert.match(profile, /Expand 2026 details/);
   assert.match(profile, /\$420,000/);
   assert.match(profile, /Separately valued features/);
   assert.match(profile, /No longer separately listed/);

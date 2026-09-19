@@ -107,11 +107,11 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(page.getByText("2026 tax year · Apr 29, 2026", {exact:true})).toBeVisible();
   await expect(page.getByText("Appraisal District status code: EF", {exact:true})).toBeVisible();
   await page.getByText("View source records", {exact:true}).click();
-  const historyDetails=page.locator("details").filter({has:page.locator("summary",{hasText:"View all assessment values"})});
-  await historyDetails.locator("summary").focus();
-  await page.keyboard.press("Enter");
-  await expect(historyDetails).toHaveAttribute("open", "");
-  await page.keyboard.press("Enter");
+  const historyToggle = page.getByRole('button', {name:'Expand 2026 details'});
+  await historyToggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button',{name:'Collapse 2026 details'})).toHaveAttribute('aria-expanded','true');
+  await page.keyboard.press('Enter');
   await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
     name: "Appraisal District market value",
