@@ -1,9 +1,34 @@
 # Combined property overview
 
-The approved combined design adds a navy facts column, primary values, dated history,
-change explanations, separately valued features, and exemptions by taxing entity.
+The overview leads with the current assessment, followed by cap/exemptions,
+compact value drivers, property facts/features, and dated history on the same page.
 No personal notes are included. Approved ParcelSavvy logo, fonts, tokens, and the
 hover/focus/tap `TermDefinition` component are reused.
+
+## PAR-10 sections
+
+`property-sections.ts` derives conditional cap guidance and compact feature/change
+labels from the existing normalized snapshot contract. It does not calculate a new
+appraisal limit or change the validated comparison/secondary-improvement model.
+The cap calculation displays the district's reported assessed value and the selected
+authority's own exemption amounts and taxable value. Missing exemption breakdowns
+remain unknown unless the recorded assessed and taxable amounts establish zero;
+unreconciled amounts receive an explanation instead of invented deductions.
+
+The cap disclosure explains the prior capped assessed base, effective-year eligibility,
+and qualifying new improvements. No hypothetical market-value simulator is included.
+The value drivers compare against the immediately preceding certified tax year;
+the separately labeled multiplier effect retains its original preliminary-model inputs.
+
+Property facts use the existing building-aware helper. Features are dynamic, with
+two highlights and a complete compact disclosure. Missing records do not prove
+physical removal; newly listed features do not prove new construction. Duplicate
+type/area matches across buildings are not merged. The official-record destination
+uses the current property ID and displayed tax year.
+
+Browser regression: `web/tests/brand/property-sections.spec.ts`. The reference
+property uses a frozen public-data fixture; conditional and layout-stress cases
+are explicitly synthetic. Run with the brand browser suite at 375/768/1440 px.
 
 ## Data and privacy
 
