@@ -3,7 +3,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { protestGuide } from '../../src/content/protest-guide';
 
 async function bounds(page: import('@playwright/test').Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  const geometry = await page.evaluate(() => ({ width: window.innerWidth, scroll: document.documentElement.scrollWidth,
+    overflow: Array.from(document.querySelectorAll('body *')).filter(element => element.getBoundingClientRect().right > window.innerWidth + 1 && !element.closest('.guide-table-scroll')).map(element => `${element.tagName}.${element.className}`).slice(0, 15),
+  }));
+  expect(geometry.scroll, JSON.stringify(geometry)).toBeLessThanOrEqual(geometry.width + 1);
 }
 
 test('approved initial states, shared shell, hearing content, responsive layout and accessibility', async ({ page }, info) => {

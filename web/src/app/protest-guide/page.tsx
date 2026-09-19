@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Suspense } from 'react';
+import { GuidePropertyBack } from '@/components/guide-property-back';
 import { SiteHeader, SiteFooter } from '@/components/site-shell';
 import { GuideChapters } from '@/components/guide-chapters';
 import { GuideMarkdown } from '@/components/guide-markdown';
@@ -21,15 +22,13 @@ function HearingRoles() {
   </dl><p><strong>Your audience is the panel.</strong></p></aside>;
 }
 
-export default async function ProtestGuidePage({ searchParams }: { searchParams: Promise<{ property?: string | string[] }> }) {
-  const { property } = await searchParams;
-  const propertyId = typeof property === 'string' && /^\d{1,12}$/.test(property) ? property : null;
+export default function ProtestGuidePage() {
   const date = new Date(`${protestGuide.reviewedDate}T12:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
   return <div className="guide-page">
     <SiteHeader propertyOverview />
     <main id="main-content">
       <section className="guide-hero" aria-labelledby="guide-title"><div className="guide-container">
-        {propertyId && <Link className="guide-back" href={`/property/${propertyId}`}>← Back to property overview</Link>}
+        <Suspense><GuidePropertyBack /></Suspense>
         <p className="guide-eyebrow">The homeowner’s field guide / Travis County, Texas</p>
         <h1 id="guide-title">Your appraisal deserves<br className="guide-desktop-break" /> a second look.</h1>
         <p className="guide-deck">Understand the numbers. Build your evidence. Make your case.<br />A practical guide to protesting your property’s value, with or without an agent.</p>

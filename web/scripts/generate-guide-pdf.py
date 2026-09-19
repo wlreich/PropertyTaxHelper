@@ -1,5 +1,6 @@
 """Deterministic build-time PDF from the public PAR-13 contract. No network access."""
 import hashlib
+from datetime import date
 import html
 import json
 import tempfile
@@ -20,6 +21,8 @@ CONTENT = ROOT / 'src/content/protest-guide.json'
 OUT = ROOT / 'public/guides/ParcelSavvy-Protest-Guide.pdf'
 MANIFEST = ROOT / 'src/content/protest-guide-pdf.json'
 GUIDE = json.loads(CONTENT.read_text())
+REVIEWED = date.fromisoformat(GUIDE['reviewedDate'])
+REVIEWED_LABEL = f'{REVIEWED:%B} {REVIEWED.day}, {REVIEWED.year}'
 rl_config.invariant = 1
 NAVY = colors.HexColor('#0b2d4d')
 INK = colors.HexColor('#173042')
@@ -35,6 +38,7 @@ def register_fonts(directory):
     for name, filename, weight in [('Body', 'inter-latin-wght-normal.woff2', 400), ('BodyBold', 'inter-latin-wght-normal.woff2', 600), ('Heading', 'manrope-latin-wght-normal.woff2', 700)]:
         font = instantiateVariableFont(Font(ROOT / 'fonts' / filename), {'wght': weight}, inplace=True)
         font.flavor = None
+        font.recalcTimestamp = False
         target = Path(directory) / f'{name}.ttf'
         font.save(target)
         pdfmetrics.registerFont(TTFont(name, target))
@@ -141,7 +145,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as directory:
         register_fonts(directory)
-        story = [Paragraph(html.escape(GUIDE['title']), TITLE), Paragraph('Travis County, Texas', H2), Paragraph(f'Reviewed September 19, 2026 · Content version {GUIDE["contentVersion"]}', SMALL), Spacer(1, 15)]
+        story = [Paragraph(html.escape(GUIDE['title']), TITLE), Paragraph('Travis County, Texas', H2), Paragraph(f'Reviewed {REVIEWED_LABEL} · Content version {GUIDE["contentVersion"]}', SMALL), Spacer(1, 15)]
         for block in GUIDE['introduction']:
             story.extend(blocks(block['markdown']))
         story.extend([Spacer(1, 12), Paragraph('In this guide', H2)])

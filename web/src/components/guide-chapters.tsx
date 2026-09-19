@@ -7,6 +7,7 @@ type Chapter = { anchor: string; number: string; title: string; content: ReactNo
 export function GuideChapters({ chapters, introduction, closing }: { chapters: Chapter[]; introduction: ReactNode; closing: ReactNode }) {
   const [opened, setOpened] = useState<Set<string>>(() => new Set());
   const [active, setActive] = useState('');
+  const [enhanced, setEnhanced] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const pending = useRef<string | null>(null);
   const anchors = chapters.map(chapter => chapter.anchor).join('|');
@@ -18,6 +19,7 @@ export function GuideChapters({ chapters, introduction, closing }: { chapters: C
       const id = window.location.hash.slice(1);
       const target = valid.includes(id) ? id : null;
       frame = requestAnimationFrame(() => {
+        setEnhanced(true);
         if (target) {
           pending.current = target;
           setOpened(previous => new Set(previous).add(target));
@@ -98,7 +100,7 @@ export function GuideChapters({ chapters, introduction, closing }: { chapters: C
       {introduction}
       <section aria-labelledby="explore-guide"><h2 id="explore-guide">Explore the guide</h2><p>Read in order, or open the chapter you need.</p>
         <div className="guide-chapters">{chapters.map(chapter => <details key={chapter.anchor} id={chapter.anchor} className={`guide-chapter${chapter.number === '07' ? ' guide-hearing' : ''}`} open={opened.has(chapter.anchor)}>
-          <summary id={`${chapter.anchor}-toggle`} aria-expanded={opened.has(chapter.anchor)} aria-controls={`${chapter.anchor}-content`} onClick={event => { event.preventDefault(); toggle(chapter.anchor); }}><h3><span>{chapter.number}</span>{chapter.title}</h3><span className="guide-disclosure" aria-hidden="true">{opened.has(chapter.anchor) ? '−' : '+'}</span></summary>
+          <summary id={`${chapter.anchor}-toggle`} aria-expanded={enhanced ? opened.has(chapter.anchor) : undefined} aria-controls={`${chapter.anchor}-content`} onClick={event => { event.preventDefault(); toggle(chapter.anchor); }}><h3><span>{chapter.number}</span>{chapter.title}</h3><span className="guide-disclosure" aria-hidden="true" /></summary>
           <div id={`${chapter.anchor}-content`} className="guide-chapter-body">{chapter.content}</div>
         </details>)}</div>
       </section>

@@ -1,10 +1,10 @@
 {
   "contentVersion": "2026-09-19.1",
   "reviewedDate": "2026-09-19",
-  "sha256": "1c1699bb0ae7dad9ed810d41a23c84cbfd66d012a5f62d8c94f74080b2795c18",
+  "sha256": "0bfa04bcc500a74615c2fa41009adc587d852db16718bd65d98e0935eb7bd59e",
   "inputs": {
     "src/content/protest-guide.json": "671a3d1373bf10f49f8b57f657f52ee2d679e413c94ad1b697a89f2c10e96fb9",
-    "scripts/generate-guide-pdf.py": "887890ae13fdb75c85777f8c92a7bf374eb46bc547d078878835bd2b62283cf2",
+    "scripts/generate-guide-pdf.py": "93e40be02ae0b03fed28a43da6dc4f7a138e397df98596c684cbcb313fdca287",
     "scripts/guide-pdf-requirements.txt": "e30ad60e05bfd76a9ba49c39c7313bc0908bbb222e5a31c36ad5130695bc5c21",
     "fonts/inter-latin-wght-normal.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
     "fonts/manrope-latin-wght-normal.woff2": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
