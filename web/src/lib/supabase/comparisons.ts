@@ -61,5 +61,12 @@ export async function getComparisons(id:string,source:string|null=null,selected:
       if(parsed) {for(const record of parsed) byId.set(record.property_id,record);data.candidates=data.candidates.map(enrich);}
     }
   }
+  else {
+    // Snapshot land may omit agricultural market value. A failed cost lookup
+    // must not fall back to that incomplete value, even in partial calculations.
+    const unknownLand=(p:ComparisonProperty)=>withCosts(p,undefined);
+    data.subject=unknownLand(data.subject);data.candidates=data.candidates.map(unknownLand);
+    data.selected=data.selected.map(unknownLand);data.matches=data.matches.map(unknownLand);
+  }
   return {status:"ok" as const,data};
 }
