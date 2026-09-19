@@ -22,7 +22,7 @@
 .guide-sidebar a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--target-min); padding: var(--space-2); border-left: var(--focus-width) solid transparent; font-size: var(--text-small); text-decoration: none; }
 .guide-sidebar a[aria-current] { border-color: var(--color-action); background: var(--color-surface-info); font-weight: var(--weight-bold); }
 .guide-sidebar a:hover { text-decoration: underline; }
-.guide-sidebar a span { font-variant-numeric: tabular-nums; }
+.guide-sidebar a span { font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
 .guide-deadline { padding: var(--space-4); background: var(--color-background); font-size: var(--text-small); }
 .guide-deadline p { margin: var(--space-2) 0 0; color: var(--color-text-muted); }
 .guide-content { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-12); }
@@ -40,7 +40,7 @@
 .guide-chapter summary::-webkit-details-marker { display: none; }
 .guide-chapter summary:focus-visible, .guide-table-scroll:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 .guide-chapter summary h3 { display: flex; gap: var(--space-3); flex: 1; font-size: var(--text-body); font-weight: var(--weight-semibold); line-height: var(--line-body); margin: 0; }
-.guide-chapter summary h3 span { font-variant-numeric: tabular-nums; }
+.guide-chapter summary h3 span { font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
 .guide-disclosure { flex: none; font-size: var(--text-h3); color: var(--color-action); }
 .guide-disclosure::before { content: "+"; }
 .guide-chapter[open] .guide-disclosure::before { content: "−"; }
