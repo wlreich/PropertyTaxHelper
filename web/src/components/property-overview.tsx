@@ -50,7 +50,7 @@ export function PropertyOverview({
   const evidence = protestEvidence(snapshots, protests);
   const historyRows = annualHistory(snapshots, evidence);
   return (
-    <AnnualHistoryProvider rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>
+    <AnnualHistoryProvider key={p.property_id} rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>
       <div className="profile-heading overview-heading">
         <div>
           <h1>{p.address}</h1>
