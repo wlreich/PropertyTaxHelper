@@ -1,4 +1,5 @@
 import {validDate} from './seasons.ts';
+import {SITE_URL} from './site.ts';
 export type ActivityRow={
  property_id:string;event_key:string;address:string;city:string;property_type:'single_family'|'land'|'other';
  deed_date:string|null;sale_date:string|null;activity_date:string;filed_date:string|null;instrument:string|null;
@@ -46,6 +47,6 @@ const cell=(value:string|number|null)=>{
 };
 export function activityCsv(data:ActivityData,selected:Set<string>){
  const header=['Property ID','Address','City','Neighborhood','Activity year','Deed date','Sale date','Filing date','Record status','Sale price reported by TCAD','Price availability','Instrument','Deed source','Appraisal export','Supplemental export','Property link','Ask a realtor'];
- const rows=data.rows.filter(r=>selected.has(activityKey(r))).map(r=>[r.property_id,r.address,r.city,data.neighborhood,data.year,r.deed_date,r.sale_date,r.filed_date,activityStatus(r),r.price,r.price_status==='reported'?'TCAD-reported; verify':activityPrice(r),r.instrument,r.deed_source,data.sources.appraisal_export_date,data.sources.sales_export_date,'https://parcelsavvy.org/property/'+r.property_id,'Confirm whether this was an arm’s-length sale, closing date and price, concessions, condition, and comparability. Coverage is incomplete; a nearby property is not automatically a comparable.']);
+ const rows=data.rows.filter(r=>selected.has(activityKey(r))).map(r=>[r.property_id,r.address,r.city,data.neighborhood,data.year,r.deed_date,r.sale_date,r.filed_date,activityStatus(r),r.price,r.price_status==='reported'?'TCAD-reported; verify':activityPrice(r),r.instrument,r.deed_source,data.sources.appraisal_export_date,data.sources.sales_export_date,SITE_URL.replace(/\/$/,'')+'/property/'+r.property_id,'Confirm whether this was an arm’s-length sale, closing date and price, concessions, condition, and comparability. Coverage is incomplete; a nearby property is not automatically a comparable.']);
  return '\uFEFF'+[header,...rows].map(r=>r.map(cell).join(',')).join('\r\n')+'\r\n';
 }
