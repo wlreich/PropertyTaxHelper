@@ -5,7 +5,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.goto('/property/100/neighborhood');
  await expect(page.getByRole('heading',{name:'Your neighborhood, in context.',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
- await expect(page.locator('select')).toHaveCount(0);
+ await expect(page.locator('.activity-controls select')).toHaveCount(3);
  await expect(page.locator('.neighborhood-story')).toContainText('2026 certified');
  await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2026');
  await expect(page.locator('.neighborhood-results')).toContainText('inferred from proposed-to-certified reductions');
@@ -18,7 +18,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(page.locator('.neighborhood-subject-value')).toContainText('$225 / sq ft');
  await page.getByRole('button',{name:'Market value',exact:true}).click();
  const disclosure=page.locator('summary').filter({hasText:'More annual outcomes and comparisons'});await disclosure.focus();await page.keyboard.press('Enter');
- await expect(disclosure).toHaveAttribute('aria-expanded','true');await expect(page.getByRole('table')).toBeVisible();await page.keyboard.press('Enter');await expect(disclosure).toHaveAttribute('aria-expanded','false');
+ await expect(disclosure).toHaveAttribute('aria-expanded','true');await expect(page.locator('.neighborhood-results').getByRole('table')).toBeVisible();await page.keyboard.press('Enter');await expect(disclosure).toHaveAttribute('aria-expanded','false');
  const compare=page.getByRole('link',{name:'Compare similar homes',exact:true});await expect(compare).toHaveAttribute('href',/\/property\/100\/compare\?release=/);
  await expect(page.getByRole('link',{name:'Read the protest guide →'})).toHaveAttribute('href','/protest-guide?property=100');
  await expect(page.getByRole('link',{name:'Support this project →'})).toHaveAttribute('href','https://donate.stripe.com/6oUaEP7jn6l39fSgXg7AI00');
