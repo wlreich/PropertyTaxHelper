@@ -25,6 +25,7 @@ test('binding, nonbinding, unconfirmed eligibility and no homestead have distinc
   assert.doesNotMatch(capModel(noHS, previous).paragraphs.join(' '), /Your cap limits|next year's cap/);
   const newHS = capModel({ ...current, market_value: current.assessed_value }, { ...previous, exemptions: [], entities: [] });
   assert.equal(newHS.state, 'eligibility-unconfirmed');
+  assert.equal(newHS.outlook, null);
   assert.equal(newHS.priorAssessed, null);
   assert.equal(capModel({ ...current, market_value: current.assessed_value }).state, 'eligibility-unconfirmed');
   // Newly recorded features must not be interpreted as qualifying new improvements

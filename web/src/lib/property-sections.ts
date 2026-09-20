@@ -34,7 +34,7 @@ export function capModel(current: Snapshot, previous?: Snapshot, available = tru
     return { code: e.code, name: entityDisplayName(e), taxable: e.taxable_value, exemptions, reconciles,
       entries: entries.map(([code, value]) => ({ code, label: exemptionName(code).replace('TCAD', 'Appraisal District'), value })) };
   });
-  return { market, assessed, difference, homestead, state, title, paragraphs, authorities, outlook: nextYearCap(current, initial, available),
+  return { market, assessed, difference, homestead, state, title, paragraphs, authorities, outlook: nextYearCap(current, initial, available && (state === 'binding' || state === 'nonbinding')),
     defaultAuthority: authorities.find(e => /\bISD\b|SCHOOL/i.test(e.name))?.code ?? authorities[0]?.code ?? '',
     exemptionNames: [...new Set([...current.exemptions, ...current.entities.flatMap(e => Object.keys(e.exemptions))])].map(c => exemptionName(c).replace('TCAD', 'Appraisal District')),
     priorAssessed: priorHomestead ? previous?.assessed_value ?? null : null,
