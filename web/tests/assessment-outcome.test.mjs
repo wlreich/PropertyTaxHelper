@@ -28,3 +28,12 @@ test('missing, invalid, preliminary, zero-base and non-homestead values are not 
  assert.equal(nextYearCap(final).base,1285275);
  assert.doesNotMatch(nextYearCap(final).explanation,/finished.*below/);
 });
+
+test('equal market and assessed values do not imply the cap reduced assessment',()=>{
+ const start={...initial,market_value:600000,assessed_value:600000};
+ const end={...final,market_value:500000,assessed_value:500000};
+ const r=assessmentOutcome(end,start);
+ assert.equal(r.capExcluded,0);
+ assert.doesNotMatch(r.explanation,/cap already excluded/);
+ assert.match(r.explanation,/assessed value also fell \$100,000/);
+});

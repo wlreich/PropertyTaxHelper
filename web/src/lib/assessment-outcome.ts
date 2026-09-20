@@ -18,7 +18,7 @@ export function assessmentOutcome(current: Snapshot, initial?: Snapshot) {
   const reconciles = capExcluded !== null &&
     Math.abs(current.assessed_value! - Math.min(current.market_value!, initial.assessed_value!)) <= 1;
   let explanation: string | null = null;
-  if (marketReduction > 0 && reconciles) {
+  if (marketReduction > 0 && reconciles && capExcluded! > 0) {
     explanation = assessedReduction > 0
       ? `The cap already excluded ${currency(capExcluded)} of your proposed market value. The lower final value reduced your assessed value another ${currency(assessedReduction)}.`
       : `Your market value fell ${currency(marketReduction)}, but remained at or above the cap. Your assessed value stayed at ${currency(current.assessed_value)}; this reduction did not lower the starting point for next year’s cap.`;
