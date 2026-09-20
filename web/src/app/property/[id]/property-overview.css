@@ -992,7 +992,7 @@
 }
 @media print { .annual-dialog, .current-record-link, .annual-pagination nav { display: none !important; } }
 .annual-mobile-protest, .annual-mobile-protest-help, .annual-change-mobile { display: none; }
-@media (max-width: 800px) {
+@media screen and (max-width: 800px) {
  .annual-history .annual-table { display: table; }
  .annual-history .annual-table thead { display: table-header-group; position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
  .annual-history .annual-table tbody { display: table-row-group; }
