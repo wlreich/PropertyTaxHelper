@@ -18,12 +18,16 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  await db.query(`insert into public.property_snapshot_profiles select anchor_dataset_id,$1::uuid,property_id,snapshot||jsonb_build_object('dataset_id',$1::text,'roll_stage','preliminary','export_date','2025-04-02','market_value',600000) from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$3`,[oldPre,anchor,old]);
  await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"preliminary_baseline_eligible":false}'::jsonb where dataset_id=$1 and property_id='120'`,[oldPre]);
  await db.exec('set role anon');
- const call=async(phase=null,year=null)=>(await db.query('select public.property_neighborhood_analysis($1,$2,$3) r',['100',phase,year])).rows[0].r;
+ const call=async(phase=null,year=null,subject='100')=>(await db.query('select public.property_neighborhood_analysis($1,$2,$3) r',[subject,phase,year])).rows[0].r;
  const raw=await call('post',2026),parsed=parseNeighborhoodAnalysis(raw,'100');assert.ok(parsed);
  const legacy=parseNeighborhood((await db.query("select public.property_neighborhood_v4('100') r")).rows[0].r,'100');
  assert.deepEqual(parsed.homes,legacy.homes);assert.deepEqual(parsed.population,legacy.population);assert.deepEqual(parsed.market_adjustment,legacy.market_adjustment);
  const analysis=neighborhoodAnalysis(parsed);assert.equal(analysis.current.dataset_id,anchor);assert.equal(analysis.latestOutcome.certified.tax_year,2026);
  assert.equal(analysis.coverage.find(c=>c.release.dataset_id===oldPre).exclusions.baseline_ineligible,1);
+ const conflicted=parseNeighborhoodAnalysis(await call('post',2026,'120'),'120');assert.ok(conflicted);
+ assert.deepEqual(conflicted.annual_periods,parsed.annual_periods);
+ assert.deepEqual(neighborhoodAnalysis(conflicted).carryForward,analysis.carryForward);
+ assert.equal((await db.query('select parcel_comparison.preliminary_release_eligible($1,$2,$3) eligible',[anchor,oldPre,'103'])).rows[0].eligible,false);
  assert.ok(analysis.carryForward.length);assert.equal(JSON.stringify(raw).includes('PRIVATE'),false);
  for(const phase of ['preliminary','protest']){
   const early=parseNeighborhoodAnalysis(await call(phase,2026),'100');assert.ok(early);assert.equal(early.source_id,pre);
@@ -36,6 +40,10 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  assert.equal((await db.query("select public.property_neighborhood_analysis('103') r")).rows[0].r.status,'missing_property');
  await assert.rejects(db.query('select * from tcad_ingest.records limit 1'));
  await assert.rejects(call('invalid',2026));
+ await db.exec('reset role');
+ await db.query('update tcad_ingest.datasets set preliminary_baseline_excluded=true where id=$1',[oldPre]);
+ await db.exec('set role anon');
+ assert.equal(parseNeighborhoodAnalysis(await call(),'100').annual_periods.some(p=>p.release.dataset_id===oldPre),false);
  await db.exec('reset role');
  await db.query('delete from public.property_snapshot_profiles where dataset_id=$1',[oldPre]);
  await db.exec('set role anon');
@@ -54,6 +62,9 @@ test('conflicting preliminary values are excluded per home without removing home
  assert.ok(home);assert.equal(home.preliminary,null);assert.equal(home.protested,true);assert.ok(home.certified>0);
  const summary=neighborhoodSummary(data);
  assert.equal(summary.all.reduced.total,2);assert.equal(summary.all.reduced.count,1);
+ const conflicted=parseNeighborhoodAnalysis((await db.query("select public.property_neighborhood_analysis('120','preliminary',2026) r")).rows[0].r,'120');assert.ok(conflicted);
+ assert.equal(conflicted.source_id,pre);
+ assert.ok(conflicted.annual_periods.some(p=>p.release.dataset_id===pre));
  assert.equal(summary.all.above.total,2);assert.equal(summary.all.missingPair,data.homes.length-2);
 });
 test('neighborhood releases, cap outcomes, protest deduplication, and public visibility',async t=>{
