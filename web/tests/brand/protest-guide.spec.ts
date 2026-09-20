@@ -105,7 +105,9 @@ test('all chapters, examples, sources and tables survive; 200% text and zoom ref
 
 test('both PDF controls deliver the same ungated versioned PDF, and property/home links work', async ({page, request}) => {
   await page.goto('/');
-  await page.getByRole('link', {name:'Protest Guide', exact:true}).click();
+  const navigation = page.getByRole('navigation', {name:'Main navigation'});
+  if (page.viewportSize()!.width <= 700) await navigation.locator('summary').click();
+  await navigation.getByRole('link', {name:'Protest Guide', exact:true}).click();
   await expect(page).toHaveURL(/\/protest-guide$/);
   const links = page.getByRole('link', {name:'Download printable PDF',exact:true});
   await expect(links).toHaveCount(2);

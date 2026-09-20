@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { currency } from '@/lib/property-search';
 import type { CapModel } from '@/lib/property-sections';
 
-export function CapAndExemptions({ model, propertyId }: { model: CapModel; propertyId: string }) {
+export function CapAndExemptions({ model, propertyId, annualReviewHref }: { model: CapModel; propertyId: string; annualReviewHref: string }) {
   const [selected, setSelected] = useState(model.defaultAuthority);
   const authority = model.authorities.find(a => a.code === selected) ?? model.authorities[0];
   const deduction = (value: number | null) => value === null ? 'Not reported' : `${value > 0 ? '− ' : ''}${currency(value)}`;
@@ -27,6 +27,7 @@ export function CapAndExemptions({ model, propertyId }: { model: CapModel; prope
         <h3 id="cap-guidance-heading">{model.title}</h3>
         {model.paragraphs.map(p => <p key={p}>{p}</p>)}
         <Link className="action-button" href={`/property/${propertyId}/compare`}>Compare similar properties</Link>
+        <Link className="cap-review-link" href={annualReviewHref}>Why review every year?</Link>
       </aside>
     </div>
     <p className="recorded-exemptions">Recorded exemptions: {model.exemptionNames.length ? model.exemptionNames.join(' · ') : model.state === 'unavailable' ? 'Not available' : 'None listed'}</p>

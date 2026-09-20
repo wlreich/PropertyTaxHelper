@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { BrandLogo } from "./brand-logo";
 import { appraisalDistrict } from "@/lib/appraisal-district";
+import { SiteNavigation } from './site-navigation';
 export function SiteHeader({ propertyOverview = false }: { propertyOverview?: boolean }) {
   return (
     <header className={`site-header${propertyOverview ? " overview-site-header" : ""}`}>
       <Link href="/" className="brand" aria-label="ParcelSavvy home"><BrandLogo /></Link>
       <span className="county-label">TRAVIS COUNTY, TEXAS</span>
-      {propertyOverview && <nav aria-label="Site navigation"><Link href="/">Search properties</Link><Link href="/support">Support ParcelSavvy</Link></nav>}
+      <SiteNavigation />
     </header>
   );
 }

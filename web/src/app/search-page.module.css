@@ -26,35 +26,12 @@
 .wordmark {
   display: block;
   min-width: var(--logo-min-width);
+  max-width: 100%;
   text-decoration: none;
 }
 
 .wordmark :global(.brand-logo) {
   width: var(--logo-width);
-}
-
-.mainNav {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  font-size: var(--text-small);
-}
-
-.mainNav a {
-  color: var(--color-text);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-}
-
-.mainNav a:hover {
-  color: var(--color-action);
-  text-decoration: underline;
-}
-
-.mainNav .supportNavLink {
-  color: var(--color-action);
-  font-weight: var(--weight-semibold);
 }
 
 .county {
@@ -76,6 +53,7 @@
 
 .hero,
 .resultsShell,
+.guideCard,
 .questions,
 .support,
 .trust,
@@ -85,6 +63,24 @@
   margin-right: auto;
   margin-left: auto;
 }
+
+.guideCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-8);
+  margin-block: var(--space-6) var(--space-8);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  overflow-wrap: anywhere;
+}
+.guideCard > div { flex: 1 1 28rem; min-width: 0; }
+.guideCard h2 { margin: 0 0 var(--space-2); font-size: var(--text-h3); }
+.guideCard p { margin: 0; color: var(--color-text-muted); }
+.guideCard > a { display: inline-flex; align-items: center; min-height: var(--target-min); }
 
 .hero {
   padding: var(--space-16) 0 var(--space-12);
@@ -757,7 +753,7 @@
   }
 
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
   }
 
@@ -768,7 +764,7 @@
   .questions,
   .support,
   .trust {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
   }
 
@@ -785,6 +781,7 @@
   .headerInner,
   .hero,
   .resultsShell,
+  .guideCard,
   .seasonCallout,
   .questions,
   .support,
@@ -799,14 +796,6 @@
 
   .wordmark :global(.brand-logo) {
     width: 170px;
-  }
-
-  .mainNav {
-    gap: var(--space-3);
-  }
-
-  .mainNav a:nth-child(2) {
-    display: none;
   }
 
   .hero {
@@ -837,8 +826,11 @@
   .previewGrid,
   .trustList,
   .footerGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+
+  .seasonCallout > span { white-space: normal; }
+  .hero > *, .questions > *, .support > *, .trust > * { min-width: 0; overflow-wrap: anywhere; }
 
   .questions {
     padding: var(--space-8) var(--space-6);
@@ -887,12 +879,6 @@
     display: block;
     border-top: 0;
     text-align: right;
-  }
-}
-
-@media (max-width: 480px) {
-  .mainNav {
-    display: none;
   }
 }
 
