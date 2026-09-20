@@ -55,13 +55,12 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   }
   await expect(page.locator("#property-details")).toBeVisible();
   await expect(facts.first()).toBeVisible();
-  await expect(page.getByText("Which property facts or comparable properties support this year’s case?", {exact:true})).toBeVisible();
-  const moreQuestions = page.getByText("More questions for your agent", {exact:true});
-  await expect(page.getByText("How was my fee calculated, and how does it relate to actual tax savings?", {exact:true})).toBeHidden();
-  await moreQuestions.focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByText("How was my fee calculated, and how does it relate to actual tax savings?", {exact:true})).toBeVisible();
-  await page.keyboard.press("Enter");
+  const agentQuestions=page.getByText('Questions for your agent',{exact:true});
+  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeHidden();
+  await agentQuestions.focus();await page.keyboard.press('Enter');
+  await expect(page.getByText('Which property facts or comparable properties support this year’s case?',{exact:true})).toBeVisible();
+  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeVisible();
+  await page.keyboard.press('Enter');
   await page.locator("#about-records-heading").focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();
@@ -83,16 +82,15 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await page.keyboard.press("Enter");
   await expect(page.getByText("No longer separately listed", {exact:true})).toBeVisible();
   await expect(page.getByRole("heading", {name:"Taxable values by authority"})).toBeVisible();
-  await expect(page.getByText("FIXTURE TAX PARTNERS", {exact:true}).first()).toBeVisible();
-  await page.getByText("View source records", {exact:true}).click();
-  await expect(page.getByText("2026 tax year · Apr 29, 2026", {exact:true})).toBeVisible();
-  await expect(page.getByText("Appraisal District status code: EF", {exact:true})).toBeVisible();
-  await page.getByText("View source records", {exact:true}).click();
-  const historyToggle = page.getByRole('button', {name:'Expand 2026 details'});
-  await historyToggle.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('button',{name:'Collapse 2026 details'})).toHaveAttribute('aria-expanded','true');
-  await page.keyboard.press('Enter');
+  await expect(page.locator(".current-assessment-evidence").first()).toContainText("FIXTURE TAX PARTNERS");
+  const historyToggle = page.getByRole('button', {name:'View 2026 details'});
+  await historyToggle.focus(); await page.keyboard.press('Enter');
+  const dialog=page.getByRole('dialog',{name:'2026 assessment & protest record'});
+  await dialog.locator('summary').filter({hasText:'Dated protest'}).click();
+  await expect(dialog).toContainText('Apr 29, 2026');
+  await expect(dialog).toContainText('Appraisal District status: EF');
+  await expect(dialog).toContainText('FIXTURE TAX PARTNERS');
+  await page.keyboard.press('Escape'); await expect(historyToggle).toBeFocused();
   await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
     name: "Appraisal District market value",
