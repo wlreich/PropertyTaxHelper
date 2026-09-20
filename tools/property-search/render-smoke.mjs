@@ -128,9 +128,9 @@ try {
   assert.match(profile, /2026 tax year · Apr 29, 2026/);
   assert.match(profile, /Appraisal District status code: EF/);
   assert.match(profile, /FIXTURE TAX PARTNERS/);
-  assert.match(profile, /Looks like a successful protest!/);
+  assert.match(profile, /Protest recorded. Value reduced/);
   assert.match(profile, /Current assessment/);
-  assert.match(profile, /Agent listed for 2026/);
+  assert.match(profile, /Agent: /);
   assert.match(profile, /What is the cap doing for you/);
   assert.match(profile, /View exemption details/);
   assert.match(profile, /Browse my street/);
