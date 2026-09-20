@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {comparisonSummary,matchProperty,suggestions,selectedIds} from '../src/lib/property-comparisons.ts';
+import {comparisonSummary,matchProperty,suggestions,selectedIds,candidatePool,candidatePage} from '../src/lib/property-comparisons.ts';
 import {getComparisons,parseComparison} from '../src/lib/supabase/comparisons.ts';
 const base={property_id:'100',address:'SUBJECT',city:'CITY',property_type:'R',market_value:1285275,land_value:100000,land_acres:1,living_area:4410,class_code:'R3',year_built:2014,neighborhood:'T2450',main_buildings:1};
 const comp=(id,value,changes={})=>({...base,property_id:id,market_value:value,...changes});
@@ -45,4 +45,22 @@ test('failed cost projection never falls back to incomplete snapshot land',async
  assert.equal(result.data.selected[0].land_value,null);
  assert.equal(result.data.candidates[0].land_value,null);
  assert.equal(result.data.selected[0].market_value,400000);
+});
+
+
+test('tier filtering uses the entire unique pool before sorting and pagination',()=>{
+ const close=Array.from({length:23},(_,i)=>comp(String(200+i),500000+i));
+ const wider=Array.from({length:12},(_,i)=>comp(String(300+i),400000+i,{living_area:4600}));
+ const pool=candidatePool({subject:base,candidates:[base,...wider,...close,close[0],comp('999',null),comp('998',1,{class_code:'XX'})]});
+ assert.equal(pool.length,35);
+ assert.equal(matchProperty(base,pool[0]).tier,0);
+ const page=candidatePage(base,pool,'1','value',0);
+ assert.equal(page.total,12);assert.deepEqual(page.counts,[23,12,0,0,0,0,0,0]);
+ assert.equal(page.items.length,10);assert.equal(page.items[0].property_id,'300');
+ assert.equal(candidatePage(base,pool,'1','value',1).items.length,2);
+ assert.equal(candidatePage(base,pool,'7','match',0).total,0);
+ assert.equal(candidatePage(base,pool,'all','match',2).items[3].property_id,'300');
+ const noClosest=candidatePool({subject:base,candidates:wider});
+ assert.equal(matchProperty(base,noClosest[0]).tier,1);
+ assert.equal(candidatePage(base,[],'all','match',0).total,0);
 });
