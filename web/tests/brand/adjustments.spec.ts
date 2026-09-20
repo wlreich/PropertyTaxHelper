@@ -46,6 +46,8 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'Reported values',exact:true}).click();
  await expect(page).toHaveURL(/selected=120/);
+ await expect(page).toHaveURL(/view=reported/);
+ await expect(page.getByRole('button',{name:'Reported values',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.goBack();
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(adjusted).toContainText('1 of 1 selected properties');
@@ -62,9 +64,9 @@ test('additional improvements contribute to estimates without review flags',asyn
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
  await expect(adjusted).toContainText('1 of 1 selected properties have estimated adjusted values');
  await expect(adjusted).not.toContainText('Needs review');
- await expect(adjusted).toContainText('$627,149');
- await expect(adjusted).not.toContainText('Estimate withheld pending review');
  await page.getByRole('button',{name:'View breakdown · 120 CYPRESS ST →',exact:true}).click();
+ await expect(page.getByRole('dialog')).toContainText('$627,149');
+ await expect(adjusted).not.toContainText('Estimate withheld pending review');
  await expect(adjusted).toContainText('Estimated adjusted value');
  await expect(adjusted).not.toContainText('Subtotal of available adjustments');
  const violations=(await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations;
