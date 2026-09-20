@@ -66,7 +66,7 @@ test('PAR-6 search links focus input; Back, Forward and clear preserve only the 
   await page.goto('/');
   const search = page.getByRole('combobox');
   const searchLinks = ['Search my property ↑', 'Property search'];
-  if (page.viewportSize()!.width > 480) searchLinks.push('Search');
+  if (page.viewportSize()!.width > 700) searchLinks.push('Search');
   for (const name of searchLinks) {
     await page.getByRole('link', { name, exact: true }).press('Enter');
     await expect(search).toBeFocused();

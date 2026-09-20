@@ -1,6 +1,7 @@
 import { CurrentAssessment } from "./current-assessment";
 import { selectCurrentAssessment } from "@/lib/current-assessment";
 import { CapAndExemptions } from './cap-and-exemptions';
+import { annualReviewGuideHref } from '@/content/guide-navigation';
 import { ValueDrivers, RecordedPropertyDetails } from './property-value-details';
 import { capModel } from '@/lib/property-sections';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
@@ -105,7 +106,7 @@ export function PropertyOverview({
               </p>
             </div>
           )}
-          <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id))} propertyId={p.property_id} />
+          <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id))} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
           <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
           <AnnualAssessmentHistory rows={annualHistory(snapshots, evidence)} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable} />

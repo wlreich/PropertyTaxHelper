@@ -4,6 +4,7 @@ import PropertyLoading from "@/components/property-loading";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { SearchForm } from "@/components/search-form";
 import { SearchEntryLink } from "@/components/search-entry-link";
+import { SiteNavigation } from "@/components/site-navigation";
 import { Unavailable } from "@/components/site-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { TermDefinition } from "@/components/term-definition";
@@ -114,13 +115,7 @@ async function HomeContent({
           >
             <BrandLogo />
           </Link>
-          <nav className={styles.mainNav} aria-label="Main navigation">
-            <SearchEntryLink>Search</SearchEntryLink>
-            <Link href="/#about">About</Link>
-            <Link className={styles.supportNavLink} href="/#support">
-              Support us
-            </Link>
-          </nav>
+          <SiteNavigation home />
           <div className={styles.county}>
             <span>{appraisalDistrict.countyLabel}</span>
             <span className={styles.districtName}>
@@ -347,6 +342,14 @@ async function HomeContent({
             )}
           </section>
         )}
+
+        <section className={styles.guideCard} aria-labelledby="guide-discovery-heading">
+          <div>
+            <h2 id="guide-discovery-heading">Thinking about protesting?</h2>
+            <p>Understand your assessment, explore working with an agent or doing it yourself, and learn how to prepare.</p>
+          </div>
+          <Link className="text-link" href="/protest-guide">Read the guide.</Link>
+        </section>
 
         {!q && (
           <>
