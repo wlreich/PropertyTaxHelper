@@ -26,6 +26,7 @@
 .wordmark {
   display: block;
   min-width: var(--logo-min-width);
+  max-width: 100%;
   text-decoration: none;
 }
 
@@ -752,7 +753,7 @@
   }
 
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
   }
 
@@ -763,7 +764,7 @@
   .questions,
   .support,
   .trust {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
   }
 
@@ -825,8 +826,11 @@
   .previewGrid,
   .trustList,
   .footerGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+
+  .seasonCallout > span { white-space: normal; }
+  .hero > *, .questions > *, .support > *, .trust > * { min-width: 0; overflow-wrap: anywhere; }
 
   .questions {
     padding: var(--space-8) var(--space-6);

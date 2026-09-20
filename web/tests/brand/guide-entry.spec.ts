@@ -17,6 +17,10 @@ async function openMenu(page: Page) {
 
 async function keyboardLink(link: Locator) {
   await link.focus();
+  // A previous mouse click leaves programmatic focus in pointer modality.
+  // Enter via actual sequential keyboard navigation before checking :focus-visible.
+  await link.press('Tab');
+  await link.page().keyboard.press('Shift+Tab');
   await expect(link).toBeFocused();
   expect(await link.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
   expect(await link.evaluate(el => parseFloat(getComputedStyle(el).outlineWidth))).toBeGreaterThan(0);
@@ -24,7 +28,9 @@ async function keyboardLink(link: Locator) {
 }
 
 async function noOverflow(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
+  const geometry = await page.evaluate(() => ({width:innerWidth, scroll:document.documentElement.scrollWidth,
+    overflowing:Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > innerWidth + 1).map(el => ({tag:el.tagName,class:el.className,right:el.getBoundingClientRect().right})).slice(0,20)}));
+  expect(geometry.scroll, JSON.stringify(geometry)).toBeLessThanOrEqual(geometry.width + 1);
 }
 
 test('PAR-17 header and education card preserve a submitted search through guide and Back', async ({page}) => {
