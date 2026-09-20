@@ -27,6 +27,11 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  const conflicted=parseNeighborhoodAnalysis(await call('post',2026,'120'),'120');assert.ok(conflicted);
  assert.deepEqual(conflicted.annual_periods,parsed.annual_periods);
  assert.deepEqual(neighborhoodAnalysis(conflicted).carryForward,analysis.carryForward);
+ // Parcel 121 has current data but no 2025 profiles; neighbors still supply history.
+ const noHistory=parseNeighborhoodAnalysis(await call('post',2026,'121'),'121');assert.ok(noHistory);
+ assert.deepEqual(noHistory.annual_periods,parsed.annual_periods);
+ assert.deepEqual(neighborhoodAnalysis(noHistory).carryForward,analysis.carryForward);
+ assert.deepEqual(neighborhoodAnalysis(noHistory).certifiedChanges,analysis.certifiedChanges);
  assert.equal((await db.query('select parcel_comparison.preliminary_release_eligible($1,$2,$3) eligible',[anchor,oldPre,'103'])).rows[0].eligible,false);
  assert.ok(analysis.carryForward.length);assert.equal(JSON.stringify(raw).includes('PRIVATE'),false);
  for(const phase of ['preliminary','protest']){
