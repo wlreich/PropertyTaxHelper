@@ -1,3 +1,4 @@
+import {neighborhoodViewFixture} from './neighborhood-view-fixture.mjs';
 import {par11Fixture} from './par11-fixture.mjs';
 import {par10Fixture} from './par10-fixture.mjs';
 import {seedMarketAdjustments} from './market-adjustment-fixture.mjs';
@@ -48,6 +49,7 @@ createServer((req,res)=>{
    }
    if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
    else if(route==='property_market_adjustment')result=await call('select public.property_market_adjustment($1) result',[args.p_id]);
+   else if(route==='property_neighborhood_analysis')result=neighborhoodViewFixture(await call('select public.property_neighborhood_analysis($1,$2,$3) result',[/^920[0-5]$/.test(args.p_id)?'100':args.p_id,args.p_phase??null,args.p_year??null]),args.p_id);
    else if(route==='property_neighborhood_v4')result=await call('select public.property_neighborhood_v4($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_neighborhood_v3')result=await call('select public.property_neighborhood_v3($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_comparisons')result=await call('select public.property_comparisons($1,$2,$3,$4,$5) result',[args.p_id,args.p_source??null,typeof args.p_selected==='string'?args.p_selected.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_selected??[],args.p_query??'',Number(args.p_page??0)]);
