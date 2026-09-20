@@ -23,8 +23,8 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
   const reported = comparisonSummary(subject, selected);
   const adjusted = adjustmentSummary(subject, results);
   return <section className="comparison-card comparison-adjusted" aria-labelledby="adjusted-comparison-heading">
-    <h3 id="adjusted-comparison-heading" tabIndex={-1}>ParcelSavvy estimated adjusted values</h3>
-    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow TCAD’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
+    <h3 className="comparison-sr-only" id="adjusted-comparison-heading" tabIndex={-1}>ParcelSavvy estimated adjusted values</h3>
+
     <ComparisonSummary value={subject.market_value} median={adjusted.median} difference={adjusted.difference} percent={adjusted.percent} adjusted/>
     <p className="comparison-small">Reported median before adjustments: {currency(reported.median)} · {reported.count} properties.</p>
     <p className="comparison-adjusted-note" role="status">{selected.length === 0 ? "Edit the comparison set to choose properties for adjustment." : `${adjusted.count} of ${results.length} selected properties have estimated adjusted values. ${adjusted.excluded ? `${adjusted.excluded} properties without an estimate are excluded from the adjusted median.` : "Both medians use the same properties."}`} Your property is excluded from both medians.{reported.missing > 0 ? ` ${reported.missing} missing reported values are also excluded from the reported median.` : ""}</p>
@@ -45,6 +45,7 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
                 <Link href={`/property/${result.property.property_id}`}>View property records</Link>
               </div>
     </dialog>}
+    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow TCAD’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
     <p className="comparison-adjusted-note">Source: TCAD {release.tax_year} {release.roll_stage} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
   </section>;
 }

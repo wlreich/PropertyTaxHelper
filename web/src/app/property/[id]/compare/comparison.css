@@ -143,7 +143,10 @@
 .comparison-candidates.comparison-rows th:nth-child(2) { min-width: 0; }
 .comparison-rows .comparison-money { white-space: normal; }
 .comparison-structure { display: block; margin-top: var(--space-2); color: var(--color-brand-primary); font-size: var(--text-small); }
-.comparison-deed { margin-top: var(--space-3); }
+.comparison-deed { margin-top: var(--space-2); }
+.comparison-deed summary { font-size: var(--text-label); font-weight: var(--weight-normal); }
+.comparison-title h2 { font-size: var(--text-h2); }
+.comparison-mobile-action { position: static; }
 .comparison-summary { grid-template-columns: repeat(3,minmax(0,1fr)); background: var(--color-surface-info); border: 0; text-align: left; }
 .comparison-summary dd { font-size: var(--text-body); }
 .comparison-conclusion { margin-top: var(--space-4); font-size: var(--text-h3); color: var(--color-brand-primary); }

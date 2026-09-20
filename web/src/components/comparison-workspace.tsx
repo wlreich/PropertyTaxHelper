@@ -122,7 +122,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
         {selected.length===10&&<p role="status" className="comparison-small">Ten-property limit reached. Remove one to add another.</p>}
       </div><div className="comparison-selection-tip"><strong>Choose for similarity</strong><p>A lower assessment alone does not make a property a stronger comparison.</p></div></aside>
     </div></>}
-    {initialStep==="results"&&view==="reported"&&<section className="comparison-card comparison-results" aria-labelledby="selected-comparison-heading"><h3 id="selected-comparison-heading">Reported comparison values</h3>
+    {initialStep==="results"&&view==="reported"&&<section className="comparison-card comparison-results" aria-labelledby="selected-comparison-heading"><h3 className="comparison-sr-only" id="selected-comparison-heading">Reported comparison values</h3>
       <ComparisonSummary value={data.subject.market_value} median={summary.median} difference={summary.difference} percent={summary.percent}/>
       <p className="comparison-small">{summary.count} of {selected.length} selected properties have reported values. Your property is excluded from the median.{summary.missing>0?` ${summary.missing} missing values left out.`:''}</p>
       {summary.count>0&&summary.count<3&&<p className="comparison-inline-note">A small selection gives limited context. Review more similar properties before drawing a conclusion.</p>}
