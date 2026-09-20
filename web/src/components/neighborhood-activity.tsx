@@ -42,7 +42,7 @@ export function NeighborhoodActivity({data,propertyId}:{data:ActivityData|null;p
    <button className="activity-link" disabled={!chosen.length} onClick={()=>{setSelected(new Set());setNotice('Selection cleared.');}}>Clear selection</button>
   </div>
   {notice&&<p className="neighborhood-note" role="status">{notice}</p>}
-  <div className="activity-pagination"><p>Showing {shown.length} of {rows.length} transaction records</p>{rows.length>5&&<button className="activity-link" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'Show latest five':'View all '+rows.length+' →'}</button>}</div>
+  <div className="activity-pagination"><p>Showing {shown.length} of {rows.length} transaction records</p>{rows.length>5&&<button className="activity-link" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'Show first five':'View all '+rows.length+' →'}</button>}</div>
   <p className="activity-source">TCAD appraisal export: {dateLabel(data.sources.appraisal_export_date)}. Supplemental deed and sale records: {dateLabel(data.sources.sales_export_date)}.<br/>Covers available records, not every sale. Nearby properties are not automatically comparable.</p>
  </section>;
 }
