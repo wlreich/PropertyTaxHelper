@@ -85,8 +85,8 @@ test('PAR-18 property landing and annual-review chapter preserve subject, return
   await back.click();
   await expect(page).toHaveURL(new RegExp(`${subject}$`));
   const cap = page.locator('.cap-guidance');
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href',`${subject}/compare`);
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveClass('action-button');
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href',`${subject}/compare`);
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveClass('action-button');
   const review = cap.getByRole('link',{name:'Why review every year?'});
   await expect(review).toHaveAttribute('href',`/protest-guide?property=736164#${annualReview.anchor}`);
   await keyboardLink(review);
@@ -117,7 +117,7 @@ test('PAR-18 no-homestead fixture keeps neutral annual guidance and correct comp
   await expect(cap).toContainText('A homestead cap has not been established here.');
   await expect(cap).not.toContainText('Your cap helps.');
   await expect(cap).not.toContainText('Your cap limits growth');
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href','/property/999012/compare');
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href','/property/999012/compare');
   await expect(cap.getByRole('link',{name:'Why review every year?'})).toHaveAttribute('href',`/protest-guide?property=999012#${annualReview.anchor}`);
   await expect(page.getByRole('link',{name:'Download printable PDF'})).toHaveCount(0);
 });
