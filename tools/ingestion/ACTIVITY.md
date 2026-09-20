@@ -38,3 +38,26 @@ Original/adjusted prices remain separate. Zero becomes unavailable. Future and
 invalid dates are quarantined. Confidential/suppressed flags and parcel groups
 must be respected by the public projection. Re-run for each reviewed new source
 release/year, then refresh the activity projection as documented in its migration.
+
+## Publish neighborhood activity
+
+After a complete, reviewed import and the publication migration, a database
+operator runs `select tcad_ingest.publish_property_activity(2026);`. This is an
+atomic, repeatable rebuild for the active appraisal release and newest complete
+JSON import for that year. Run it again after changing the active appraisal release
+or importing a newer source. Incomplete imports never replace published data.
+
+The public RPC `property_neighborhood_activity(property_id, year)` returns a
+bounded (10,000 maximum) activity list for the active district neighborhood,
+available years, and separate appraisal/JSON export dates. Empty lists mean no
+matching records in these sources, not that no sales occurred. The activity
+population includes all visible property types and differs from valuation metrics.
+
+Matching uses property ID plus deed ID, then an instrument without a conflicting
+deed ID, then an unambiguous date without conflicting identifiers. Unmatched
+transactions remain separate. Supplemental deeds replace repeat appraisal deeds
+with the same instrument; nothing deduplicates solely by property ID. Recorded
+sales are not asserted to be verified arm’s-length comparables. Confidential,
+suppressed, unknown-privacy and future-dated sale observations are excluded.
+Multi-property prices and unknown parcel allocations are withheld. Prices are
+never inferred from consideration, listing prices or assessed values.
