@@ -150,10 +150,12 @@ test('PAR-17/18 focused layout, accessibility and screenshots at required widths
     const propertyNav=page.getByRole('navigation',{name:'Property tools'});
     await expect(propertyNav.getByRole('link',{name:'Protest Guide',exact:true})).toHaveCount(1);
     const cap=page.locator('.cap-guidance');
-    const primary=(await cap.locator('.action-button').boundingBox())!;
-    const secondary=(await cap.locator('.cap-review-link').boundingBox())!;
-    expect(secondary.y).toBeGreaterThanOrEqual(primary.y+primary.height);
-    expect(Math.abs(primary.x-secondary.x)).toBeLessThanOrEqual(1);
+    const action=cap.getByRole('link',{name:'Why review every year?'});
+    await expect(action).toHaveCount(1);
+    const actionBox=(await action.boundingBox())!;
+    const copyBox=(await cap.locator('p').last().boundingBox())!;
+    expect(actionBox.y).toBeGreaterThanOrEqual(copyBox.y+copyBox.height);
+    expect(actionBox.height).toBeGreaterThanOrEqual(44);
     await noOverflow(page);
     if (width===390 || width===1440) {
       expect((await new AxeBuilder({page}).include('.property-navigation').include('.cap-guidance').analyze()).violations).toEqual([]);
