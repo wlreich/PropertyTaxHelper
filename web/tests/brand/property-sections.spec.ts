@@ -4,10 +4,10 @@ import AxeBuilder from '@axe-core/playwright';
 test('PAR-10 reference sections: authority arithmetic, dynamic features, accessible disclosures and Figma captures', async ({page}, info) => {
   await page.goto('/property/736164');
   const cap = page.locator('.cap-section');
-  await expect(cap).toContainText('Your cap helps. Keep reviewing.');
+  await expect(cap).toContainText('Your starting point for next year');
   const calculation = cap.locator('.cap-calculation');
   for (const value of ['$1,575,313','− $197,959','$1,377,354','− $203,000','$1,174,354']) await expect(calculation).toContainText(value);
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href','/property/736164/compare');
+  await expect(cap.getByRole('link',{name:'Why review every year?'})).toHaveAttribute('href','/protest-guide?property=736164#annual-review');
   await expect(cap).toContainText('$956,614');
   await page.getByLabel('Calculation authority').selectOption('03');
   await expect(calculation).toContainText('Travis County exemptions');
@@ -30,7 +30,7 @@ test('PAR-10 reference sections: authority arithmetic, dynamic features, accessi
   expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const guidanceCopy=await page.locator('.cap-guidance p').last().boundingBox();
-  const guidanceAction=await cap.getByRole('link',{name:'Compare similar properties'}).boundingBox();
+  const guidanceAction=await cap.getByRole('link',{name:'Why review every year?'}).boundingBox();
   expect(guidanceAction!.y).toBeGreaterThanOrEqual(guidanceCopy!.y+guidanceCopy!.height);
   await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement) document.activeElement.blur();});
   for(const [name,section] of [['cap',cap],['drivers',drivers],['details',facts]] as const) {
@@ -42,10 +42,10 @@ test('PAR-10 reference sections: authority arithmetic, dynamic features, accessi
 });
 
 test('PAR-10 conditional states do not promise an active cap or turn missing amounts into zero',async({page})=>{
-  for(const [id,title] of [['999011','Keep reviewing your market value.'],['999012','Keep reviewing your market value.'],['999013','More cap information needed.']]) {
+  for(const [id,title] of [['999011','Your starting point for next year'],['999012','Keep reviewing your market value.'],['999013','More cap information needed.']]) {
     await page.goto(`/property/${id}`);
     await expect(page.locator('.cap-guidance h3')).toHaveText(title);
-    if(id==='999011') await expect(page.locator('.cap-guidance')).toContainText('cap is not reducing');
+    if(id==='999011') await expect(page.locator('.cap-guidance')).toContainText('starting point for next year');
     if(id==='999012') await expect(page.locator('.cap-guidance')).toContainText('No residence homestead exemption');
     if(id==='999013') { await expect(page.locator('.cap-calculation')).toContainText('Not reported'); await expect(page.locator('.cap-calculation')).not.toContainText('$0'); await expect(page.locator('#property-details')).toContainText('Current feature records unavailable'); }
   }

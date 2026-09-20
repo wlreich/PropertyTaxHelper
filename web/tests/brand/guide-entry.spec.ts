@@ -85,8 +85,8 @@ test('PAR-18 property landing and annual-review chapter preserve subject, return
   await back.click();
   await expect(page).toHaveURL(new RegExp(`${subject}$`));
   const cap = page.locator('.cap-guidance');
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href',`${subject}/compare`);
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveClass('action-button');
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href',`${subject}/compare`);
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveClass('action-button');
   const review = cap.getByRole('link',{name:'Why review every year?'});
   await expect(review).toHaveAttribute('href',`/protest-guide?property=736164#${annualReview.anchor}`);
   await keyboardLink(review);
@@ -117,7 +117,7 @@ test('PAR-18 no-homestead fixture keeps neutral annual guidance and correct comp
   await expect(cap).toContainText('A homestead cap has not been established here.');
   await expect(cap).not.toContainText('Your cap helps.');
   await expect(cap).not.toContainText('Your cap limits growth');
-  await expect(cap.getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href','/property/999012/compare');
+  await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties'})).toHaveAttribute('href','/property/999012/compare');
   await expect(cap.getByRole('link',{name:'Why review every year?'})).toHaveAttribute('href',`/protest-guide?property=999012#${annualReview.anchor}`);
   await expect(page.getByRole('link',{name:'Download printable PDF'})).toHaveCount(0);
 });
@@ -150,10 +150,12 @@ test('PAR-17/18 focused layout, accessibility and screenshots at required widths
     const propertyNav=page.getByRole('navigation',{name:'Property tools'});
     await expect(propertyNav.getByRole('link',{name:'Protest Guide',exact:true})).toHaveCount(1);
     const cap=page.locator('.cap-guidance');
-    const primary=(await cap.locator('.action-button').boundingBox())!;
-    const secondary=(await cap.locator('.cap-review-link').boundingBox())!;
-    expect(secondary.y).toBeGreaterThanOrEqual(primary.y+primary.height);
-    expect(Math.abs(primary.x-secondary.x)).toBeLessThanOrEqual(1);
+    const action=cap.getByRole('link',{name:'Why review every year?'});
+    await expect(action).toHaveCount(1);
+    const actionBox=(await action.boundingBox())!;
+    const copyBox=(await cap.locator('p').last().boundingBox())!;
+    expect(actionBox.y).toBeGreaterThanOrEqual(copyBox.y+copyBox.height);
+    expect(actionBox.height).toBeGreaterThanOrEqual(44);
     await noOverflow(page);
     if (width===390 || width===1440) {
       expect((await new AxeBuilder({page}).include('.property-navigation').include('.cap-guidance').analyze()).violations).toEqual([]);

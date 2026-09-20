@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { currency } from '@/lib/property-search';
 import type { CapModel } from '@/lib/property-sections';
 
-export function CapAndExemptions({ model, propertyId, annualReviewHref }: { model: CapModel; propertyId: string; annualReviewHref: string }) {
+export function CapAndExemptions({ model, annualReviewHref }: { model: CapModel; propertyId: string; annualReviewHref: string }) {
   const [selected, setSelected] = useState(model.defaultAuthority);
   const authority = model.authorities.find(a => a.code === selected) ?? model.authorities[0];
   const deduction = (value: number | null) => value === null ? 'Not reported' : `${value > 0 ? '− ' : ''}${currency(value)}`;
@@ -24,10 +24,16 @@ export function CapAndExemptions({ model, propertyId, annualReviewHref }: { mode
         {model.authorities.length > 1 && <div className="authority-choice"><label htmlFor="calculation-authority">Calculation authority</label><select id="calculation-authority" value={authority?.code} onChange={e => setSelected(e.target.value)}>{model.authorities.map(a => <option key={a.code} value={a.code}>{a.name}</option>)}</select></div>}
       </div>
       <aside className="cap-guidance" aria-labelledby="cap-guidance-heading">
-        <h3 id="cap-guidance-heading">{model.title}</h3>
-        {model.paragraphs.map(p => <p key={p}>{p}</p>)}
-        <Link className="action-button" href={`/property/${propertyId}/compare`}>Compare similar properties</Link>
-        <Link className="cap-review-link" href={annualReviewHref}>Why review every year?</Link>
+        <h3 id="cap-guidance-heading">{model.outlook?.title ?? model.title}</h3>
+        {model.outlook ? <>
+          <p>{model.outlook.explanation}</p>
+          <dl className="cap-outlook-values">
+            <div><dt>{model.outlook.year} starting value</dt><dd>{currency(model.outlook.base)}</dd></div>
+            <div><dt>{model.outlook.year} ceiling under the 10% cap</dt><dd>{currency(model.outlook.ceiling)}</dd></div>
+          </dl>
+          <p className="overview-note">Assumes continued eligibility and no qualifying new improvements. A ceiling, not a prediction or tax bill; assessed value can be lower if market value is lower.</p>
+        </> : model.paragraphs.map(p => <p key={p}>{p}</p>)}
+        <Link className="action-button" href={annualReviewHref}>Why review every year?</Link>
       </aside>
     </div>
     <p className="recorded-exemptions">Recorded exemptions: {model.exemptionNames.length ? model.exemptionNames.join(' · ') : model.state === 'unavailable' ? 'Not available' : 'None listed'}</p>
