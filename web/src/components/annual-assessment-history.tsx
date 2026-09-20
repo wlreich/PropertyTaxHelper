@@ -84,8 +84,8 @@ export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, c
 }
 
 export function CurrentYearRecord({year}: {year: number}) {
-  const {rows, unavailable, openYear} = useHistory();
-  if (unavailable || !rows.some(row => row.year === year)) return null;
+  const {rows, openYear} = useHistory();
+  if (!rows.some(row => row.year === year)) return null;
   return <button type="button" className="current-record-link" aria-haspopup="dialog" onClick={e => openYear(year, e.currentTarget)}>View {year} assessment &amp; protest record</button>;
 }
 
@@ -102,7 +102,8 @@ export function AnnualAssessmentHistory() {
     <p className="eyebrow">Your property over time</p>
     <h2 id="history-heading" tabIndex={-1}>Assessment &amp; protest history</h2>
     <p className="overview-note">Values and protest records together, year by year. Select a year for the full record.</p>
-    {unavailable ? <p>Assessment history is temporarily unavailable. Try again in a few minutes.</p> : !rows.length ?
+    {unavailable && rows.length > 0 && <p>Some assessment history is temporarily unavailable. Available protest and assessment records are shown below.</p>}
+    {unavailable && !rows.length ? <p>Assessment history is temporarily unavailable. Try again in a few minutes.</p> : !rows.length ?
       <p>No annual assessment records are available for this property yet.</p> : <>
       <table className="annual-table" role="table">
         <caption className="visually-hidden">Annual assessment values, newest year first</caption>
