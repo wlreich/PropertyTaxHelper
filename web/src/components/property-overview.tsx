@@ -6,13 +6,12 @@ import { ValueDrivers, RecordedPropertyDetails } from './property-value-details'
 import { capModel } from '@/lib/property-sections';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
-import { ProtestResult, InterimChange, Representation, HomeownerNextSteps } from "./homeowner-story";
+import { InterimChange, HomeownerNextSteps } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
-import { priorSeasonResult } from "@/lib/homeowner-insights";
 import { SeasonNotice } from "./season-notice";
 import type { SeasonContext } from "@/lib/seasons";
-import { AnnualAssessmentHistory } from "./annual-assessment-history";
+import { AnnualAssessmentHistory, AnnualHistoryProvider } from "./annual-assessment-history";
 import { annualHistory } from "@/lib/annual-history";
 import {
   annualBaseline,
@@ -49,9 +48,9 @@ export function PropertyOverview({
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
   const evidence = protestEvidence(snapshots, protests);
-  const historical = priorSeasonResult(snapshots, season?.config.tax_year ?? p.tax_year);
+  const historyRows = annualHistory(snapshots, evidence);
   return (
-    <>
+    <AnnualHistoryProvider rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>
       <div className="profile-heading overview-heading">
         <div>
           <h1>{p.address}</h1>
@@ -105,9 +104,6 @@ export function PropertyOverview({
           <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id), initial)} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
           <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
-          <AnnualAssessmentHistory rows={annualHistory(snapshots, evidence)} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable} />
-          {historical.current && historical.current.dataset_id !== current?.dataset_id && <ProtestResult current={historical.current} initial={historical.initial} evidence={evidence} historical />}
-          <Representation evidence={evidence} year={current.tax_year} unavailable={protestsUnavailable} />
           <HomeownerNextSteps address={p.address} />
           <section className="overview-context" aria-labelledby="context-heading">
             <h2 id="context-heading">Put your assessment in context</h2>
@@ -122,6 +118,7 @@ export function PropertyOverview({
               <Link href="/support">Make a donation ↗</Link>
             </div>
           </section>
+          <AnnualAssessmentHistory />
           <section className="overview-source">
             <p>Latest assessment shown: {snapshotLabel(current)} record · {current.export_date ? dateLabel(current.export_date) : current.export_time_raw ?? "Export date not reported"}. Later Appraisal District corrections may exist.</p>
             <details className="homeowner-details"><summary id="about-records-heading">Sources &amp; calculation details</summary>
@@ -145,6 +142,6 @@ export function PropertyOverview({
           </section>
         </div>
       </div>
-    </>
+    </AnnualHistoryProvider>
   );
 }

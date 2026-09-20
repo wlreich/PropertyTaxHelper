@@ -963,3 +963,31 @@
 .cap-outlook-values { margin-block: var(--space-4); }
 .cap-outlook-values > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-4); padding-block: var(--space-2); }
 .cap-outlook-values dd { margin: 0; font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Bounded history; a single modal keeps older records off the page flow. */
+.current-record-link { display: inline-flex; align-items: center; min-height: var(--target-min); padding-block: var(--space-2); margin-top: var(--space-3); color: var(--color-surface); background: transparent; border: 0; text-decoration: underline; cursor: pointer; font-size: var(--text-small); }
+.current-record-link:focus-visible { outline-color: var(--color-focus-on-dark); }
+.annual-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); font-size: var(--text-small); }
+.annual-pagination nav { display: flex; gap: var(--space-3); }
+.annual-pagination .annual-earlier { margin-top: 0; }
+.annual-earlier:disabled { color: var(--color-text-muted); cursor: default; text-decoration: none; }
+.annual-trend { margin-top: var(--space-4); }
+.annual-trend summary, .annual-record-disclosure > summary { color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); cursor: pointer; }
+.annual-dialog { margin: auto; width: min(860px, calc(100vw - var(--space-8))); max-height: calc(100dvh - var(--space-8)); overflow-y: auto; overscroll-behavior: contain; color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); padding: 0; }
+.annual-dialog::backdrop { background: color-mix(in srgb, var(--color-brand-primary) 60%, transparent); }
+.annual-dialog-toolbar { display: flex; justify-content: flex-end; position: sticky; top: 0; z-index: 1; background: var(--color-surface); padding: var(--space-2) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+.annual-dialog .annual-year-details { border-radius: 0; background: var(--color-surface); }
+.annual-dialog h2 { font-family: var(--font-heading); font-size: var(--text-h2); margin-bottom: var(--space-4); }
+.annual-dialog p { margin-block: var(--space-4); }
+.annual-detail-comparison { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: var(--space-4); font-size: var(--text-small); font-variant-numeric: tabular-nums; }
+.annual-detail-comparison th, .annual-detail-comparison td { padding: var(--space-3) var(--space-2); text-align: right; border-bottom: var(--border-width) solid var(--color-border); overflow-wrap: anywhere; }
+.annual-detail-comparison th:first-child { text-align: left; }
+.annual-detail-comparison thead { background: var(--color-background); }
+.annual-record-disclosure { border-top: var(--border-width) solid var(--color-border); }
+.annual-dialog .annual-source-values dd { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+ .annual-dialog { width: 100%; max-width: 100%; max-height: 100dvh; height: 100dvh; border-radius: 0; }
+ .annual-dialog h2 { font-size: var(--text-h3); }
+ .annual-detail-comparison th, .annual-detail-comparison td { padding-inline: var(--space-1); }
+}
+@media print { .annual-dialog, .current-record-link, .annual-pagination nav { display: none !important; } }

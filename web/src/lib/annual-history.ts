@@ -1,4 +1,5 @@
 import { comparison, dateLabel, entityDisplayName, exemptionName, isPreliminaryBaseline, preliminaryBaseline, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { assessmentOutcome } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 import { validDate } from './seasons.ts';
 
@@ -26,6 +27,11 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
     const within = final && validDate(final.export_date) && preliminary ? comparison(preliminary.market_value, final.market_value) : null;
     return {
       year, preliminary: preliminary?.market_value ?? null,
+      preliminaryAssessed: preliminary?.assessed_value ?? null,
+      preliminaryLand: preliminary?.land_value ?? null, preliminaryImprovements: preliminary?.improvement_value ?? null,
+      certifiedLand: final?.land_value ?? null, certifiedImprovements: final?.improvement_value ?? null,
+      outcome: final ? assessmentOutcome(final, preliminary) : null,
+      annualAssessed: final && prior && validDate(final.export_date) && validDate(prior.export_date) ? comparison(prior.assessed_value, final.assessed_value) : null,
       market: final?.market_value ?? null, assessed: final?.assessed_value ?? null,
       afterCap: latest?.assessed_value ?? null,
       status: final ? 'Certified' : latest?.roll_stage === 'preliminary' ? 'Preliminary only' : latest ? 'Supplemental only' : 'Protest records only',
@@ -39,8 +45,9 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
           exemptions: Object.entries(e.exemptions).map(([code, value]) => ({code, name: exemptionName(code).replace('TCAD', 'Appraisal District'), value}))})),
       })),
       protests: evidence.filter(e => e.tax_year === year).map(e => ({
-        id: e.dataset_id, date: dateLabel(e.export_date), recorded: Boolean(e.protest_flag || e.arb_case_listed),
-        agent: e.arb_agent_listed ? e.arb_agent_name ?? 'Agent name not identified' : null,
+        id: e.dataset_id, date: dateLabel(e.export_date),
+        basis: e.protest_flag && e.arb_case_listed ? 'Protest flag and ARB case listed' : e.arb_case_listed ? 'ARB case listed' : e.protest_flag ? 'Protest flag recorded' : 'Agent assignment recorded', recorded: Boolean(e.protest_flag || e.arb_case_listed),
+        agent: e.arb_agent_name ?? (e.arb_agent_listed ? 'Agent name not identified' : null),
         codes: e.arb_status_codes,
       })),
     };

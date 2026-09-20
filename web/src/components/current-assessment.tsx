@@ -2,6 +2,7 @@ import { currency } from '@/lib/property-search';
 import { currentAssessmentStory } from '@/lib/current-assessment';
 import { snapshotLabel, type Snapshot, type ProtestObservation } from '@/lib/property-history';
 import type { SeasonContext } from '@/lib/seasons';
+import { CurrentYearRecord } from './annual-assessment-history';
 import { TermDefinition } from './term-definition';
 
 function AnnualChange({ change, year }: { change: ReturnType<typeof currentAssessmentStory>['annual']; year?: number }) {
@@ -23,6 +24,7 @@ export function CurrentAssessment({current,snapshots,evidence,season,unavailable
     {story.outcome?.explanation && <p className="current-assessment-impact">{story.outcome.explanation}</p>}
     <p className="current-assessment-evidence">{story.protest} · {story.agents.length ? `Agent${story.agents.length > 1 ? 's' : ''}: ${story.agents.map(a=>a.name).join(' · ')}` : 'Agent not identified'}</p>
     {(story.agents.length > 0 || story.proposed && story.proposed.dollars < 0) && <p className="current-assessment-evidence">The records do not establish what caused a reduction or who handled the case.</p>}
+    <CurrentYearRecord year={current.tax_year} />
     {story.seasonNote && <p className="current-assessment-season">{story.seasonNote}</p>}
   </section>;
 }

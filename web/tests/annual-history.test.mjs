@@ -64,3 +64,16 @@ test('latest certified source wins once per year, with dated supplemental protes
   assert.equal(rows[1].protests[0].agent,'SYNTHETIC AGENT'); assert.equal(rows[1].protests[0].date,'Export date not reported');
   assert.equal(rows[1].sources[0].date,'May 8, 2025');
 });
+
+test('year detail values share the eligible baseline and preserve protest-only years',()=>{
+ const rows=annualHistory(snapshots);
+ assert.equal(rows[0].preliminaryAssessed,1377354);
+ assert.equal(rows[0].annualAssessed.dollars,125214);
+ const evidence={dataset_id:'older-protest',tax_year:2020,export_date:'2020-05-01',export_time_raw:null,protest_flag:true,arb_case_listed:true,arb_agent_listed:false,arb_agent_name:null,arb_status_codes:['EF']};
+ const old=annualHistory(snapshots,[evidence]).at(-1);
+ assert.equal(old.year,2020);assert.equal(old.status,'Protest records only');
+ assert.equal(old.market,null);assert.equal(old.preliminaryAssessed,null);assert.equal(old.outcome,null);
+ assert.equal(old.protests[0].recorded,true);
+ const excluded=annualHistory(parseHistory(par11Fixture('999119').overview.history))[1];
+ assert.equal(excluded.preliminaryAssessed,null);assert.equal(excluded.outcome,null);
+});
