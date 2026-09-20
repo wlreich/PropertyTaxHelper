@@ -6,16 +6,11 @@ test("taxable-only reduction stays distinct from unchanged market value and prot
   await expect(summary).toContainText('$600,000');
   await expect(summary).toContainText('Reduction from proposed');
   await expect(summary).toContainText('Proposed and certified values match');
-  const result=page.getByRole('region',{name:'Your taxable value came down'});
-  await expect(result).toContainText('$240,000 lower');
-  await expect(result).toContainText('Leander ISD taxable value');
-  await expect(result).toContainText('Your market value stayed at $600,000.');
-  await expect(result).toContainText('Appraisal caps and exemptions');
-  await expect(result).toContainText('A protest was also recorded');
-  await expect(result).toContainText('A taxable-value decrease alone does not establish a successful protest.');
-  await expect(result).not.toHaveClass(/homeowner-positive/);
-  await expect(page.getByRole('heading',{name:'Looks like a successful protest!'})).toHaveCount(0);
-  expect((await new AxeBuilder({page}).include('.current-assessment').include('.overview-insight').analyze()).violations).toEqual([]);
+  const result=summary;
+  await expect(summary).toContainText('Protest recorded');
+  await expect(summary).not.toContainText('successful protest');
+  await expect(page.getByRole('heading',{name:'Your taxable value came down'})).toHaveCount(0);
+  expect((await new AxeBuilder({page}).include('.current-assessment').analyze()).violations).toEqual([]);
   await page.evaluate(()=>{document.documentElement.style.zoom='2';});
   const zoomLayout = await page.evaluate(()=>({
     width: window.innerWidth,
@@ -74,27 +69,13 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(
     page.getByRole("definition").filter({hasText:"No longer separately listed"}),
   ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Looks like a successful protest!" }),
-  ).toBeVisible();
-  const assessmentSummary = page.locator(".current-assessment");
-  await expect(assessmentSummary).toContainText("$450,000");
-  await expect(assessmentSummary).toContainText("$100,000");
-  await expect(assessmentSummary).toContainText("↑ $50,000");
-  const protestResult = page.getByRole("region", {name:"Looks like a successful protest!"});
-  await expect(protestResult).toContainText("A protest was also recorded for 2026.");
-  await expect(protestResult).not.toContainText("during that period");
-  await expect(protestResult).toContainText("Agent listed for 2026");
-  await expect(protestResult).toContainText("FIXTURE TAX PARTNERS");
-  await expect(protestResult).toContainText("Recorded: Apr 29, 2026");
-  await expect(protestResult).toContainText("do not confirm what caused the reduction");
-  const values = page.getByRole("region", {name:"What is the cap doing for you?"});
-  await expect(values).toContainText("Leander ISD");
-  await expect(values).toContainText("before exemptions");
-  await expect(values).toContainText("$420,000");
-  await expect(protestResult.locator(".homeowner-result")).toHaveCSS("color", "rgb(25, 122, 101)");
-  expect((await assessmentSummary.boundingBox())!.y).toBeLessThan((await protestResult.boundingBox())!.y);
-  expect((await protestResult.boundingBox())!.y).toBeLessThan((await values.boundingBox())!.y);
+  const assessmentSummary = page.locator('.current-assessment');
+  for (const value of ['$450,000','$100,000','↑ $50,000','Protest recorded','FIXTURE TAX PARTNERS']) await expect(assessmentSummary).toContainText(value);
+  await expect(page.getByRole('heading',{name:'Looks like a successful protest!'})).toHaveCount(0);
+  const values = page.getByRole('region',{name:'What is the cap doing for you?'});
+  await expect(values).toContainText('Leander ISD');
+  await expect(values).toContainText('$420,000');
+  expect((await assessmentSummary.boundingBox())!.y).toBeLessThan((await values.boundingBox())!.y);
   await page.locator("#taxing-authorities summary").focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#taxing-authorities")).toHaveAttribute("open", "");

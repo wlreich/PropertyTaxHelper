@@ -48,9 +48,6 @@ export function PropertyOverview({
   const previous = current ? annualBaseline(snapshots, current) : undefined;
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
-  const entity =
-    current?.entities.find((e) => /\bISD\b|SCHOOL/i.test(e.name)) ??
-    current?.entities[0];
   const evidence = protestEvidence(snapshots, protests);
   const historical = priorSeasonResult(snapshots, season?.config.tax_year ?? p.tax_year);
   return (
@@ -91,7 +88,6 @@ export function PropertyOverview({
         <div className="overview-content">
           <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <InterimChange current={current} initial={initial} />
-          <ProtestResult current={current} initial={initial} entity={entity} evidence={evidence} />
           {(historyUnavailable || snapshots.length === 0) && (
             <div className="notice">
               <h2>
@@ -106,7 +102,7 @@ export function PropertyOverview({
               </p>
             </div>
           )}
-          <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id))} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
+          <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id), initial)} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
           <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
           <AnnualAssessmentHistory rows={annualHistory(snapshots, evidence)} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable} />

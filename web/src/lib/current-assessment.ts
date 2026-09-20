@@ -1,4 +1,5 @@
 import { annualBaseline, comparison, preliminaryBaseline, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { assessmentOutcome } from './assessment-outcome.ts';
 import { agentsForYear, assessmentSummary } from './homeowner-insights.ts';
 import { validDate, type SeasonContext } from './seasons.ts';
 import type { Property } from './supabase/properties.ts';
@@ -51,5 +52,6 @@ export function currentAssessmentStory(current: Snapshot, snapshots: Snapshot[],
   const protest = recorded ? 'Protest recorded' : proposed && proposed.dollars < 0 ? `Reduction evidence suggests a possible protest; ${unavailable ? 'protest records temporarily unavailable' : 'no protest record found'}` : unavailable ? 'Protest records temporarily unavailable' : 'No protest found in available records';
   const agents = agentsForYear(evidence, current.tax_year);
   const seasonNote = season && season.config.tax_year > current.tax_year ? `${season.config.tax_year} values are not available for this property yet. Showing the latest available ${current.tax_year} assessment.` : current.roll_stage !== 'certified' ? season?.phase === 'protest' && season.config.tax_year === current.tax_year ? 'Protest season is underway. The available records do not establish a final outcome for this property.' : 'Review the proposed value and property details. Pending results are not a zero-dollar reduction.' : null;
-  return { previous, initial, annual, assessed, proposed, capped, headline, narrative: `${trend}${cap} ${outcome}`, protest, agents, seasonNote };
+  const resultHeadline = recorded && proposed && proposed.dollars < 0 ? `Protest recorded. Value reduced ${proposed.percent !== null ? `${Math.abs(proposed.percent).toFixed(1)}%` : ''} from the proposal.` : headline;
+  return { previous, initial, annual, assessed, proposed, capped, headline: resultHeadline, outcome: assessmentOutcome(current, initial), narrative: `${trend}${cap} ${outcome}`, protest, agents, seasonNote };
 }

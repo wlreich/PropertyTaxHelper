@@ -1,10 +1,11 @@
 import { comparison, componentKey, componentName, entityDisplayName, exemptionName, type Snapshot } from './property-history.ts';
+import { nextYearCap } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 
 const hasHomestead = (s: Snapshot | undefined) => Boolean(s && (s.exemptions.includes('HS') || s.entities.some(e => Object.hasOwn(e.exemptions, 'HS'))));
 const review = "Review your assessment every year. Consider a protest when property details or comparable values support it, even if this year's tax bill may not change.";
 
-export function capModel(current: Snapshot, previous?: Snapshot, available = true) {
+export function capModel(current: Snapshot, previous?: Snapshot, available = true, initial?: Snapshot) {
   const market = current.market_value, assessed = current.assessed_value;
   const difference = market !== null && assessed !== null && assessed <= market ? market - assessed : null;
   const homestead = available && hasHomestead(current);
@@ -33,7 +34,7 @@ export function capModel(current: Snapshot, previous?: Snapshot, available = tru
     return { code: e.code, name: entityDisplayName(e), taxable: e.taxable_value, exemptions, reconciles,
       entries: entries.map(([code, value]) => ({ code, label: exemptionName(code).replace('TCAD', 'Appraisal District'), value })) };
   });
-  return { market, assessed, difference, homestead, state, title, paragraphs, authorities,
+  return { market, assessed, difference, homestead, state, title, paragraphs, authorities, outlook: nextYearCap(current, initial, available),
     defaultAuthority: authorities.find(e => /\bISD\b|SCHOOL/i.test(e.name))?.code ?? authorities[0]?.code ?? '',
     exemptionNames: [...new Set([...current.exemptions, ...current.entities.flatMap(e => Object.keys(e.exemptions))])].map(c => exemptionName(c).replace('TCAD', 'Appraisal District')),
     priorAssessed: priorHomestead ? previous?.assessed_value ?? null : null,

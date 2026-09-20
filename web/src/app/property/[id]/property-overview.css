@@ -958,3 +958,8 @@
 
 .current-assessment .definition-content { left: 0; right: auto; width: min(300px, calc(100vw - 96px)); text-transform: none; }
 .current-assessment .definition-trigger { text-transform: inherit; }
+
+.current-assessment-impact { padding: var(--space-4); background: var(--color-surface-info); color: var(--color-text); border-radius: var(--radius-input); }
+.cap-outlook-values { margin-block: var(--space-4); }
+.cap-outlook-values > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-4); padding-block: var(--space-2); }
+.cap-outlook-values dd { margin: 0; font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; text-align: right; }
