@@ -60,15 +60,3 @@ jobs:
             web/guide-report
             web/guide-test-results
           if-no-files-found: ignore
-
-  activity-migration-scaffold:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - name: Generate review-correction migration with the pinned CLI
-        run: npx --yes supabase@2.117.0 migration new property_activity_review_fixes
