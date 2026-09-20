@@ -7,7 +7,7 @@ export type Population = {candidate_count:number;excluded:{property_id:string;re
 export type Neighborhood = {market_adjustment?:MarketAdjustment|null;anchor_id:string;source_id:string;releases:ComparisonRelease[];preliminary_id:string|null;certified_id:string|null;prior_id:string|null;neighborhood:string;subdivision:string|null;subject:ComparisonProperty;homes:Home[];caps:Cap[];population:Population};
 export const median=(values:number[])=>{const s=[...values].sort((a,b)=>a-b);return s.length?(s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2:null;};
 export const usable=(n:number|null):n is number=>n!==null&&Number.isFinite(n)&&n>=1000;
-export const perFoot=(value:number|null,area:number|null)=>usable(value)&&area!==null&&area>0?value/area:null;
+export const perFoot=(value:number|null,area:number|null)=>usable(value)&&area!==null&&Number.isFinite(area)&&area>0?value/area:null;
 export const percentage=(n:number,d:number)=>d>0?n/d*100:null;
 const mean=(values:number[])=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
 export function summarizeGroup(homes:Home[],caps:Cap[]) {
