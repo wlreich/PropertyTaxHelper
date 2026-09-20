@@ -28,6 +28,7 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await trigger.focus();await page.keyboard.press('Enter');
   const dialog=page.getByRole('dialog',{name:'2025 assessment & protest record'});
   await expect(dialog).toBeVisible();await expect(page.getByRole('dialog')).toHaveCount(1);
+  await page.screenshot({path:info.outputPath('par25-year-summary.png')});
   await expect(dialog).toContainText('Certified change from 2024: market Not available');
   await dialog.locator('summary').filter({hasText:'Source releases'}).click();
   for(const value of ['May 8, 2025','2025 interim snapshot','Jul 3, 2025','Jul 19, 2025','Residence homestead','Home & improvements'])await expect(dialog).toContainText(value);

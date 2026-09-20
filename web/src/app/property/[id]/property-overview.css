@@ -991,3 +991,18 @@
  .annual-detail-comparison th, .annual-detail-comparison td { padding-inline: var(--space-1); }
 }
 @media print { .annual-dialog, .current-record-link, .annual-pagination nav { display: none !important; } }
+.annual-mobile-protest, .annual-mobile-protest-help, .annual-change-mobile { display: none; }
+@media (max-width: 800px) {
+ .annual-history .annual-table { display: table; }
+ .annual-history .annual-table thead { display: table-header-group; position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
+ .annual-history .annual-table tbody { display: table-row-group; }
+ .annual-history .annual-table tr { display: table-row; }
+ .annual-history .annual-table th, .annual-history .annual-table .annual-value-row td { display: table-cell; width: auto; padding: var(--space-3) var(--space-1); }
+ .annual-history .annual-table th:first-child { width: 23%; }
+ .annual-history .annual-table th:nth-child(2), .annual-history .annual-table th:nth-child(5), .annual-history .annual-table th:nth-child(6),
+ .annual-history .annual-table td:nth-child(2), .annual-history .annual-table td:nth-child(5), .annual-history .annual-table td:nth-child(6) { display: none; }
+ .annual-history .annual-mobile-label, .annual-history .annual-year-toggle > span, .annual-change-full { display: none; }
+ .annual-mobile-protest { display: block; font-size: var(--text-label); color: var(--color-text-muted); padding-left: var(--space-2); }
+ .annual-change-mobile { display: inline; }
+ .annual-mobile-protest-help { display: block; font-size: var(--text-small); color: var(--color-text-muted); margin-top: var(--space-3); }
+}
