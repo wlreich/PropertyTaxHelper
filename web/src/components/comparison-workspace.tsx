@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useRef,useState,type FormEvent} from "react";
-import {comparisonMethod,comparisonSummary,matchProperty,suggestions,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
+import {comparisonMethod,comparisonSummary,matchProperty,candidatePool,candidatePage,tierNames,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
 import {currency,parseSearch} from "@/lib/property-search";
 import {PropertySectionLink} from "./property-section-link";
 import {AdjustedComparisons} from "./adjusted-comparisons";
@@ -25,17 +25,18 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
     url.searchParams.set("selected",selected.map(p=>p.property_id).join(","));
     window.history.replaceState(window.history.state,"",url);
   }
-  const recommended=suggestions(data);
+  const recommended=candidatePool(data);
   const [selected,setSelected]=useState<ComparisonProperty[]>(initialIds===null?recommended.slice(0,3):data.selected);
-  const [tier,setTier]=useState("all"),[sort,setSort]=useState("match"),[showAll,setShowAll]=useState(false);
+  const [tier,setTier]=useState(recommended.length?String(matchProperty(data.subject,recommended[0]).tier):"all"),[sort,setSort]=useState("match"),[candidateIndex,setCandidateIndex]=useState(0);
   const [query,setQuery]=useState(""),[submitted,setSubmitted]=useState(""),[searchPage,setSearchPage]=useState(0);
   const [matches,setMatches]=useState<ComparisonProperty[]>([]),[hasMore,setHasMore]=useState(false),[searched,setSearched]=useState(false);
   const [busy,setBusy]=useState(false),[searchError,setSearchError]=useState("");
   const [message,setMessage]=useState(initialIds && data.selected.length<initialIds.length?"Some saved selections are unavailable in this release and were left out.":"");
   const requestNumber=useRef(0);
   const summary=comparisonSummary(data.subject,selected);
-  const filtered=recommended.filter(p=>tier==="all"||String(matchProperty(data.subject,p).tier)===tier).sort((a,b)=>sort==="value"?(a.market_value??Infinity)-(b.market_value??Infinity):0);
-  const visible=showAll?filtered:filtered.slice(0,4);
+  const candidates=candidatePage(data.subject,recommended,tier,sort,candidateIndex);
+  const visible=candidates.items;
+  const selectedTier=comparisonMethod.tiers.find(t=>String(t.tier)===tier);
   function updateSelection(items:ComparisonProperty[],notice="") {
     setSelected(items);setMessage(notice);
     const url=new URL(window.location.href);
@@ -45,7 +46,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
   }
   function toggle(property:ComparisonProperty) {
     if(selected.some(p=>p.property_id===property.property_id))updateSelection(selected.filter(p=>p.property_id!==property.property_id),`${property.address} removed.`);
-    else if(selected.length<10)updateSelection([...selected,property],`${property.address} added.`);
+    else if(property.property_id!==data.subject.property_id&&selected.length<10)updateSelection([...selected,property],`${property.address} added.`);
     else setMessage("You can compare up to 10 properties. Remove one to add another.");
   }
   async function search(event?:FormEvent,page=0) {
@@ -99,12 +100,13 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
     <div className="comparison-mobile-action"><span><strong>{selected.length}</strong> selected</span><button type="button" disabled={!selected.length} onClick={showResults}>Compare properties</button></div>
     <div className="comparison-workspace">
       <section className="comparison-card comparison-suggestions" aria-labelledby="suggestions-heading">
-        <div className="comparison-card-heading"><h3 id="suggestions-heading" tabIndex={-1}>Suggested properties</h3><p>Showing {visible.length} of {filtered.length} suggestions · Market area {data.subject.neighborhood??"not reported"}</p></div>
-        <div className="comparison-controls"><label>Similarity tier<select value={tier} onChange={e=>{setTier(e.target.value);setShowAll(false);}}><option value="all">All tiers</option>{comparisonMethod.tiers.map(t=><option key={t.tier} value={t.tier}>Tier {t.tier}</option>)}</select></label><label>Sort by<select value={sort} onChange={e=>setSort(e.target.value)}><option value="match">Closest recorded match</option><option value="value">Lowest reported value</option></select></label><PropertySectionLink target="comparison-search-heading" className="comparison-add-link">+ Add by address or ID</PropertySectionLink></div>
-        {data.candidate_limit_reached&&<p className="comparison-inline-note">This market area has more than 2,000 records. Suggestions use a limited set; use address search to explore beyond it.</p>}
+        <div className="comparison-card-heading"><h3 id="suggestions-heading" tabIndex={-1}>Suggested properties</h3><p>Showing {visible.length} of {candidates.total} suggestions · Market area {data.subject.neighborhood??"not reported"}</p></div>
+        <div className="comparison-controls"><label>Similarity tier<select value={tier} onChange={e=>{setTier(e.target.value);setCandidateIndex(0);}}><option value="all">All tiers · Closest first ({recommended.length})</option>{comparisonMethod.tiers.map(t=><option key={t.tier} value={t.tier}>Tier {t.tier} · {tierNames[t.tier]} ({candidates.counts[t.tier]})</option>)}</select></label><label>Sort by<select value={sort} onChange={e=>{setSort(e.target.value);setCandidateIndex(0);}}><option value="match">Closest recorded match</option><option value="value">Lowest reported value</option></select></label><PropertySectionLink target="comparison-search-heading" className="comparison-add-link">+ Add by address or ID</PropertySectionLink></div>
+        <p className="comparison-inline-note">{selectedTier?`Same recorded market area and class · living area within ${selectedTier.area}% · built within ${selectedTier.years} years.`:"All available tiers, ordered by closest recorded match unless sorted by value."} Each property appears in its closest qualifying tier. Condition and other eligibility factors remain unverified.</p>
+        {data.candidate_limit_reached&&<p className="comparison-inline-note">This market area has more than 2,000 records. Tier counts and suggestions cover only the loaded candidate pool; use address search to explore beyond it.</p>}
         {visible.length>0&&<p className="comparison-small comparison-mobile-hint">Scroll the table sideways for values and match details.</p>}
         {visible.length?<div className="comparison-table-scroll" role="region" aria-label="Suggested property table" tabIndex={0}><table className="comparison-candidates"><thead><tr><th scope="col"><span className="comparison-sr-only">Select</span></th><th scope="col">Property</th><th scope="col">Match</th><th scope="col">TCAD market value</th><th scope="col">Why it matches</th></tr></thead><tbody>{visible.map(candidateRow)}</tbody></table></div>:<p className="comparison-inline-note">No suggestions match the available criteria{tier!=="all"?" and selected filter":""}. Add a property by address or ID to explore your own comparisons.</p>}
-        {filtered.length>4&&<button className="comparison-text-button" onClick={()=>setShowAll(!showAll)}>{showAll?"Show fewer suggestions":`Show all ${filtered.length} suggestions`}</button>}
+        {candidates.total>10&&<div className="comparison-pagination"><button disabled={candidateIndex===0} onClick={()=>setCandidateIndex(candidateIndex-1)}>Previous suggestions</button><span>Page {candidateIndex+1} of {Math.ceil(candidates.total/10)}</span><button disabled={(candidateIndex+1)*10>=candidates.total} onClick={()=>setCandidateIndex(candidateIndex+1)}>Next suggestions</button></div>}
         <p className="comparison-inline-note">Suggestions favor similar recorded characteristics. They are not TCAD’s confirmed comparable list.</p>
         <details className="comparison-search"><summary id="comparison-search-heading">Add by address or property ID</summary>
           <form onSubmit={search}><label htmlFor="comparison-query">Property address or ID</label><div className="comparison-search-fields"><input id="comparison-query" value={query} maxLength={120} onChange={e=>setQuery(e.target.value)} placeholder="Street name, address, or property ID"/><button type="submit" disabled={busy}>{busy?"Searching…":"Search properties"}</button></div></form>

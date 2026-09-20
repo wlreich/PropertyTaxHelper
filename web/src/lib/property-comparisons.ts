@@ -53,12 +53,22 @@ export function matchProperty(subject: ComparisonProperty, candidate: Comparison
   // ParcelSavvy ordering, not a recreation of the complete TCAD score.
   return {tier, areaDifference, yearDifference, reasons, rank: tier ?? 99};
 }
-export function suggestions(data: ComparisonData) {
-  return data.candidates.filter(p=>p.property_id!==data.subject.property_id && p.market_value!==null && p.class_code!=="XX" && matchProperty(data.subject,p).tier!==null)
+export const tierNames = ["Closest", "Very similar", "Similar", "Wider age range", "Wider size range", "Broader matches", "Broad matches", "Broadest matches"];
+export function candidatePool(data: ComparisonData) {
+  return [...new Map(data.candidates.filter(p=>p.property_id!==data.subject.property_id && p.market_value!==null && p.class_code!=="XX" && matchProperty(data.subject,p).tier!==null).map(p=>[p.property_id,p])).values()]
     .sort((a,b)=>{
       const x=matchProperty(data.subject,a),y=matchProperty(data.subject,b);
       return x.rank-y.rank || Math.abs(x.areaDifference!)-Math.abs(y.areaDifference!) || x.yearDifference!-y.yearDifference! || a.property_id.localeCompare(b.property_id);
-    }).slice(0,10);
+    });
+}
+export function suggestions(data: ComparisonData) {
+  return candidatePool(data).slice(0,10);
+}
+export function candidatePage(subject: ComparisonProperty, pool: ComparisonProperty[], tier: string, sort: string, page: number, pageSize=10) {
+  const counts=comparisonMethod.tiers.map(t=>pool.filter(p=>matchProperty(subject,p).tier===t.tier).length);
+  const filtered=pool.filter(p=>tier==="all"||String(matchProperty(subject,p).tier)===tier)
+    .sort((a,b)=>sort==="value"?(a.market_value??Infinity)-(b.market_value??Infinity):0);
+  return {counts,total:filtered.length,items:filtered.slice(page*pageSize,(page+1)*pageSize)};
 }
 export function comparisonSummary(subject: ComparisonProperty, selected: ComparisonProperty[]) {
   const unique=[...new Map(selected.filter(p=>p.property_id!==subject.property_id).map(p=>[p.property_id,p])).values()];

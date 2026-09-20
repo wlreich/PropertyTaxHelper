@@ -8,7 +8,7 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Compare properties');
  await expect(page.getByRole('group',{name:'Comparison values'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Compare selected properties',exact:true})).toHaveCSS('color','rgb(255, 255, 255)');
- await expect(page.getByLabel('Similarity tier')).toHaveValue('all');
+ await expect(page.getByLabel('Similarity tier')).toHaveValue('0');
  await expect(page.getByRole('complementary',{name:'Your comparison set'})).not.toContainText('Tier 0');
  await expect(page.getByRole('region',{name:'Suggested property table'})).not.toContainText('Possible Tier');
  const results=page.getByRole('region',{name:'Your selected properties, side by side'});
