@@ -16,3 +16,22 @@ test('shortlist keeps only selections, price caveats and provenance; neutralizes
  assert.ok(csv.includes('Sale unconfirmed'));assert.ok(csv.includes('Not allocated to this property'));assert.ok(csv.includes('2026-07-18'));assert.ok(csv.includes('2026-08-27'));assert.ok(csv.includes('Confirm whether this was an arm’s-length sale'));
  assert.ok(!csv.includes('650000'));assert.equal(csv.split('\r\n').filter(Boolean).length,3);
 });
+
+test('activity loader omits an absent optional year from GET RPC parameters',async()=>{
+ const {getPropertyActivity}=await import('../src/lib/supabase/property-activity.ts');
+ const previous={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_PUBLISHABLE_KEY,fetch:globalThis.fetch};
+ process.env.SUPABASE_URL='http://127.0.0.1:4055';process.env.SUPABASE_PUBLISHABLE_KEY='sb_publishable_fixture';
+ try{
+  globalThis.fetch=async input=>{
+   const url=new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url);
+   assert.notEqual(url.searchParams.get('p_year'),'null');
+   return new Response(JSON.stringify(activityViewFixture('100',url.searchParams.get('p_year'))),{status:200,headers:{'Content-Type':'application/json'}});
+  };
+  assert.equal((await getPropertyActivity('100')).year,2026);
+  assert.equal((await getPropertyActivity('100',2025)).year,2025);
+ }finally{
+  if(previous.url===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=previous.url;
+  if(previous.key===undefined)delete process.env.SUPABASE_PUBLISHABLE_KEY;else process.env.SUPABASE_PUBLISHABLE_KEY=previous.key;
+  globalThis.fetch=previous.fetch;
+ }
+});
