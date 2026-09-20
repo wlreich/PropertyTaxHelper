@@ -222,6 +222,31 @@ def main():
                 except psycopg.errors.InsufficientPrivilege:
                     pass
                 c.execute('reset role')
+    # Activity extraction remains private and loads atomically/idempotently.
+    from activity import extract as extract_activity, load as load_activity, digest as activity_digest
+    from test_activity import prop as activity_property
+    import json, zipfile, uuid
+    with tempfile.TemporaryDirectory() as activity_tmp:
+        root=Path(activity_tmp); archive=root/'activity.zip'; output=root/'activity.jsonl'
+        with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as z:
+            z.writestr('Travis-protaxExport-20260827.json',json.dumps([activity_property()]))
+        dataset=str(uuid.uuid4()); sha=activity_digest(archive)
+        with psycopg.connect(dsn,autocommit=True) as c:
+            c.execute("""insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at)
+                values (%s,%s,%s,'activity-fixture','utf-8',2026,'supplemental','https://traviscad.org/synthetic','synthetic','{}','ready',now())""",(dataset,sha,'f'*64))
+        summary=extract_activity(archive,dataset,sha,2026,output)
+        with connection() as c:
+            load_activity(c,output);load_activity(c,output)
+            assert c.execute('select count(*) from tcad_ingest.activity_observations where run_id=%s',(summary['run_id'],)).fetchone()[0]==2
+            assert c.execute('select status from tcad_ingest.activity_imports where id=%s',(summary['run_id'],)).fetchone()[0]=='complete'
+        with psycopg.connect(dsn,autocommit=True) as c:
+            for role in ('anon','authenticated','service_role'):
+                c.execute('set role '+role)
+                try:
+                    c.execute('select * from tcad_ingest.activity_observations')
+                    raise AssertionError('Private activity became public')
+                except psycopg.errors.InsufficientPrivilege:pass
+                c.execute('reset role')
     print('PASS: private archive + receipt, validation without inserts, full import, retry, durable URI and audit history')
 
 
