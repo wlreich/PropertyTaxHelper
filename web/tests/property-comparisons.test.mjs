@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {comparisonSummary,matchProperty,suggestions,selectedIds,candidatePool,candidatePage} from '../src/lib/property-comparisons.ts';
+import {comparisonEvidence} from '../src/lib/comparison-evidence.ts';
 import {getComparisons,parseComparison} from '../src/lib/supabase/comparisons.ts';
 const base={property_id:'100',address:'SUBJECT',city:'CITY',property_type:'R',market_value:1285275,land_value:100000,land_acres:1,living_area:4410,class_code:'R3',year_built:2014,neighborhood:'T2450',main_buildings:1};
 const comp=(id,value,changes={})=>({...base,property_id:id,market_value:value,...changes});
@@ -63,4 +64,14 @@ test('tier filtering uses the entire unique pool before sorting and pagination',
  const noClosest=candidatePool({subject:base,candidates:wider});
  assert.equal(matchProperty(base,noClosest[0]).tier,1);
  assert.equal(candidatePage(base,[],'all','match',0).total,0);
+});
+
+test('comparison deed clues use prior-year events, explicit coverage, and never infer prices',()=>{
+ const data={year:2025,sources:{appraisal_export_date:'2026-07-18',sales_export_date:'2026-08-27'},rows:[{property_id:'120',deed_date:'2025-06-20',price:650000},{property_id:'120',deed_date:'2026-01-02',price:900000}]};
+ const e=comparisonEvidence(data,'120',2026);
+ assert.equal(e.deedDate,'2025-06-20');assert.equal(e.start,'2025-01-01');assert.equal(e.end,'2025-12-31');
+ assert.match(e.coverage,/2026-07-18/);assert.match(e.coverage,/2026-08-27/);assert.equal('price' in e,false);
+ assert.equal(comparisonEvidence(data,'121',2026).deedDate,null);
+ assert.equal(comparisonEvidence(data,'120',2025).available,false);
+ assert.equal(comparisonEvidence(null,'120',2026).available,false);
 });
