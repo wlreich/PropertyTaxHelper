@@ -14,8 +14,11 @@ export async function fixtureDatabase({ beforeAcreageFix = false, beforeParkland
   const directory = fileURLToPath(
     new URL("../../supabase/migrations/", import.meta.url),
   );
-  for (const filename of (await readdir(directory))
-    .filter((x) => x.endsWith(".sql") && !(beforeAcreageFix && x >= "20260908183146") && !((beforeParkland || beforeAcreageFix) && x.endsWith("_property_parkland_filter.sql")))
+  const migrations = await readdir(directory);
+  const parklandMigration = migrations.find(x => x.endsWith("_property_parkland_filter.sql"));
+  // Upgrade fixtures stop before the target migration, including all later dependents.
+  for (const filename of migrations
+    .filter((x) => x.endsWith(".sql") && !(beforeAcreageFix && x >= "20260908183146") && !(beforeParkland && x >= parklandMigration))
     .sort())
     await db.exec(await readFile(`${directory}/${filename}`, "utf8"));
   await db.query(
