@@ -132,5 +132,46 @@
   .comparison-view-switch, .comparison-view-controls .comparison-add-link { width: 100%; }
 }
 
+/* Results and selection share compact rows and aligned mobile values. */
+.comparison-result-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); flex: 1; justify-content: flex-end; }
+.comparison-rows { table-layout: fixed; min-width: 0; margin-block: var(--space-4); }
+.comparison-rows th, .comparison-rows td { overflow-wrap: anywhere; }
+.comparison-rows thead { background: var(--color-background); }
+.comparison-rows tbody th { font-weight: var(--weight-semibold); }
+.comparison-rows tbody th > a { display: block; margin-bottom: var(--space-2); }
+.comparison-candidates.comparison-rows { table-layout: auto; }
+.comparison-candidates.comparison-rows th:nth-child(2) { min-width: 0; }
+.comparison-rows .comparison-money { white-space: normal; }
+.comparison-structure { display: block; margin-top: var(--space-2); color: var(--color-brand-primary); font-size: var(--text-small); }
+.comparison-deed { margin-top: var(--space-3); }
+.comparison-summary { grid-template-columns: repeat(3,minmax(0,1fr)); background: var(--color-surface-info); border: 0; text-align: left; }
+.comparison-summary dd { font-size: var(--text-body); }
+.comparison-conclusion { margin-top: var(--space-4); font-size: var(--text-h3); color: var(--color-brand-primary); }
 .comparison-pagination button { min-height: var(--target-min); padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-action); border-radius: var(--radius-input); color: var(--color-action); cursor: pointer; }
 .comparison-pagination button:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.comparison-dialog { width: min(60rem,calc(100% - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; overflow: auto; padding: var(--space-4); color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); }
+.comparison-dialog::backdrop { background: color-mix(in srgb,var(--color-brand-primary) 65%,transparent); }
+.comparison-dialog-toolbar { position: sticky; top: 0; display: flex; justify-content: flex-end; background: var(--color-surface); padding-bottom: var(--space-3); }
+.comparison-dialog .comparison-breakdown { border: 0; padding: 0; background: var(--color-surface); }
+.comparison-dialog h4 { font-size: var(--text-h3); }
+.comparison-page button:focus-visible, .comparison-dialog a:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+@media(max-width: 700px) {
+  .comparison-result-actions { justify-content: flex-start; }
+  .comparison-summary { grid-template-columns: 1fr; gap: var(--space-2); }
+  .comparison-summary > div { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--space-3); }
+  .comparison-summary dd { text-align: right; }
+  .comparison-rows, .comparison-rows tbody, .comparison-rows tr, .comparison-rows th, .comparison-rows td { display: block; width: 100%; }
+  .comparison-rows thead { display: none; }
+  .comparison-rows tr { padding-block: var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+  .comparison-rows th, .comparison-rows td { padding: var(--space-2); border: 0; }
+  .comparison-rows td[data-label] { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--space-3); text-align: right; }
+  .comparison-rows td[data-label]::before { content: attr(data-label); color: var(--color-text-muted); text-align: left; font-weight: var(--weight-normal); }
+  .comparison-rows td[data-label] .comparison-small { grid-column: 2; }
+  .comparison-dialog { width: calc(100% - 1rem); max-height: calc(100dvh - 1rem); }
+  .comparison-breakdown table, .comparison-breakdown tbody, .comparison-breakdown tr, .comparison-breakdown th, .comparison-breakdown td { display: block; width: 100%; }
+  .comparison-breakdown table thead { display: none; }
+  .comparison-breakdown table th:first-child { width: 100%; }
+  .comparison-breakdown table td:last-child { min-width: 0; text-align: right; font-weight: var(--weight-semibold); }
+  .comparison-partial-result { grid-template-columns: 1fr; }
+  .comparison-calculation-inputs div { justify-content: space-between; }
+}
