@@ -55,13 +55,12 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   }
   await expect(page.locator("#property-details")).toBeVisible();
   await expect(facts.first()).toBeVisible();
-  await expect(page.getByText("Which property facts or comparable properties support this year’s case?", {exact:true})).toBeVisible();
-  const moreQuestions = page.getByText("More questions for your agent", {exact:true});
-  await expect(page.getByText("How was my fee calculated, and how does it relate to actual tax savings?", {exact:true})).toBeHidden();
-  await moreQuestions.focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByText("How was my fee calculated, and how does it relate to actual tax savings?", {exact:true})).toBeVisible();
-  await page.keyboard.press("Enter");
+  const agentQuestions=page.getByText('Questions for your agent',{exact:true});
+  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeHidden();
+  await agentQuestions.focus();await page.keyboard.press('Enter');
+  await expect(page.getByText('Which property facts or comparable properties support this year’s case?',{exact:true})).toBeVisible();
+  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeVisible();
+  await page.keyboard.press('Enter');
   await page.locator("#about-records-heading").focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();

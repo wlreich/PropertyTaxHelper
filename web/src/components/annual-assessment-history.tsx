@@ -6,7 +6,7 @@ import { currency } from '@/lib/property-search';
 
 const amount = (value: number | null) => value === null ? 'Not available' : currency(value);
 const columns = ['Proposed market', 'Certified market', 'Change from proposal', 'After cap', 'Protest record'];
-const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.some(p => p.recorded) ? 'Recorded' : row.within && row.within.dollars < 0 ? 'Reduction only' : unavailable ? 'Unavailable' : 'Not found';
+const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.some(p => p.recorded) ? 'Recorded' : unavailable ? 'Unavailable' : row.within && row.within.dollars < 0 ? 'Reduction only' : 'Not found';
 
 function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnavailable: boolean}) {
   return <div className="annual-year-details">

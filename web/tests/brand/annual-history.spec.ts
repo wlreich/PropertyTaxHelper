@@ -87,3 +87,17 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
   await dialog.locator('summary').filter({hasText:'Source releases'}).click();await expect(dialog).toContainText('$1,365,039');
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});expect(await dialog.evaluate(n=>n.scrollWidth<=n.clientWidth)).toBe(true);
 });
+
+test('PAR-25 partial outages preserve known protest records without inferring unchecked status',async({page})=>{
+ await page.goto('/property/999120');const history=page.locator('.annual-history');
+ await expect(history).toContainText('Some assessment history is temporarily unavailable');
+ await expect(history.locator('.annual-value-row')).toHaveCount(1);
+ await expect(history.locator('[data-year="2025"]')).toContainText('Recorded');
+ await page.getByRole('button',{name:'View 2025 details'}).click();const dialog=page.getByRole('dialog');
+ await dialog.locator('summary').filter({hasText:'Dated protest'}).click();
+ await expect(dialog).toContainText('SYNTHETIC HISTORY AGENT');await expect(dialog).toContainText('May 8, 2025');
+ await page.keyboard.press('Escape');
+ await page.goto('/property/999121');
+ await expect(page.locator('[data-year="2026"] td').nth(4)).toContainText('Unavailable');
+ await expect(page.locator('[data-year="2026"]')).not.toContainText('Reduction only');
+});

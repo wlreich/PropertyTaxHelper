@@ -123,6 +123,9 @@ export function HomeownerNextSteps({address}:{address:string}) {
       <li><strong>Look for a fair comparison</strong><span>Start with the same Appraisal District neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
     </ol>
     {street && <><Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link><p className="overview-note">Searches addresses on your street. Use the results as a starting point, then compare the property details.</p></>}
+    <details className="homeowner-details"><summary>Questions for your agent</summary>
+      <ul className="homeowner-checklist"><li>Which property facts or comparable properties support this year’s case?</li><li>What is the latest status, and can I see any agreement or decision?</li><li>How was my fee calculated, and how does it relate to actual tax savings?</li><li>Is there anything I should document before next year?</li></ul>
+    </details>
     <details className="homeowner-details"><summary>Could I prepare my own protest?</summary>
       <p>Start by identifying a specific issue you can support: an incorrect property detail, documented condition, or a well-chosen comparison. Organize the evidence and the value you believe it supports.</p>
       <p><TermDefinition term="Sales and assessment comparisons">Sales help evaluate market value. Assessment comparisons examine how similar properties are appraised. They support different questions; keep the evidence separate.</TermDefinition></p>

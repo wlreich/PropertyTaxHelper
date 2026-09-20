@@ -7,7 +7,7 @@ export const par11Reference = structuredClone(par9Reference);
 par11Reference.overview.history = history;
 export function par11Fixture(id) {
   if (id === '736164') return par11Reference;
-  if (!['999110','999111','999115','999116','999117','999118','999119'].includes(id)) return null;
+  if (!['999110','999111','999115','999116','999117','999118','999119','999120','999121'].includes(id)) return null;
   const result = structuredClone(par11Reference);
   const base = history.snapshots.find(s => s.tax_year === 2026 && s.roll_stage === 'certified');
   const makeYear = year => {
@@ -28,6 +28,11 @@ export function par11Fixture(id) {
   profile.property_id=id; profile.address='11 SYNTHETIC HISTORY STREET';
   const latest = result.overview.history.snapshots.at(-1);
   if (latest) for (const key of ['tax_year','roll_stage','export_time_raw','market_value','assessed_value','land_value','improvement_value']) profile[key]=latest[key];
+  if (id === '999120') {
+    result.overview.history.snapshots = 'temporarily malformed';
+    result.overview.history.protest_observations = [{dataset_id:'synthetic-protest-2025',tax_year:2025,export_date:'2025-05-08',export_time_raw:null,protest_flag:true,arb_case_listed:true,arb_agent_listed:true,arb_agent_name:'SYNTHETIC HISTORY AGENT',arb_status_codes:['EF']}];
+  }
+  if (id === '999121') result.overview.history.protest_observations = 'temporarily malformed';
   result.adjustment=null;
   return result;
 }
