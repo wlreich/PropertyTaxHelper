@@ -22,6 +22,7 @@ test('approved initial states, shared shell, hearing content, responsive layout 
   await page.screenshot({path:info.outputPath('guide-initial.png'), fullPage:true});
   if (!desktop) { await hearing.focus(); await page.keyboard.press('Enter'); }
   await expect(page.locator('#arb-hearing-content')).toBeVisible();
+  await page.screenshot({path:info.outputPath('guide-hearing-expanded.png'),fullPage:true});
   await expect(page.locator('.guide-hearing-roles')).toContainText('Independently evaluates both sides and decides');
   await expect(page.locator('.guide-founder-note')).toContainText('This is one homeowner’s experience');
   await expect(page.locator('#arb-hearing-content')).toContainText('Continuing to a decision carries uncertainty');
@@ -77,7 +78,12 @@ test('all chapters, examples, sources and tables survive; 200% text and zoom ref
   await page.goto('/protest-guide');
   for (const chapter of protestGuide.chapters) {
     const button = page.locator(`#${chapter.anchor}-toggle`);
-    if (await button.getAttribute('aria-expanded') !== 'true') await button.click();
+    if (await button.getAttribute('aria-expanded') !== 'true') {
+      await button.focus();
+      await page.keyboard.press('Enter');
+      await expect(button).toBeFocused();
+    }
+    await expect(button).toHaveAttribute('aria-expanded','true');
     for (const section of chapter.sections) {
       await expect(page.locator(`#${section.id}`)).toBeVisible();
       for (const link of section.sourceLinks) await expect(page.locator(`#${section.id} a`).filter({hasText:link.label}).first()).toHaveAttribute('href',link.url);
@@ -123,6 +129,8 @@ test('both PDF controls deliver the same ungated versioned PDF, and property/hom
     await link.click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('ParcelSavvy-Protest-Guide.pdf');
+    await expect(page).toHaveURL(/\/protest-guide$/);
+    await expect(page.getByRole('heading',{name:'Your appraisal deserves a second look.'})).toBeVisible();
   }
   await page.goto('/property/100');
   await page.getByRole('navigation', {name:'Property tools'}).getByRole('link', {name:'Protest Guide'}).click();
