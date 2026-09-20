@@ -144,17 +144,17 @@ try {
   const neighborhood = await page("/property/100/neighborhood");
   assert.match(neighborhood, /Subdivision on record/);
   assert.match(neighborhood, /GRAND MESA SECTION II/);
-  assert.match(neighborhood, /Appraisal data snapshot/);
-  assert.match(neighborhood, /Values reduced from preliminary/);
-  assert.match(neighborhood, /Median reduction/);
-  assert.match(neighborhood, /Print or save PDF/);
+  assert.match(neighborhood, /Your neighborhood, in context/);
+  assert.match(neighborhood, /Proposed values reduced/);
+  assert.match(neighborhood, /Median dollar reduction/);
+  assert.match(neighborhood, /Print \/ save PDF/);
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);
   const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");
   assert.match(printable, /Print or save as PDF/);
-  assert.match(printable, /Page 1 of 2/);
-  assert.match(printable, /Page 2 of 2/);
-  assert.match(printable, /Protest activity and reductions/);
-  assert.match(printable, /Median reduction among reduced homes/);
+  assert.match(printable, /Look across years/);
+  assert.match(printable, /market-area multiplier/);
+  assert.match(printable, /identified protest activity/);
+  assert.match(printable, /Median dollar reduction among/);
   assert.match(printable, /PS-NBR-2026\.1/);
   assert.match(printable, /Live analysis:/);
   assert.doesNotMatch(printable, /donat|support us/i);
@@ -183,7 +183,7 @@ try {
   const css = await page(cssPath.replaceAll("&amp;", "&"));
   assert.match(css, /@media/);
   console.log(
-    "Rendered-page checks passed: home, typeahead API, partial/exact/multiple matches, pagination, profile, neighborhood analysis, two-page printable report, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
+    "Rendered-page checks passed: home, typeahead API, partial/exact/multiple matches, pagination, profile, neighborhood analysis, shared printable report, return link, confidential 404, no-results, invalid input, stylesheet, and no credential/owner leakage.",
   );
 } finally {
   for (const child of processes) child.kill("SIGTERM");
