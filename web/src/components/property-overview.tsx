@@ -85,7 +85,7 @@ export function PropertyOverview({
       </nav>
       <div className="overview-layout">
         <div className="overview-content">
-          <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
+          <SeasonNotice propertyId={p.property_id} season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <InterimChange current={current} initial={initial} />
           {(historyUnavailable || snapshots.length === 0) && (
             <div className="notice">

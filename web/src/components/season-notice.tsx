@@ -1,7 +1,7 @@
 import { dateLabel, type Snapshot, type ProtestObservation } from "@/lib/property-history";
 import { phaseNames, validDate, officialSource, type SeasonContext } from "@/lib/seasons";
 
-export function SeasonNotice({ season, current, recordYear, evidence = [] }: { season: SeasonContext | null; current?: Snapshot; recordYear?: number; evidence?: ProtestObservation[] }) {
+export function SeasonNotice({ season, current, recordYear, propertyId, evidence = [] }: { season: SeasonContext | null; current?: Snapshot; recordYear?: number; propertyId?: string; evidence?: ProtestObservation[] }) {
   if (!season) return <p className="overview-note">Season guidance is unavailable. The dated property records below remain available. <a href="https://traviscad.org/protests">Check Appraisal District for current filing information.</a></p>;
   const { config, phase } = season;
   const sameYear = (current?.tax_year ?? recordYear) === config.tax_year;
@@ -18,6 +18,6 @@ export function SeasonNotice({ season, current, recordYear, evidence = [] }: { s
     {sameYear && phase !== "preliminary" && current?.roll_stage === "preliminary" && <p><strong>No certified result is available for this property yet.</strong> A missing update is not an unsuccessful protest.</p>}
     {validDate(config.filing_deadline) && officialSource(config.deadline_source) && validDate(config.verified_on) && <p>General filing deadline: <strong>{dateLabel(config.filing_deadline)}</strong>. <a href={config.deadline_source!}>Official deadline information</a> · verified {dateLabel(config.verified_on)}. Check your notice for the deadline that applies to your property.</p>}
     {!config.filing_deadline && <p><a href="https://traviscad.org/protests">Check Appraisal District’s current protest information</a> for filing requirements and your next steps.</p>}
-    {phase === "protest" && <a href="/protest-guide">Review preparation steps</a>}
+    {phase === "protest" && <a href={propertyId ? `/protest-guide?property=${encodeURIComponent(propertyId)}` : "/protest-guide"}>Review preparation steps</a>}
   </section>;
 }
