@@ -15,7 +15,7 @@ function Match({subject,property}:{subject:ComparisonProperty;property:Compariso
   const match=matchProperty(subject,property);
   return <span className="comparison-tier">{match.tier===null?"Review differences":`Tier ${match.tier}`}</span>;
 }
-export function ComparisonWorkspace({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string}) {
+export function ComparisonWorkspace({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery=""}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string}) {
   const router=useRouter();
   const view=initialView;
   const recommended=useMemo(()=>candidatePool(data),[data]);
@@ -25,6 +25,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
   useEffect(()=>{if(initialStep==='select')heading.current?.focus();else if(focusTarget==='edit')editButton.current?.focus();},[initialStep,focusTarget]);
   function navigate(step:"select"|"results",ids:string[],nextView=view,focus="") {
     const params=new URLSearchParams({release:data.release.dataset_id,selected:ids.join(','),view:nextView,step});
+    for(const [key,value] of new URLSearchParams(evidenceQuery))params.set(key,value);
     if(focus)params.set('focus',focus);
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
@@ -69,6 +70,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
   }
   function releaseChange(source:string) {
     const params=new URLSearchParams({release:source,selected:activeIds.join(","),view,step:initialStep});
+    for(const [key,value] of new URLSearchParams(evidenceQuery))params.set(key,value);
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
   function showResults() {navigate('results',selected.map(p=>p.property_id),view,'edit');}

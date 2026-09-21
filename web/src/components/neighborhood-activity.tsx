@@ -1,33 +1,41 @@
 'use client';
 import Link from 'next/link';
-import {useState,useTransition} from 'react';
-import {useRouter} from 'next/navigation';
+import {useState} from 'react';
+import {useSearchParams} from 'next/navigation';
+import {EvidenceWindowControls} from './evidence-window-controls';
+import {evidenceParams,evidenceCoverage,activitySelection,type WindowActivity,type EvidenceWindow} from '@/lib/evidence-window';
 import {dateLabel} from '@/lib/property-history';
-import {activityKey,activityStatus,activityPrice,activityRows,activityCsv,activityTypes,type ActivityData,type ActivityFilter} from '@/lib/property-activity';
+import {activityKey,activityStatus,activityPrice,activityRows,activityWindowCsv,activityTypes,type ActivityFilter} from '@/lib/property-activity';
 
-export function NeighborhoodActivity({data,propertyId}:{data:ActivityData|null;propertyId:string}){
- const router=useRouter(),[type,setType]=useState<ActivityFilter>('all'),[sort,setSort]=useState('newest');
- const [expanded,setExpanded]=useState(false),[selected,setSelected]=useState<Set<string>>(new Set());
- const [pending,startTransition]=useTransition(),[notice,setNotice]=useState('');
- if(!data)return <section id="recent-activity" className="neighborhood-panel neighborhood-activity" aria-labelledby="activity-heading"><h2 id="activity-heading">Recent sales &amp; ownership changes</h2><p>Property activity is not available for this view. This does not mean no properties sold.</p><Link href={'/property/'+propertyId+'/neighborhood#recent-activity'}>Try the latest available activity</Link></section>;
+export function NeighborhoodActivity({data,propertyId,window,error}:{data:WindowActivity|null;propertyId:string;window:EvidenceWindow;error?:string|null}){
+ const query=useSearchParams();
+ const [type,setType]=useState<ActivityFilter>((query.get('activityType')??'all') in activityTypes?query.get('activityType') as ActivityFilter??'all':'all'),[sort,setSort]=useState(query.get('activitySort')??'newest');
+ const [expanded,setExpanded]=useState(false),[selected,setSelected]=useState<Set<string>>(activitySelection(query.get('activitySelected')));
+ const pending=false,[notice,setNotice]=useState('');
+ function remember(nextType=type,nextSort=sort,nextSelected=selected){const params=new URLSearchParams(query.toString());for(const [key,value] of evidenceParams(window))params.set(key,value);params.set('activityType',nextType);params.set('activitySort',nextSort);params.set('activitySelected',JSON.stringify([...nextSelected]));globalThis.history.replaceState(null,'',`?${params}#recent-activity`);}
+ const controls=<EvidenceWindowControls key={JSON.stringify(window)} window={window} error={error}/>;
+ if(!data||error)return <section id="recent-activity" className="neighborhood-panel neighborhood-activity" aria-labelledby="activity-heading"><h2 id="activity-heading">Recent sales &amp; ownership changes</h2>{controls}<p>Property activity is not available for this view. This does not mean no properties sold.</p><Link href={'/property/'+propertyId+'/neighborhood#recent-activity'}>Try the latest available activity</Link></section>;
  const rows=activityRows(data,type,sort),shown=expanded?rows:rows.slice(0,5),propertyCount=new Set(rows.map(r=>r.property_id)).size;
  const visibleKeys=new Set(rows.map(activityKey));
  const chosen=data.rows.filter(r=>selected.has(activityKey(r))),selectedProperties=new Set(chosen.map(r=>r.property_id)).size;
- function toggle(key:string){setSelected(old=>{const next=new Set(old);if(next.has(key))next.delete(key);else next.add(key);return next;});setNotice('');}
+ function toggle(key:string){const next=new Set(selected);if(next.has(key))next.delete(key);else if(next.size<100)next.add(key);else {setNotice('Select up to 100 transaction records for one shortlist.');return;}setSelected(next);remember(type,sort,next);setNotice('');}
  function download(){
   if(!data||!chosen.length)return;
-  const url=URL.createObjectURL(new Blob([activityCsv(data,selected)],{type:'text/csv;charset=utf-8'}));
-  const a=document.createElement('a');a.href=url;a.download='ParcelSavvy-'+data.neighborhood.replace(/[^a-z0-9_-]/gi,'')+'-'+data.year+'-realtor-shortlist.csv';document.body.append(a);a.click();a.remove();
+  const url=URL.createObjectURL(new Blob([activityWindowCsv(data,selected,type,sort)],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='ParcelSavvy-'+(data.neighborhood??'activity').replace(/[^a-z0-9_-]/gi,'')+'-'+window.targetYear+'-realtor-shortlist.csv';document.body.append(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);setNotice('Shortlist downloaded as CSV. Share it with a realtor to verify the transactions.');
  }
  return <section id="recent-activity" className="neighborhood-panel neighborhood-activity" aria-labelledby="activity-heading" aria-busy={pending}>
   <h2 id="activity-heading">Recent sales &amp; ownership changes</h2>
-  <p className="activity-count">{propertyCount.toLocaleString('en-US')} {propertyCount===1?'property':'properties'} with {data.year} recorded activity in {data.neighborhood} · {activityTypes[type]}</p>
-  <p className="neighborhood-note">Find properties to ask a realtor about. A deed change can be a sale or another kind of transfer.<br/>{rows.every(r=>r.price===null)?'Individual sale prices are not reported for these candidates; ask a realtor to confirm the transaction and price.':'Available prices are reported by TCAD. Ask a realtor to verify the sale, price, and circumstances.'}</p>
+  {controls}
+  <p className="activity-coverage">{evidenceCoverage(data)}. Coverage is incomplete; export dates are not transaction dates.</p>
+  {(data.missingYears.length>0||data.failedYears.length>0)&&<p>Unavailable years do not mean no properties sold.</p>}
+  <p className="activity-count">{propertyCount.toLocaleString('en-US')} {propertyCount===1?'property':'properties'} with recorded activity in this window · {data.neighborhood??'Neighborhood'} · {activityTypes[type]}</p>
+  <p className="neighborhood-note">Includes records with a deed or sale date in the window; their other dates may fall outside it. Find properties to ask a realtor about. A deed change can be a sale or another kind of transfer.<br/>{rows.every(r=>r.price===null)?'Individual sale prices are not reported for these candidates; ask a realtor to confirm the transaction and price.':'Available prices are reported by TCAD. Ask a realtor to verify the sale, price, and circumstances.'}</p>
   <div className="activity-controls">
-   <label><span className="sr-only">Activity year</span><select aria-label="Activity year" value={data.year} disabled={pending} onChange={e=>startTransition(()=>router.replace('/property/'+propertyId+'/neighborhood?activityYear='+e.target.value+'#recent-activity',{scroll:false}))}>{data.years.map(y=><option key={y} value={y}>Year: {y}</option>)}</select></label>
-   <label><span className="sr-only">Property type</span><select aria-label="Property type" value={type} disabled={pending} onChange={e=>{setType(e.target.value as ActivityFilter);setExpanded(false);}}>{Object.entries(activityTypes).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
-   <label><span className="sr-only">Sort activity</span><select aria-label="Sort activity" value={sort} disabled={pending} onChange={e=>setSort(e.target.value)}><option value="newest">Newest activity first</option><option value="oldest">Oldest activity first</option><option value="address">Address</option></select></label>
+
+   <label><span className="sr-only">Property type</span><select aria-label="Property type" value={type} disabled={pending} onChange={e=>{setType(e.target.value as ActivityFilter);remember(e.target.value as ActivityFilter);setExpanded(false);}}>{Object.entries(activityTypes).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
+   <label><span className="sr-only">Sort activity</span><select aria-label="Sort activity" value={sort} disabled={pending} onChange={e=>{setSort(e.target.value);remember(type,e.target.value);}}><option value="newest">Newest activity first</option><option value="oldest">Oldest activity first</option><option value="address">Address</option></select></label>
   </div>
   <p className="sr-only" role="status">{pending?'Loading property activity…':propertyCount+' properties; '+rows.length+' transaction records.'}</p>
   {rows.length?<table className="activity-table" aria-label="Recent property activity"><thead><tr><th scope="col">Property / select for shortlist</th><th scope="col">Deed / sale date</th><th scope="col">What the record tells us</th><th scope="col">Sale price</th></tr></thead>
@@ -36,13 +44,15 @@ export function NeighborhoodActivity({data,propertyId}:{data:ActivityData|null;p
     <td><span>{r.deed_date?'Deed':'Sale'}: </span>{dateLabel(r.activity_date)}{r.sale_date&&r.deed_date&&r.sale_date!==r.deed_date&&<small>Sale: {dateLabel(r.sale_date)}</small>}</td>
     <td><span className="activity-status">{activityStatus(r)}</span></td>
     <td><span className="activity-mobile-label">Sale price: </span>{activityPrice(r)}{r.price!==null&&<small>TCAD-reported</small>}{r.price_status==='multi_property'&&<small>Multi-property sale</small>}</td>
-   </tr>)}</tbody></table>:<div className="activity-empty"><p>No matching activity appears in these records. Coverage is incomplete.</p>{type!=='all'&&<button className="activity-link" onClick={()=>setType('all')}>Show all property types</button>}</div>}
+   </tr>)}</tbody></table>:<div className="activity-empty"><p>No matching activity appears in these records. Coverage is incomplete.</p>{type!=='all'&&<button className="activity-link" onClick={()=>{setType('all');remember('all');}}>Show all property types</button>}</div>}
   <div className="activity-shortlist"><div><p role="status">{selectedProperties} {selectedProperties===1?'property':'properties'} selected{chosen.length!==selectedProperties?' · '+chosen.length+' records':''}</p><p>Ask a realtor to confirm the sale and price.</p>{chosen.some(r=>!visibleKeys.has(activityKey(r)))&&<p>Includes selections outside this filter.</p>}</div>
    <button className="action-button" disabled={!chosen.length||pending} onClick={download}>Download realtor shortlist</button>
-   <button className="activity-link" disabled={!chosen.length} onClick={()=>{setSelected(new Set());setNotice('Selection cleared.');}}>Clear selection</button>
+   <button className="activity-link" disabled={!chosen.length} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
   </div>
+  {selected.size>chosen.length&&<p role="status">Some saved selections are outside this window or unavailable and are excluded from this export.</p>}
+  <Link href={`/property/${propertyId}/compare?${evidenceParams(window)}`}>Compare properties using this evidence window</Link>
   {notice&&<p className="neighborhood-note" role="status">{notice}</p>}
   <div className="activity-pagination"><p>Showing {shown.length} of {rows.length} transaction records</p>{rows.length>5&&<button className="activity-link" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'Show first five':'View all '+rows.length+' →'}</button>}</div>
-  <p className="activity-source">TCAD appraisal export: {dateLabel(data.sources.appraisal_export_date)}. Supplemental deed and sale records: {dateLabel(data.sources.sales_export_date)}.<br/>Covers available records, not every sale. Nearby properties are not automatically comparable.</p>
+  {data.datasets.map(d=><p key={d.year} className="activity-source">{d.year} activity sources: Appraisal District export {dateLabel(d.sources.appraisal_export_date)}; supplemental deed and sale export {dateLabel(d.sources.sales_export_date)}. Nearby properties are not automatically comparable.</p>)}
  </section>;
 }

@@ -13,7 +13,7 @@ export function ComparisonFacts({subject,property}:{subject:ComparisonProperty;p
 }
 export function DeedClue({evidence}:{evidence:ComparisonEvidence|undefined}) {
  if(!evidence)return null;
- return <details className="comparison-deed"><summary>{evidence.deedDate?`Deed clue · ${evidence.deedDate}`:evidence.available?'No deed clue in this window':'Deed evidence unavailable'}</summary><p className="comparison-small">{evidence.deedDate?'A recorded transfer is a clue, not proof of an arm’s-length sale.':'Coverage is incomplete; absence of a record does not establish that no transfer occurred.'} Research window: {evidence.start}–{evidence.end}.{evidence.coverage?` Source coverage: ${evidence.coverage}; research dates are separate from the appraisal release.`:''}</p></details>;
+ return <details className="comparison-deed"><summary>{evidence.deedDate?`Deed clue · ${evidence.deedDate}`:evidence.available?'No deed clue in this window':'Deed evidence unavailable'}</summary><p className="comparison-small">{evidence.deedDate?'A recorded transfer is a clue, not proof of an arm’s-length sale.':'Coverage is incomplete; absence of a record does not establish that no transfer occurred.'} Preparing for {evidence.targetYear}. Research window: {evidence.start}–{evidence.end}.{evidence.coverage?` Source coverage: ${evidence.coverage}; research dates are separate from the appraisal release.`:''}</p></details>;
 }
 export const valueDifference=(n:number|null)=>n===null?'Not available':n===0?'Same as median':`${currency(Math.abs(n))} ${n>0?'above':'below'}`;
 export function ComparisonSummary({value,median,difference,percent,adjusted=false}:{value:number|null;median:number|null;difference:number|null;percent:number|null;adjusted?:boolean}) {

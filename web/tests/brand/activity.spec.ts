@@ -15,7 +15,7 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  await section.getByRole('checkbox').nth(1).check();
  await expect(section.locator('.activity-shortlist')).toContainText('2 properties selected');
  const downloading=page.waitForEvent('download');await section.getByRole('button',{name:'Download realtor shortlist'}).click();const download=await downloading;
- expect(download.suggestedFilename()).toBe('ParcelSavvy-T2450-2026-realtor-shortlist.csv');
+ expect(download.suggestedFilename()).toBe('ParcelSavvy-T2450-2027-realtor-shortlist.csv');
  const csv=await readFile((await download.path())!,'utf8');expect(csv).toContain('Sale unconfirmed');expect(csv).toContain('650000');expect(csv).toContain('2026-08-27');expect(csv).not.toContain('122 CYPRESS');
  await section.getByRole('button',{name:'Clear selection'}).click();await expect(section.getByRole('checkbox').first()).not.toBeChecked();
  await section.getByRole('button',{name:'View all 7 →'}).click();await expect(rows).toHaveCount(7);
@@ -32,7 +32,27 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  }
  if(width===1440){await page.evaluate(()=>{document.documentElement.style.zoom='2';});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.evaluate(()=>{document.documentElement.style.zoom='1';});}
  if(width===375){await page.setViewportSize({width:320,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
- await section.getByRole('combobox',{name:'Activity year'}).selectOption('2025');await expect(section.locator('.activity-count')).toContainText('1 property with 2025');await expect(section.getByRole('button',{name:'Download realtor shortlist'})).toBeDisabled();
+ await section.getByLabel('Preparing for').fill('2026');await section.getByRole('button',{name:'Apply dates'}).click();await expect(section.locator('.activity-count')).toContainText('1 property with recorded activity');
  await page.goto('/property/9204/neighborhood');await expect(page.locator('#recent-activity')).toContainText('No matching activity appears');
  await page.goto('/property/9205/neighborhood');await expect(page.locator('#recent-activity')).toContainText('This does not mean no properties sold');
+});
+
+test('PAR-32 date window survives shortlist, print, comparison views and return',async({page},info)=>{
+ test.skip(info.project.name!=='width-1440','one focused integration journey');
+ await page.goto('/property/100/neighborhood');const activity=page.locator('#recent-activity');
+ await activity.getByLabel('Evidence start').fill('2026-06-01');await activity.getByLabel('Evidence end').fill('2026-06-30');await activity.getByRole('button',{name:'Apply dates'}).click();
+ await expect(activity.locator('tbody tr')).toHaveCount(5);await activity.getByRole('checkbox').nth(1).check();
+ await activity.getByRole('combobox',{name:'Property type',exact:true}).selectOption('land');
+ const downloadPromise=page.waitForEvent('download');await activity.getByRole('button',{name:'Download realtor shortlist'}).click();const download=await downloadPromise;
+ const csv=await readFile((await download.path())!,'utf8');for(const text of ['2027','2026-06-01','2026-06-30','120 CYPRESS','Land only'])expect(csv).toContain(text);
+ await page.getByRole('link',{name:'Print / save PDF',exact:true}).click();const report=page.locator('.activity-print');
+ await expect(report).toContainText('Preparing for 2027');await expect(report).toContainText('2026-06-01–2026-06-30');await expect(report.locator('tbody tr')).toHaveCount(1);await expect(report).toContainText('120 CYPRESS');
+ await page.pdf({path:info.outputPath('par32-shortlist.pdf'),format:'Letter',printBackground:true});
+ await page.getByRole('link',{name:'← Back to neighborhood analysis'}).click();await expect(activity.getByRole('combobox',{name:'Property type',exact:true})).toHaveValue('land');await expect(activity.locator('.activity-shortlist')).toContainText('1 property selected');
+ await activity.getByRole('link',{name:'Compare properties using this evidence window'}).click();await expect(page.getByLabel('Preparing for')).toHaveValue('2027');await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
+ await page.getByRole('button',{name:'Apply selection',exact:true}).last().click();await expect(page).toHaveURL(/evidenceStart=2026-06-01/);
+ const clue=page.locator('.comparison-deed').first();await clue.locator('summary').click();await expect(clue).toContainText('2026-06-01–2026-06-30');await expect(clue).toContainText('Preparing for 2027');
+ await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();await expect(page).toHaveURL(/targetYear=2027/);
+ await page.getByRole('navigation',{name:'Property tools'}).getByRole('link',{name:'Neighborhood',exact:true}).click();await expect(activity.getByLabel('Evidence end')).toHaveValue('2026-06-30');
+ await activity.getByLabel('Preparing for').fill('2025');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(activity).toContainText('Coverage unavailable for 2024');await expect(activity).toContainText('Unavailable years do not mean no properties sold');
 });

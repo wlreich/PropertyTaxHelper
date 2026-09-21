@@ -35,3 +35,35 @@ test('activity loader omits an absent optional year from GET RPC parameters',asy
   globalThis.fetch=previous.fetch;
  }
 });
+
+import {defaultEvidenceWindow,readEvidenceWindow,evidenceWindowError,windowActivity,evidenceCoverage} from '../src/lib/evidence-window.ts';
+import {activityWindowCsv} from '../src/lib/property-activity.ts';
+import {comparisonEvidence} from '../src/lib/comparison-evidence.ts';
+test('PAR-32 shared windows validate boundaries and distinguish future, missing and failed coverage',()=>{
+ assert.deepEqual(defaultEvidenceWindow(2027),{targetYear:2027,start:'2026-01-01',end:'2026-12-31'});
+ assert.equal(readEvidenceWindow({activityYear:'2025'},2027).window.targetYear,2026);
+ for(const query of [{targetYear:['2027']},{targetYear:'x'},{targetYear:'1900'},{evidenceStart:'2026-02-30'},{evidenceStart:'2026-06-02',evidenceEnd:'2026-06-01'},{evidenceStart:'2020-01-01',evidenceEnd:'2026-12-31'}])assert.ok(readEvidenceWindow(query,2027).error);
+ const window=defaultEvidenceWindow(2027),data=parseActivity(activityViewFixture());assert.equal(evidenceWindowError(window),null);
+ assert.match(evidenceCoverage(windowActivity(window,[data],[2026])),/2026-08-27 \(later dates are not covered\)/);
+ const unavailable=windowActivity(defaultEvidenceWindow(2026),[],[2026]);assert.deepEqual(unavailable.missingYears,[2025]);assert.match(evidenceCoverage(unavailable),/Coverage unavailable for 2025/);
+ assert.match(evidenceCoverage(windowActivity(window,[],[2026],[2026])),/temporarily unavailable/);
+});
+test('PAR-32 inclusive date boundaries, distinct deed/sale dates, deduplication and export/clue parity',()=>{
+ const data=parseActivity(activityViewFixture());
+ data.rows=[{...data.rows[0],event_key:'jan',deed_date:'2026-01-01',activity_date:'2026-01-01'},
+ {...data.rows[1],event_key:'dec',deed_date:'2026-12-31',sale_date:'2026-12-30',activity_date:'2026-12-31'},
+ {...data.rows[1],event_key:'mismatch',deed_date:'2026-07-01',sale_date:'2026-06-30',activity_date:'2026-07-01'}];
+ data.sources={appraisal_export_date:'2027-01-10',sales_export_date:'2027-01-10'};
+ const all=windowActivity(defaultEvidenceWindow(2027),[data,data],[2026]);assert.equal(all.rows.length,3);assert.ok(all.rows.some(r=>r.deed_date==='2026-01-01'));assert.ok(all.rows.some(r=>r.deed_date==='2026-12-31'));
+ const window={targetYear:2027,start:'2026-06-01',end:'2026-06-30'},narrow=windowActivity(window,[data],[2026]);assert.equal(narrow.rows.length,1);
+ assert.equal(comparisonEvidence(narrow,'120',window).deedDate,null,'outside-window deed must not become a clue');assert.equal(comparisonEvidence(all,'120',all.window).deedDate,'2026-12-31');
+ const csv=activityWindowCsv(narrow,new Set(narrow.rows.map(activityKey)),'all','oldest');for(const text of ['2027','2026-06-01','2026-06-30','2026-07-01','2027-01-10','Evidence start','Target appraisal year'])assert.ok(csv.includes(text));assert.equal(csv.split('\r\n').filter(Boolean).length,2);
+});
+test('PAR-32 loader requests only published years and preserves missing coverage',async()=>{
+ const {getWindowActivity}=await import('../src/lib/supabase/property-activity.ts');
+ const previous={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_PUBLISHABLE_KEY,fetch:globalThis.fetch};process.env.SUPABASE_URL='http://127.0.0.1:4055';process.env.SUPABASE_PUBLISHABLE_KEY='sb_publishable_fixture';const calls=[];
+ try{globalThis.fetch=async input=>{const url=new URL(input);calls.push(url.searchParams.get('p_year'));const raw=activityViewFixture('100',url.searchParams.get('p_year'));raw.years=[2026];return new Response(JSON.stringify(raw),{status:200});};
+ const prior=await getWindowActivity('100',defaultEvidenceWindow(2026));assert.deepEqual(prior.missingYears,[2025]);assert.equal(prior.rows.length,0);assert.deepEqual(calls,[null]);calls.length=0;
+ assert.equal((await getWindowActivity('100',defaultEvidenceWindow(2027))).rows.length,7);assert.deepEqual(calls,[null]);
+ }finally{globalThis.fetch=previous.fetch;for(const [key,value] of [['SUPABASE_URL',previous.url],['SUPABASE_PUBLISHABLE_KEY',previous.key]])if(value===undefined)delete process.env[key];else process.env[key]=value;}
+});
