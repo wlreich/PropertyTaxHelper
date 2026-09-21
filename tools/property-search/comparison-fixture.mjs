@@ -15,10 +15,6 @@ export async function seedComparisons(db) {
  }
  await db.query('insert into public.property_snapshot_profiles values($1,$2,$3,$4)',[anchor,old,'100',snapshot(2000,2014,420000,old)]);
  await db.query('insert into public.property_snapshot_profiles values($1,$2,$3,$4)',[anchor,old,'120',snapshot(2000,2014,390000,old)]);
- // Date/stage fixtures distinguish the original proposal from a later interim snapshot.
- for(const [source,date,eligible] of [['33333333-3333-4333-8333-333333333330','2025-05-08',true],['33333333-3333-4333-8333-333333333331','2025-07-03',false]]) {
-  await db.query('insert into public.property_snapshot_profiles values($1,$2,$3,$4)',[anchor,source,'100',{...snapshot(2000,2014,430000,source),roll_stage:'preliminary',export_date:date,preliminary_baseline_eligible:eligible}]);
- }
  // Synthetic costs remain private; the RPC returns an explicit field allowlist.
  await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at) select $1,repeat('d',64),layout_sha256,parser_version,source_encoding,2025,roll_stage,source_url,archive_location,header,status,completed_at from tcad_ingest.datasets where id=$2`,[old,anchor]);
  for(const source of [anchor,old]) {

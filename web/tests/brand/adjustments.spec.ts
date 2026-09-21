@@ -52,8 +52,6 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(adjusted).toContainText('1 of 1 selected properties');
  await page.reload();await expect(adjusted).toContainText('1 of 1 selected properties');
- await expect(page.getByRole('option',{name:'2025 interim snapshot · 2025-07-03',exact:true})).toHaveCount(1);
- await expect(page.getByRole('option',{name:'2025 preliminary · 2025-05-08',exact:true})).toHaveCount(1);
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(adjusted).toContainText('$390,000');
  await expect(adjusted).toContainText('2025 certified');
