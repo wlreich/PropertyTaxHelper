@@ -19,7 +19,7 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
   const [expanded, setExpanded] = useState<string | null>(null);
   const results = useMemo(() => selected.map(property => propertyAdjustments(subject, property, release.tax_year)), [subject, selected, release.tax_year]);
   const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement|null>(null);
-  useEffect(()=>{if(expanded)dialog.current?.showModal();},[expanded]);
+  useEffect(()=>{if(expanded)dialog.current?.showModal();else trigger.current?.focus();},[expanded]);
   const result=results.find(r=>r.property.property_id===expanded);
   const reported = comparisonSummary(subject, selected);
   const adjusted = adjustmentSummary(subject, results);
@@ -38,8 +38,8 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
        <td><button className="comparison-expand" aria-haspopup="dialog" aria-expanded={expanded===r.property.property_id} onClick={e=>{trigger.current=e.currentTarget;setExpanded(r.property.property_id);}}>View breakdown<span className="comparison-sr-only"> · {r.property.address}</span> →</button></td></tr>)}
     </tbody></table></div>}
     {selected.length>0&&adjusted.count===0&&<p className="comparison-inline-note">No complete estimates are available for this set. Open a breakdown to review missing inputs, or use Reported values.</p>}
-    {result&&<dialog ref={dialog} className="comparison-dialog" aria-labelledby="adjustment-dialog-heading" onClose={()=>{setExpanded(null);trigger.current?.focus();}}>
-      <div className="comparison-dialog-toolbar"><button className="comparison-add-link" onClick={()=>dialog.current?.close()}>Close breakdown ×</button></div>
+    {result&&<dialog ref={dialog} className="comparison-dialog" aria-labelledby="adjustment-dialog-heading" onCancel={e=>{e.preventDefault();setExpanded(null);}} onClose={()=>setExpanded(null)}>
+      <div className="comparison-dialog-toolbar"><button className="comparison-add-link" onClick={()=>setExpanded(null)}>Close breakdown ×</button></div>
               <div className="comparison-breakdown"><h4 id="adjustment-dialog-heading">Adjustment breakdown · {result.property.address}</h4><DeedClue evidence={evidence[result.property.property_id]}/>
                 <table><caption className="comparison-sr-only">Adjustments for {result.property.address}</caption><thead><tr><th scope="col">Factor</th><th scope="col">Explanation and inputs</th><th scope="col">Adjustment</th></tr></thead><tbody>{result.lines.map(line => <tr key={line.factor}><th scope="row">{line.factor}</th><td>{line.explanation}{line.inputs.length > 0 && <dl className="comparison-calculation-inputs">{line.inputs.map(input => <div key={input.label}><dt>{input.label}</dt><dd>{input.value === null || input.value === undefined ? "Not reported" : typeof input.value === "string" ? input.value : input.unit === "year" ? String(input.value) : input.unit === "number" ? input.value.toLocaleString("en-US", {maximumFractionDigits: 2}) : currency(input.value)}</dd></div>)}</dl>}</td><td>{line.amount === null ? "Not estimated" : signed(line.amount)}</td></tr>)}</tbody></table>
                 <div className="comparison-partial-result"><div><strong>{result.adjustedValue === null ? "Subtotal of available adjustments" : "Estimated adjusted value"}</strong><p className="comparison-money">{result.adjustedValue === null ? currency(result.partialSubtotal) : `${currency(result.property.market_value)} ${result.total! < 0 ? "−" : "+"} ${currency(Math.abs(result.total!))} = ${currency(result.adjustedValue)}`}</p></div>{result.adjustedValue === null && <p>Excluded from the adjusted median. Some required inputs are unavailable or these building types and construction classes are not supported by this calculation.</p>}</div>
