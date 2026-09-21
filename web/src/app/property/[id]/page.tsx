@@ -40,6 +40,7 @@ export default async function PropertyPage({
         </Link>
         {result.status === "ok" ? (
           <PropertyOverview
+            searchContext={new URLSearchParams(q ? {q,page:String(page),...(search.all === "1" ? {all:"1"} : {})} : {}).toString()}
             marketAdjustment={marketAdjustment}
             property={result.data}
             snapshots={overview.snapshots}

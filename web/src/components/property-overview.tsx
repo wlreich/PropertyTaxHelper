@@ -35,6 +35,7 @@ export function PropertyOverview({
   protests = [],
   protestsUnavailable = false,
   season = null,
+  searchContext = "",
 }: {
   property: Property;
   marketAdjustment?: MarketAdjustment | null;
@@ -43,9 +44,12 @@ export function PropertyOverview({
   protests?: ProtestObservation[];
   protestsUnavailable?: boolean;
   season?: SeasonContext | null;
+  searchContext?: string;
 }) {
   const current = selectCurrentAssessment(p, snapshots);
   const source = propertySource(p);
+  const printParams = new URLSearchParams(searchContext);
+  printParams.set("release",current.dataset_id);
   const previous = current ? annualBaseline(snapshots, current) : undefined;
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
@@ -59,6 +63,7 @@ export function PropertyOverview({
           <p>{[p.city, p.postal_code].filter(Boolean).join(", ")} · Appraisal District #{p.property_id}</p>
         </div>
 
+        <Link className="overview-secondary-action" href={`/property/${p.property_id}/print?${printParams}`}>Print / save property report</Link>
       </div>
       {p.values_under_review && (
         <div className="notice">
