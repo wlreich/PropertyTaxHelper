@@ -44,6 +44,9 @@ test('PAR-37 source-backed vacancy regression fails before the fix and passes af
   try{
    await seedResidentialSource(db);
    await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
+   const candidate='22222222-2222-4222-8222-222222222222';
+   await db.query("insert into parcel_admin.preparations(id,source_dataset,expected_active) values($1,'11111111-1111-4111-8111-111111111111','11111111-1111-4111-8111-111111111111')",[candidate]);
+   await db.query("select tcad_ingest.prepare_property_search('11111111-1111-4111-8111-111111111111',$1)",[candidate]);
    await db.exec('set role anon');
    const run=async(q,suggest=false,page=0,all=false)=>(await db.query(suggest?'select public.suggest_property_parcels($1,$2,$3) result':'select public.search_property_parcels_v2($1,$2,$3) result',[q,suggest?8:page,all])).rows[0].result;
    const ids=x=>x.items.map(i=>i.property_id);
@@ -54,6 +57,13 @@ test('PAR-37 source-backed vacancy regression fails before the fix and passes af
     await db.exec(await readFile(new URL('../../supabase/migrations/20260921023946_residential_discovery_vacant_lots.sql',import.meta.url),'utf8'));
     await db.exec('set role anon');
    }
+   await db.exec('reset role');
+   const classified=async()=>(await db.query("select is_vacant_land from public.property_search_documents where dataset_id=$1 and property_id='736081'",[candidate])).rows[0].is_vacant_land;
+   assert.equal(await classified(),true,'pre-existing candidate receives the vacancy backfill');
+   await db.query("select tcad_ingest.prepare_property_search('11111111-1111-4111-8111-111111111111',$1)",[candidate]);
+   assert.equal(await classified(),true,'future preparations retain the classification');
+   await db.query('update public.property_search_state set dataset_id=$1',[candidate]);
+   await db.exec('set role anon');
    for(const suggest of [true,false]){
     assert.deepEqual(new Set(ids(await run('high lonesome',suggest))),new Set(['736083','736086']));
     assert.deepEqual(ids(await run('1402 High Lonesome',suggest)),['736086']);
