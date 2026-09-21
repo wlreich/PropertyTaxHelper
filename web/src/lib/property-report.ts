@@ -55,7 +55,8 @@ export function buildPropertyReport(input: PropertyReportInput) {
   // Under-review profiles must never recover withheld values from older snapshots.
   if (p.values_under_review && current.dataset_id !== selected.dataset_id) return null;
   const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>s.tax_year<current.tax_year || s.tax_year===current.tax_year && (!current.export_date || s.export_date!==null && s.export_date<=current.export_date));
-  const evidence = protestEvidence(snapshots,input.protests ?? []);
+  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && s.export_date<=current.export_date);
+  const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);
   const cap = capModel(current,story.previous,available,story.initial);

@@ -26,12 +26,12 @@ test('PAR-28 complete Letter reports preserve inventory, history and page furnit
 
 test('PAR-28 keyboard print entry, retained release, narrow preview and return',async({page},info)=>{
  test.skip(info.project.name!=='width-375','One narrow keyboard journey.');
- await page.goto('/property/999283');const entry=page.getByRole('link',{name:'Print / save property report',exact:true});await expect(entry).toHaveAttribute('href',/release=28261111-1111-4111-8111-111111111111/);await entry.focus();await entry.press('Enter');
+ await page.goto('/property/999283?q=SYNTHETIC&page=2&all=1');const entry=page.getByRole('link',{name:'Print / save property report',exact:true});await expect(entry).toHaveAttribute('href',/release=28261111-1111-4111-8111-111111111111/);await entry.focus();await entry.press('Enter');
  await expect(page.locator('.property-report')).toHaveAttribute('data-report-property','999283');await expect(page.locator('.property-report')).toHaveAttribute('data-report-year','2026');
  const print=page.getByRole('button',{name:'Print / save PDF',exact:true});await expect(print).toBeEnabled();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
  await page.evaluate(()=>{window.print=()=>{document.body.dataset.printRequested='yes';};});await print.focus();await print.press('Enter');await expect(page.locator('body')).toHaveAttribute('data-print-requested','yes');
- await page.getByRole('link',{name:'← Return to property overview',exact:true}).click();await expect(page).toHaveURL(/\/property\/999283$/);
+ await page.getByRole('link',{name:'← Return to property overview',exact:true}).click();await expect(page).toHaveURL(/\/property\/999283\?q=SYNTHETIC&page=2&all=1$/);await expect(page.getByRole('link',{name:'← Back to search results',exact:true})).toHaveAttribute('href',/q=SYNTHETIC&page=2&all=1/);
  await page.goto('/property/999283/print?release=28251111-1111-4111-8111-111111111111');await expect(page.locator('.property-report')).toHaveAttribute('data-report-year','2025');
  await page.goto('/property/999283/print?release=missing');await expect(page.getByRole('heading',{name:'Requested assessment unavailable'})).toBeVisible();await expect(print).toHaveCount(0);
 });

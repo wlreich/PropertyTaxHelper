@@ -13,3 +13,5 @@ The narrow keyboard journey checks entry, retained release, font readiness, prin
 Production uses the existing live RPC and requires property/release agreement before displaying neighborhood aggregates. Condition/effective age and lot-area medians are not supplied by the current public contract; the report says so. No private Figma imagery, owner/contact fields, actual-property capture or private appeal data are published by this change.
 
 Brand: approved BrandLogo, Manrope/Inter, semantic tokens, Appraisal District wording and evidence-led qualifications. Letter uses 0.5-inch margins, 10.5-point body and 9-point supporting text. Small records use a compact layout without shrinking required text. The PR/Linear completion record reports actual deployment; this evidence map does not assert deployment on its own.
+
+Review follow-up: protest observations are bounded to the selected year and export date; later observations cannot rewrite historical reports. Search query, result page and all-results context survive print and Return. Four report model tests, lint/build and the narrow keyboard return-path journey passed.

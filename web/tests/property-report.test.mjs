@@ -30,3 +30,11 @@ test('sparse and withheld records never acquire a certified outcome, cap ceiling
  const r=buildPropertyReport(i);assert.ok(JSON.stringify(r).includes('Values need further review'));assert.ok(!JSON.stringify(r).includes('$950,000'));
  assert.equal(buildPropertyReport({...i,release:i.snapshots[0].dataset_id}),null);
 });
+
+test('historical reports exclude later-year and later-release protest observations',()=>{
+ const i=input('999283'),prior=i.snapshots.find(s=>s.tax_year===2025&&s.roll_stage==='certified');
+ const observation={dataset_id:'future-protest',tax_year:2025,export_date:'2025-12-31',export_time_raw:null,protest_flag:true,arb_case_listed:false,arb_agent_listed:true,arb_agent_name:'Future-only agent',arb_status_codes:[]};
+ const baseline=buildPropertyReport({...i,release:prior.dataset_id,protests:[]});
+ const actual=buildPropertyReport({...i,release:prior.dataset_id,protests:[observation,{...observation,dataset_id:'next-year',tax_year:2026}]});
+ assert.deepEqual(actual,baseline);
+});
