@@ -1,8 +1,8 @@
 // Synthetic rendering variants only; production source selection remains in the RPC.
 export function neighborhoodViewFixture(base,id) {
- if(!['9200','9201','9202','9203','9204','9205'].includes(id))return base;
+ if(!['9200','9201','9202','9203','9204','9205','9290'].includes(id))return base;
  const d=structuredClone(base),small=id==='9203',empty=id==='9204',pre=id==='9201',extra=id==='9202';
- d.subject.property_id=id;d.subject.address='456 EXAMPLE LANE';d.subject.market_value=pre?600000:450000;
+ d.subject.property_id=id;d.subject.address=id==='9290'?'290 LONG SYNTHETIC CYPRESS RIDGE NEIGHBORHOOD STREET NORTHWEST':'456 EXAMPLE LANE';d.subject.market_value=pre?600000:450000;
  const years=extra?[2024,2025,2026]:[2025,2026];
  d.releases=[];d.annual_periods=[];
  d.homes=Array.from({length:empty?0:small?3:12},(_,i)=>({...structuredClone(base.homes[0]),property_id:i===0?id:String(9300+i),market:450000+i*10000,area:2000+i*50}));

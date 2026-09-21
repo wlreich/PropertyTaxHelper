@@ -149,10 +149,10 @@ try {
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);
   const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");
   assert.match(printable, /Print or save as PDF/);
-  assert.match(printable, /Look across years/);
-  assert.match(printable, /market-area multiplier/);
+  assert.match(printable, /Neighborhood history &amp; valuation context/);
+  assert.match(printable, /Market-area multiplier/);
   assert.match(printable, /identified protest activity/);
-  assert.match(printable, /Median dollar reduction among/);
+  assert.match(printable, /median reduction/);
   assert.match(printable, /PS-NBR-2026\.1/);
   assert.match(printable, /Live analysis:/);
   assert.doesNotMatch(printable, /donat|support us/i);

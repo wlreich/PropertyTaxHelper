@@ -8,9 +8,8 @@ export function ActivityShortlistPrint({data,window,query}:{data:WindowActivity|
  <p>Preparing for {window.targetYear} · Evidence window: {window.start}–{window.end}</p>
  <p>Filter: {activityTypes[type]} · Sort: {sort}. Selected records outside the property-type filter are retained.</p>
  <p>{data?evidenceCoverage(data):'Activity coverage is unavailable'}. Coverage is incomplete; a transfer is not proof of a sale.</p>
- {chosen.length?<table><thead><tr><th scope="col">Property</th><th scope="col">Transaction dates</th><th scope="col">Record / price</th></tr></thead><tbody>{chosen.map(r=><tr key={activityKey(r)}><th scope="row">{r.address}<br/>Property {r.property_id}</th><td>Deed: {r.deed_date??'Not reported'}<br/>Sale: {r.sale_date??'Not reported'}</td><td>{activityStatus(r)}<br/>Sale price: {activityPrice(r)}</td></tr>)}</tbody></table>:<p>No available records selected for this window. This does not mean no properties sold.</p>}
+ {chosen.length?<table><colgroup><col style={{width:'40%'}}/><col style={{width:'28%'}}/><col style={{width:'32%'}}/></colgroup><thead><tr><th scope="col">Property</th><th scope="col">Transaction dates</th><th scope="col">Record / price</th></tr></thead><tbody>{chosen.map(r=><tr key={activityKey(r)}><th scope="row">{r.address}<br/>Property {r.property_id}</th><td>Deed: {r.deed_date??'Not reported'}<br/>Sale: {r.sale_date??'Not reported'}</td><td>{activityStatus(r)}<br/>Sale price: {activityPrice(r)}</td></tr>)}</tbody></table>:<p>No available records selected for this window. This does not mean no properties sold.</p>}
  {selected.size>chosen.length&&<p>Some saved selections are outside this window or unavailable; they are not included in this shortlist.</p>}
- {data?.datasets.map(d=><p key={d.year}>{d.year} source exports: appraisal {d.sources.appraisal_export_date}; supplemental {d.sources.sales_export_date}. Export dates are not transaction dates.</p>)}
- <p>Ask a realtor to confirm the transaction, sale date and price, concessions, condition, and comparability. Listing dates are not available in these records.</p>
+ <p>Export dates are not transaction dates. Ask a realtor to confirm the transaction, sale date and price, concessions, condition, and comparability. Listing dates are not available in these records.</p>
  </section>;
 }
