@@ -49,7 +49,7 @@ try {
  const before=await measure();
  await db.exec('reset role');
  const fix=await migration('20260921023946_residential_discovery_vacant_lots');
- await db.exec(fix.slice(fix.indexOf('create or replace function public.search_property_parcels('))); 
+ await db.exec(fix.slice(fix.indexOf('create or replace function public.search_property_parcels(')));
  await db.exec('analyze public.property_search_documents; set role anon');
  const after=await measure();
  for(let i=0;i<before.length;i++) {if(before[i].name==='suggest street') {assert.equal(after[i].result.items.length,8);assert.ok(after[i].result.items.every(x=>Number(x.property_id)%12000!==0));}else assert.deepEqual(after[i].result,before[i].result);}
