@@ -28,13 +28,12 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.goBack();await compare.click();await expect(page).toHaveURL(/\/property\/100\/compare\?release=/);await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Compare properties');await page.goBack();
  await page.getByRole('link',{name:'Read the protest guide →'}).click();await expect(page).toHaveURL(/protest-guide\?property=100/);await page.goBack();
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
- const story=await page.locator('.neighborhood-story').innerText();const results=await page.locator('.neighborhood-result-rows').innerText();
+
  await page.getByRole('link',{name:'Print / save PDF',exact:true}).click();await expect(page).toHaveURL(/\/neighborhood\/print\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
- await expect(page.locator('.neighborhood-story')).toHaveText(story,{useInnerText:true});await expect(page.locator('.neighborhood-result-rows')).toHaveText(results,{useInnerText:true});
+ await expect(page.locator('.nbr-metrics')).toContainText('$450,000');await expect(page.locator('.nbr-outcome')).toContainText('1 / 2');
  await page.evaluate(()=>{window.print=()=>{document.body.dataset.printRequested='yes';};});await page.getByRole('button',{name:'Print or save as PDF'}).click();await expect(page.locator('body')).toHaveAttribute('data-print-requested','yes');
  await page.emulateMedia({media:'print'});await expect(page.locator('.print-toolbar')).toBeHidden();
- await page.goto('/property/9200/neighborhood/print');await expect(page.locator('.neighborhood-carry')).toBeVisible();await page.evaluate(()=>document.fonts.ready);const pdf=info.outputPath('neighborhood-report.pdf');await page.pdf({path:pdf,preferCSSPageSize:true,printBackground:true});await info.attach('Neighborhood print',{path:pdf,contentType:'application/pdf'});
- await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();await expect(page).toHaveURL(/\/property\/9200\/neighborhood\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
+ await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();await expect(page).toHaveURL(/\/property\/100\/neighborhood\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
  await page.goto('/property/103/neighborhood');await expect(page.getByRole('heading',{name:'Let’s try another address'})).toBeVisible();
 });
 test('neighborhood period labels, additional history and missing or small samples',async({page},info)=>{

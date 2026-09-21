@@ -55,7 +55,7 @@ createServer((req,res)=>{
    else if(route==='property_market_adjustment')result=await call('select public.property_market_adjustment($1) result',[args.p_id]);
    else if(route==='property_neighborhood_activity')result=activityViewFixture(args.p_id,args.p_year??null);
    else if(route==='property_neighborhood_analysis' && par28Fixture(args.p_id))result=par28Neighborhood(await call('select public.property_neighborhood_analysis($1,$2,$3) result',['100',args.p_phase??null,args.p_year??null]),args.p_id);
-   else if(route==='property_neighborhood_analysis')result=neighborhoodViewFixture(await call('select public.property_neighborhood_analysis($1,$2,$3) result',[/^920[0-5]$/.test(args.p_id)?'100':args.p_id,args.p_phase??null,args.p_year??null]),args.p_id);
+   else if(route==='property_neighborhood_analysis')result=neighborhoodViewFixture(await call('select public.property_neighborhood_analysis($1,$2,$3) result',[/^(920[0-5]|9290)$/.test(args.p_id)?'100':args.p_id,args.p_phase??null,args.p_year??null]),args.p_id);
    else if(route==='property_neighborhood_v4')result=await call('select public.property_neighborhood_v4($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_neighborhood_v3')result=await call('select public.property_neighborhood_v3($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_comparisons')result=await call('select public.property_comparisons($1,$2,$3,$4,$5) result',[args.p_id,args.p_source??null,typeof args.p_selected==='string'?args.p_selected.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_selected??[],args.p_query??'',Number(args.p_page??0)]);
