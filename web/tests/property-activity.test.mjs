@@ -15,6 +15,9 @@ test('shortlist keeps only selections, price caveats and provenance; neutralizes
  assert.ok(csv.startsWith('\uFEFF'));assert.ok(csv.includes("\"'=SUM(1,2)\""));assert.ok(csv.includes('"Town, ""North"""'));
  assert.ok(csv.includes('Sale unconfirmed'));assert.ok(csv.includes('Not allocated to this property'));assert.ok(csv.includes('2026-07-18'));assert.ok(csv.includes('2026-08-27'));assert.ok(csv.includes('Confirm whether this was an arm’s-length sale'));
  assert.ok(!csv.includes('650000'));assert.equal(csv.split('\r\n').filter(Boolean).length,3);
+ assert.ok(csv.includes('Sale price reported by Appraisal District'));assert.ok(!csv.includes('TCAD'));
+ const reported=activityCsv(data,new Set([activityKey(data.rows[1])]));assert.ok(reported.includes('Appraisal District-reported; verify'));assert.ok(reported.includes('650000'));
+
 });
 
 test('activity loader omits an absent optional year from GET RPC parameters',async()=>{

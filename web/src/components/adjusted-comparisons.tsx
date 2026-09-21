@@ -46,7 +46,7 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
                 <Link href={`/property/${result.property.property_id}`}>View property records</Link>
               </div>
     </dialog>}
-    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow TCAD’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
-    <p className="comparison-adjusted-note">Source: TCAD {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
+    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow the Appraisal District’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; the Appraisal District’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
+    <p className="comparison-adjusted-note">Source: Appraisal District {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
   </section>;
 }

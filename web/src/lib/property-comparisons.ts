@@ -3,7 +3,7 @@ import type { CostRecord } from "./tcad-costs.ts";
 // Missing condition/state/eligibility inputs must never become confirmed tier matches.
 export const comparisonMethod = {
   year: 2026,
-  name: "TCAD 2026 equity comparison criteria",
+  name: "Appraisal District 2026 equity comparison criteria",
   tiers: [
     { tier: 0, area: 1, condition: 0, classSteps: 0, years: 2 },
     { tier: 1, area: 5, condition: 0, classSteps: 0, years: 5 },

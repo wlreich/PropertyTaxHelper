@@ -18,7 +18,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await first.focus();await page.keyboard.press('Enter');
  await expect(page.getByRole('button',{name:'Close breakdown ×',exact:true})).toBeFocused();
  await expect(page.getByRole('dialog')).toContainText('$400,000 + $0 = $400,000');
- await expect(page.getByRole('dialog')).toContainText('Same reported class; $0 follows TCAD’s worked same-class comparisons.');
+ await expect(page.getByRole('dialog')).toContainText('Same reported class; $0 follows the Appraisal District’s worked same-class comparisons.');
  await expect(page.getByRole('dialog')).toContainText('Your living area (sq ft)2,000');
  await expect(adjusted).toContainText('$4,577 below');
  await expect(adjusted).toContainText('3 of 3 selected properties');
@@ -55,7 +55,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(adjusted).toContainText('$390,000');
  await expect(adjusted).toContainText('2025 certified');
- await expect(adjusted).toContainText('Estimate method: TCAD formulas');
+ await expect(adjusted).toContainText('Estimate method: Appraisal District formulas');
  await expect(page.getByText('2025 matching tolerances have not been verified.',{exact:false})).toBeVisible();
  await expect(page.getByText('Adjustment inputs are separate:',{exact:false})).toBeVisible();
  const caveat=info.outputPath('prior-year-matching-caveat.png');await page.screenshot({path:caveat,fullPage:true});await info.attach('Prior-year matching caveat',{path:caveat,contentType:'image/png'});
