@@ -33,7 +33,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.evaluate(()=>{window.print=()=>{document.body.dataset.printRequested='yes';};});await page.getByRole('button',{name:'Print or save as PDF'}).click();await expect(page.locator('body')).toHaveAttribute('data-print-requested','yes');
  await page.emulateMedia({media:'print'});await expect(page.locator('.print-toolbar')).toBeHidden();
  await page.goto('/property/9200/neighborhood/print');await expect(page.locator('.neighborhood-carry')).toBeVisible();await page.evaluate(()=>document.fonts.ready);const pdf=info.outputPath('neighborhood-report.pdf');await page.pdf({path:pdf,preferCSSPageSize:true,printBackground:true});await info.attach('Neighborhood print',{path:pdf,contentType:'application/pdf'});
- await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();await expect(page).toHaveURL(/\/property\/9200\/neighborhood$/);
+ await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();await expect(page).toHaveURL(/\/property\/9200\/neighborhood\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
  await page.goto('/property/103/neighborhood');await expect(page.getByRole('heading',{name:'Let’s try another address'})).toBeVisible();
 });
 test('neighborhood period labels, additional history and missing or small samples',async({page},info)=>{
