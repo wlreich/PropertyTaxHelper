@@ -1,11 +1,9 @@
 import type {ActivityData} from './property-activity.ts';
-export type ComparisonEvidence = {start:string;end:string;coverage:string|null;deedDate:string|null;available:boolean};
-// Research dates are independent of appraisal releases. Only the preceding
-// calendar year is shown; later transfers never enter an earlier interpretation.
-export function comparisonEvidence(data:ActivityData|null,propertyId:string,appraisalYear:number):ComparisonEvidence {
- const year=appraisalYear-1,start=`${year}-01-01`,end=`${year}-12-31`;
- if(!data||data.year!==year)return {start,end,coverage:null,deedDate:null,available:false};
- const rows=data.rows.filter(r=>r.property_id===propertyId&&r.deed_date!==null&&r.deed_date>=start&&r.deed_date<=end)
-  .sort((a,b)=>b.deed_date!.localeCompare(a.deed_date!));
- return {start,end,coverage:`appraisal ${data.sources.appraisal_export_date}, supplemental ${data.sources.sales_export_date}`,deedDate:rows[0]?.deed_date??null,available:true};
+import {defaultEvidenceWindow,windowActivity,inEvidenceWindow,evidenceCoverage,type WindowActivity,type EvidenceWindow} from './evidence-window.ts';
+export type ComparisonEvidence = {start:string;end:string;coverage:string|null;deedDate:string|null;available:boolean;targetYear:number};
+export function comparisonEvidence(data:ActivityData|WindowActivity|null,propertyId:string,target:number|EvidenceWindow):ComparisonEvidence {
+ const window=typeof target==='number'?defaultEvidenceWindow(target):target;
+ const scoped=data&&('datasets' in data?data:windowActivity(window,data.year>=Number(window.start.slice(0,4))&&data.year<=Number(window.end.slice(0,4))?[data]:[],[data.year]));
+ const rows=scoped?.rows.filter(r=>r.property_id===propertyId&&inEvidenceWindow(r.deed_date,window)).sort((a,b)=>b.deed_date!.localeCompare(a.deed_date!))??[];
+ return {start:window.start,end:window.end,targetYear:window.targetYear,coverage:scoped?evidenceCoverage(scoped):null,deedDate:rows[0]?.deed_date??null,available:!!scoped?.datasets.length};
 }

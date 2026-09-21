@@ -39,3 +39,7 @@
  .print-report .neighborhood-distribution>div {grid-template-columns:1fr 1fr;}
  .print-report .neighborhood-cap-strip {grid-template-columns:1fr 1fr;}
 }
+
+.activity-print table {width:100%;border-collapse:collapse;font-size:var(--text-small);}
+.activity-print th,.activity-print td {text-align:left;padding:var(--space-2);border-bottom:var(--border-width) solid var(--color-border);overflow-wrap:anywhere;}
+@media print {.activity-print {break-inside:auto;}.activity-print h2 {break-after:avoid;}.activity-print thead {display:table-header-group;}.activity-print tr {break-inside:avoid;}}

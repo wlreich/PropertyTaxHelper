@@ -38,7 +38,7 @@ export function parseActivity(v:unknown):ActivityData|null{
  }
  return {year:v.year,years:v.years,neighborhood:v.neighborhood,sources:{appraisal_export_date:v.sources.appraisal_export_date,sales_export_date:v.sources.sales_export_date},rows};
 }
-export function activityRows(data:ActivityData,type:ActivityFilter,sort:string){
+export function activityRows(data:Pick<ActivityData,'rows'>,type:ActivityFilter,sort:string){
  return data.rows.filter(r=>type==='all'||r.property_type===type).sort((a,b)=>(sort==='address'?a.address.localeCompare(b.address,'en',{numeric:true}):(sort==='oldest'?1:-1)*a.activity_date.localeCompare(b.activity_date))||activityKey(a).localeCompare(activityKey(b)));
 }
 const cell=(value:string|number|null)=>{
@@ -48,5 +48,14 @@ const cell=(value:string|number|null)=>{
 export function activityCsv(data:ActivityData,selected:Set<string>){
  const header=['Property ID','Address','City','Neighborhood','Activity year','Deed date','Sale date','Filing date','Record status','Sale price reported by TCAD','Price availability','Instrument','Deed source','Appraisal export','Supplemental export','Property link','Ask a realtor'];
  const rows=data.rows.filter(r=>selected.has(activityKey(r))).map(r=>[r.property_id,r.address,r.city,data.neighborhood,data.year,r.deed_date,r.sale_date,r.filed_date,activityStatus(r),r.price,r.price_status==='reported'?'TCAD-reported; verify':activityPrice(r),r.instrument,r.deed_source,data.sources.appraisal_export_date,data.sources.sales_export_date,SITE_URL.replace(/\/$/,'')+'/property/'+r.property_id,'Confirm whether this was an arm’s-length sale, closing date and price, concessions, condition, and comparability. Coverage is incomplete; a nearby property is not automatically a comparable.']);
+ return '\uFEFF'+[header,...rows].map(r=>r.map(cell).join(',')).join('\r\n')+'\r\n';
+}
+
+export function activityWindowCsv(data:import('./evidence-window.ts').WindowActivity,selected:Set<string>,type:ActivityFilter='all',sort='newest'){
+ const header=['Target appraisal year','Evidence start','Evidence end','Property filter','Property type','Retained outside filter','Sort order','Coverage unavailable years','Temporarily unavailable years','Property ID','Address','City','Neighborhood','Activity year','Deed date','Sale date','Filing date','Record status','Sale price reported by Appraisal District','Price availability','Instrument','Deed source','Appraisal export','Supplemental export','Property link','Ask a realtor'];
+ const rows=activityRows(data,'all',sort).filter(r=>selected.has(activityKey(r))).map(r=>{
+  const source=data.datasets.find(d=>d.rows.some(x=>activityKey(x)===activityKey(r)));
+  return [data.window.targetYear,data.window.start,data.window.end,activityTypes[type],activityTypes[r.property_type],type!=='all'&&type!==r.property_type?'Yes':'No',sort,data.missingYears.join('; '),data.failedYears.join('; '),r.property_id,r.address,r.city,data.neighborhood,source?.year??null,r.deed_date,r.sale_date,r.filed_date,activityStatus(r),r.price,r.price_status==='reported'?'Appraisal District-reported; verify':activityPrice(r),r.instrument,r.deed_source,source?.sources.appraisal_export_date??null,source?.sources.sales_export_date??null,SITE_URL.replace(/\/$/,'')+'/property/'+r.property_id,'Confirm whether this was an arm’s-length sale, closing date and price, concessions, condition, and comparability. Export dates are not transaction dates. Coverage is incomplete.'];
+ });
  return '\uFEFF'+[header,...rows].map(r=>r.map(cell).join(',')).join('\r\n')+'\r\n';
 }
