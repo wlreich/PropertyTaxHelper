@@ -18,6 +18,6 @@ export function SeasonNotice({ season, current, recordYear, evidence = [] }: { s
     {sameYear && phase !== "preliminary" && current?.roll_stage === "preliminary" && <p><strong>No certified result is available for this property yet.</strong> A missing update is not an unsuccessful protest.</p>}
     {validDate(config.filing_deadline) && officialSource(config.deadline_source) && validDate(config.verified_on) && <p>General filing deadline: <strong>{dateLabel(config.filing_deadline)}</strong>. <a href={config.deadline_source!}>Official deadline information</a> · verified {dateLabel(config.verified_on)}. Check your notice for the deadline that applies to your property.</p>}
     {!config.filing_deadline && <p><a href="https://traviscad.org/protests">Check Appraisal District’s current protest information</a> for filing requirements and your next steps.</p>}
-    {phase === "protest" && <a href="#next-heading">Review preparation steps</a>}
+    {phase === "protest" && <a href="/protest-guide">Review preparation steps</a>}
   </section>;
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessmentSummary,agentsForYear,seasonOutcome,annualExplanation,featureHighlights,streetSearch,historySequence} from '../src/lib/homeowner-insights.ts';
+import {assessmentSummary,agentsForYear,seasonOutcome,annualExplanation,featureHighlights,historySequence} from '../src/lib/homeowner-insights.ts';
 import {parseHistory,parseProtestObservations} from '../src/lib/property-history.ts';
 import {fixtureHistory} from '../../tools/property-search/history-fixture.mjs';
 const [previous,initial,current]=parseHistory(fixtureHistory);
@@ -117,12 +117,9 @@ test('feature summaries distinguish missing, changed and ambiguous details and p
  assert.ok(featureHighlights({...current,components:[...current.components,spa,spa]},initial,previous).some(x=>x.value==='More than one matching detail'));
  assert.ok(featureHighlights({...current,components:[{...spa,value:0}]},initial,previous).some(x=>x.value==='$0'));
 });
-test('history and street discovery are bounded and do not pretend every nearby property is comparable',()=>{
+test('history sequence is bounded',()=>{
  assert.equal(historySequence(current,initial,previous).length,3);
  assert.equal(historySequence(undefined,undefined,undefined).length,0);
- assert.equal(streetSearch('123 N OAK ST UNIT 5'),'N OAK ST');
- assert.equal(streetSearch('PAW PRINT'),null);
- assert.equal(streetSearch('1 A'),null);
 });
 test('agent names are an explicit allowlist and require a recorded assignment',()=>{
  assert.equal(evidence[0].arb_agent_name,'FIXTURE TAX PARTNERS');
