@@ -12,7 +12,8 @@ import "./comparison.css";
 import "@/styles/evidence-window.css";
 import {EvidenceWindowControls} from "@/components/evidence-window-controls";
 import {readEvidenceWindow,evidenceParams} from "@/lib/evidence-window";
-export const maxDuration=30;
+// Comparison/cost lookups and the two activity phases are independently bounded.
+export const maxDuration=90;
 export default async function ComparePage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<Record<string,string|string[]|undefined>>}) {
   const {id}=await params,search=await searchParams;
   if(!validPropertyId(id))notFound();
@@ -27,10 +28,9 @@ export default async function ComparePage({params,searchParams}:{params:Promise<
   const evidence:Record<string,ComparisonEvidence>={};
   if(result.status==='ok'&&step==='results'&&!windowError) {
     const properties=selection===null?candidatePool(result.data).slice(0,3):result.data.selected;
-    const groups=new Map([[result.data.subject.neighborhood??id,id]]);
-    for(const p of properties)if(!groups.has(p.neighborhood??p.property_id))groups.set(p.neighborhood??p.property_id,p.property_id);
-    const records=new Map(await Promise.all([...groups].map(async([area,propertyId])=>[area,await getWindowActivity(propertyId,window)] as const)));
-    for(const p of properties)evidence[p.property_id]=comparisonEvidence(records.get(p.neighborhood??p.property_id)??null,p.property_id,window);
+    // Activity resolves current neighborhoods; historical release groups cannot safely share a representative.
+    const records=await Promise.all(properties.map(async p=>[p.property_id,await getWindowActivity(p.property_id,window)] as const));
+    for(const [propertyId,data] of records)evidence[propertyId]=comparisonEvidence(data,propertyId,window);
   }
   return <><SiteHeader/><main id="main-content" className="main-shell profile-shell comparison-page">
     <Link href={`/property/${id}`} className="back-link">← Back to property overview</Link>

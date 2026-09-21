@@ -15,14 +15,15 @@ import {activeSeason} from '@/lib/seasons';
 import {validPropertyId} from '@/lib/property-comparisons';
 import '../property-overview.css';
 import './neighborhood.css';
-export const maxDuration=30;
+// Calendar, analysis and the two bounded activity phases each allow 15 seconds.
+export const maxDuration=90;
 export const metadata={title:'Your neighborhood | ParcelSavvy'};
 export default async function NeighborhoodPage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<EvidenceQuery>}) {
  const {id}=await params;if(!validPropertyId(id))notFound();
  const calendar=await getSeasonCalendar(),season=calendar?activeSeason(calendar):null;
  const query=await searchParams;
  const result=await getNeighborhoodAnalysis(id,season);
- const defaultYear=season?season.config.tax_year+(season.phase==='post'?1:0):result.status==='ok'?result.analysis.current.tax_year+1:new Date().getUTCFullYear();
+ const defaultYear=season?season.config.tax_year+(season.phase==='post'?1:0):result.status==='ok'?result.analysis.current.tax_year:new Date().getUTCFullYear();
  const {window,error}=readEvidenceWindow(query,defaultYear);
  if(result.status==='missing_property')notFound();
  if(result.status!=='ok')return <><SiteHeader/><main id="main-content" className="main-shell profile-shell"><h1>Your neighborhood</h1><PropertyNavigation propertyId={id} active="neighborhood" evidenceQuery={error?'':evidenceParams(window).toString()}/><div className="notice"><h2>{result.status==='missing_area'?'No market area is recorded for this property':result.status==='missing_snapshot'?'Neighborhood records are not available yet':'Neighborhood data is temporarily unavailable'}</h2><p>Open the property overview or try again later.</p><Link href={`/property/${id}`}>Property overview</Link></div></main><SiteFooter/></>;

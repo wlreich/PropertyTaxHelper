@@ -13,7 +13,8 @@ import {PrintButton} from './print-button';
 import {NEIGHBORHOOD_METHOD_VERSION,SITE_URL} from '@/lib/site';
 import '../neighborhood.css';
 import './print.css';
-export const maxDuration=30;
+// Calendar, analysis and the two bounded activity phases each allow 15 seconds.
+export const maxDuration=90;
 export const metadata={title:'Printable neighborhood report | ParcelSavvy',robots:{index:false,follow:false}};
 export default async function NeighborhoodPrintPage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<EvidenceQuery>}) {
  const {id}=await params;if(!validPropertyId(id))notFound();
@@ -22,7 +23,7 @@ export default async function NeighborhoodPrintPage({params,searchParams}:{param
  if(result.status==='missing_property')notFound();
  if(result.status!=='ok')return <main id="main-content" className="print-unavailable"><h1>Neighborhood report unavailable</h1><p>The neighborhood analysis could not be loaded.</p><Link href={`/property/${id}/neighborhood`}>Return to the neighborhood page</Link></main>;
  const {data:d,analysis}=result,query=await searchParams;
- const {window,error}=readEvidenceWindow(query,season?season.config.tax_year+(season.phase==='post'?1:0):analysis.current.tax_year+1);
+ const {window,error}=readEvidenceWindow(query,season?season.config.tax_year+(season.phase==='post'?1:0):analysis.current.tax_year);
  const scope=error?new URLSearchParams():evidenceParams(window);
  for(const key of ['activityType','activitySort','activitySelected'])if(typeof query[key]==='string')scope.set(key,query[key]);
  const backHref=`/property/${id}/neighborhood?${scope}`;
