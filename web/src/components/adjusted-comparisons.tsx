@@ -9,6 +9,7 @@ import { currency } from "@/lib/property-search";
 import { ComparisonFacts, ComparisonSummary, DeedClue } from "./comparison-property-facts";
 import type { ComparisonEvidence } from "@/lib/comparison-evidence";
 import { ADJUSTMENT_METHOD_VERSION } from "@/lib/site";
+import { snapshotLabel } from '@/lib/property-history';
 
 const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${currency(Math.abs(value))}`;
 
@@ -46,6 +47,6 @@ export function AdjustedComparisons({ subject, selected, release, evidence }: {
               </div>
     </dialog>}
     <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow TCAD’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; TCAD’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
-    <p className="comparison-adjusted-note">Source: TCAD {release.tax_year} {release.roll_stage} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
+    <p className="comparison-adjusted-note">Source: TCAD {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
   </section>;
 }

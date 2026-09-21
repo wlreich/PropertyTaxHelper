@@ -61,7 +61,7 @@ test('comparison selection, median, manual search, release switching and respons
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(results).toContainText('$30,000 above');
  await expect(results).toContainText('2025 certified');
- await expect(page.getByText('2025 rules have not been verified',{exact:false})).toBeVisible();
+ await expect(page.getByText('2025 matching tolerances have not been verified',{exact:false})).toBeVisible();
  await page.goto('/property/103/compare');await expect(page.getByRole('heading',{name:"Let’s try another address"})).toBeVisible();
 });
 
@@ -83,7 +83,8 @@ test('draft limit, cancellation, empty sets and unavailable saved properties',as
  await page.getByRole('button',{name:'Clear selections',exact:true}).click();
  await page.getByRole('complementary',{name:'Your comparison set'}).getByRole('button',{name:'Apply selection',exact:true}).click();
  await expect(page.getByText('No homes selected. Use Edit selection to build your comparison.',{exact:true})).toBeVisible();
- await page.goto('/property/100/compare?step=results&selected=120,121&release=22222222-2222-4222-8222-222222222222');
+ await page.goto('/property/100/compare?step=results&selected=120,121');
+ await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
  await expect(page.getByText('Some saved selections are unavailable in this release and were left out.',{exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Edit selection (1)',exact:true})).toBeVisible();
 });

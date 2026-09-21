@@ -1,4 +1,5 @@
 import { CurrentAssessment } from "./current-assessment";
+import { propertySource } from '@/lib/property-source';
 import { selectCurrentAssessment } from "@/lib/current-assessment";
 import { CapAndExemptions } from './cap-and-exemptions';
 import { annualReviewGuideHref } from '@/content/guide-navigation';
@@ -44,6 +45,7 @@ export function PropertyOverview({
   season?: SeasonContext | null;
 }) {
   const current = selectCurrentAssessment(p, snapshots);
+  const source = propertySource(p);
   const previous = current ? annualBaseline(snapshots, current) : undefined;
   const initial = current ? preliminaryBaseline(snapshots, current) : undefined;
   const facts = propertyFacts(current);
@@ -130,12 +132,10 @@ export function PropertyOverview({
             </p>
             <p>Feature values are shown as recorded and may not add up to the main improvement total. A later missing record does not erase earlier evidence.</p>
             <p>Bold changes are at least $25,000, or at least 10% and $10,000. Size alone does not establish an error. Positive emphasis is reserved for a qualified preliminary-to-certified reduction with recorded protest evidence.</p>
-            <a href="https://traviscad.org/propertysearch/">
-              Check Appraisal District’s current records ↗
+            <a href={source.parcelHref}>
+              Check this property’s Appraisal District record ({p.tax_year}) ↗
             </a>
-            <span> · </span>
-            <a href={p.source_url}>Appraisal District source ↗</a>
-            <span> · </span>
+            <p><a href={source.downloadHref}>{source.downloadLabel} ↗</a><br />{source.description}</p>
             <Link href={`/report-data-issue?property=${p.property_id}`}>Something looks wrong? Report a data issue</Link>
             </details>
           </section>

@@ -13,6 +13,10 @@ test('comparisons use one published source, preserve RLS, reject unsafe input an
   assert.equal(r.candidates.some(p=>['100','102','103'].includes(p.property_id)),false);
   assert.equal(r.candidates.find(p=>p.property_id==='120').market_value,400000);
   assert.equal(JSON.stringify(r).includes('PRIVATE'),false);
+  assert.equal(r.releases.find(x=>x.export_date==='2025-05-08').preliminary_baseline_eligible,true);
+  const interim=await call('33333333-3333-4333-8333-333333333331');
+  assert.equal(interim.release.preliminary_baseline_eligible,false);
+  assert.equal(interim.release.export_date,'2025-07-03');
   assert.equal((await db.query("select count(*)::int n from public.property_comparison_areas where property_id in ('102','103')")).rows[0].n,0);
   const historic=await call(old,['120','121']);assert.equal(historic.subject.market_value,420000);assert.equal(historic.selected.length,1);assert.equal(historic.selected[0].market_value,390000);
   assert.equal((await call('99999999-9999-4999-8999-999999999999')).status,'missing_snapshot');
