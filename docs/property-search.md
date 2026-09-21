@@ -127,3 +127,24 @@ Only when the entire normal search has no results, the first page can return up 
 The existing GIN trigram index selects candidates; component checks determine eligibility. A low trigram candidate threshold accommodates a central transposition in a five-letter word; it is not the acceptance criterion. Queries with a house number use that exact prefix to constrain spelling candidates. No county-wide similarity score is shown to homeowners.
 
 Checks cover ordinal variants, omitted versus conflicting components, numbered streets, house/unit boundaries, one versus multiple typos, suggestion limits, later pages, ID lookup, privacy, keyboard navigation and responsive layouts.
+
+
+## Source-confirmed vacant lots (PAR-37)
+
+Residential address discovery also excludes a narrowly verified vacant-lot class:
+all Property source rows have `land_state_cd=C1` (the source StateCode dictionary
+says VACANT LOT), no improvement state code, and no Improvement child records
+for the parcel or its UDI group. The published `is_vacant_land` flag is calculated
+during publication and backfilled for existing projections.
+
+Unknown/null classification remains searchable. Residential classification,
+contradictory improvement evidence, missing house numbers/living area/year built,
+and low or zero values do not cause this exclusion. This does not claim to be a
+complete classifier for every nonresidential category.
+
+The flag is applied inside autocomplete and submitted-search RPC candidates,
+including fuzzy fallback, before limits/pagination. The existing parkland toggle
+only controls parkland; it does not override vacancy filtering. Exact property-ID
+lookup and detail access remain available under the same confidentiality rules.
+Comparison/neighborhood cohorts, calculation models and raw source records are
+unchanged. No new public raw fields or access grants are introduced.
