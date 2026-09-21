@@ -45,7 +45,7 @@ test('PAR-32 date window survives shortlist, print, comparison views and return'
  await expect(activity.locator('tbody tr')).toHaveCount(5);await activity.getByRole('checkbox').nth(1).check();
  await activity.getByRole('combobox',{name:'Property type',exact:true}).selectOption('land');
  const downloadPromise=page.waitForEvent('download');await activity.getByRole('button',{name:'Download realtor shortlist'}).click();const download=await downloadPromise;
- const csv=await readFile((await download.path())!,'utf8');for(const text of ['2027','2026-06-01','2026-06-30','120 CYPRESS','Land only'])expect(csv).toContain(text);
+ const csv=await readFile((await download.path())!,'utf8');for(const text of ['2027','2026-06-01','2026-06-30','120 CYPRESS','Land only','Single-family homes','Retained outside filter'])expect(csv).toContain(text);
  await page.getByRole('link',{name:'Print / save PDF',exact:true}).click();const report=page.locator('.activity-print');
  await expect(report).toContainText('Preparing for 2027');await expect(report).toContainText('2026-06-01–2026-06-30');await expect(report.locator('tbody tr')).toHaveCount(1);await expect(report).toContainText('120 CYPRESS');
  const liveLink=new URL((await page.locator('.print-report-footer a').getAttribute('href'))!);expect(liveLink.searchParams.get('evidenceStart')).toBe('2026-06-01');expect(liveLink.searchParams.get('evidenceEnd')).toBe('2026-06-30');expect(liveLink.searchParams.get('activityType')).toBe('land');expect(JSON.parse(liveLink.searchParams.get('activitySelected')!)).toHaveLength(1);
@@ -55,7 +55,7 @@ test('PAR-32 date window survives shortlist, print, comparison views and return'
  await expect(activity.getByRole('button',{name:'Clear selection'})).toBeEnabled();await activity.getByRole('button',{name:'Clear selection'}).click();await expect(activity).not.toContainText('Some saved selections are outside this window');
  await activity.getByLabel('Preparing for').fill('2027');await activity.getByLabel('Evidence start').fill('2026-06-01');await activity.getByLabel('Evidence end').fill('2026-06-30');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(page).toHaveURL(/targetYear=2027/);await expect(activity.getByRole('button',{name:'Apply dates'})).toBeEnabled();
  await activity.getByRole('link',{name:'Compare properties using this evidence window'}).click();await expect(page.getByLabel('Preparing for')).toHaveValue('2027');await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
- const shared=new URL(page.url());shared.searchParams.delete('targetYear');await page.goto(shared.pathname+shared.search);await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
+ await expect(page).toHaveURL(/\/compare\?/);const shared=new URL(page.url());shared.searchParams.delete('targetYear');await page.goto(shared.pathname+shared.search);await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
  await page.getByRole('button',{name:'Apply selection',exact:true}).last().click();await expect(page).toHaveURL(/evidenceStart=2026-06-01/);
  const clue=page.locator('.comparison-deed').first();await clue.locator('summary').click();await expect(clue).toContainText('2026-06-01–2026-06-30');await expect(clue).toContainText('Preparing for 2026');
  await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();await expect(page).toHaveURL(/targetYear=2026/);

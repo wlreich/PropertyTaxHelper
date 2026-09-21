@@ -57,7 +57,7 @@ test('PAR-32 inclusive date boundaries, distinct deed/sale dates, deduplication 
  const all=windowActivity(defaultEvidenceWindow(2027),[data,data],[2026]);assert.equal(all.rows.length,3);assert.ok(all.rows.some(r=>r.deed_date==='2026-01-01'));assert.ok(all.rows.some(r=>r.deed_date==='2026-12-31'));
  const window={targetYear:2027,start:'2026-06-01',end:'2026-06-30'},narrow=windowActivity(window,[data],[2026]);assert.equal(narrow.rows.length,1);
  assert.equal(comparisonEvidence(narrow,'120',window).deedDate,null,'outside-window deed must not become a clue');assert.equal(comparisonEvidence(all,'120',all.window).deedDate,'2026-12-31');
- const csv=activityWindowCsv(narrow,new Set(narrow.rows.map(activityKey)),'all','oldest');for(const text of ['2027','2026-06-01','2026-06-30','2026-07-01','2027-01-10','Evidence start','Target appraisal year'])assert.ok(csv.includes(text));assert.equal(csv.split('\r\n').filter(Boolean).length,2);
+ const csv=activityWindowCsv(narrow,new Set(narrow.rows.map(activityKey)),'land','oldest');for(const text of ['2027','2026-06-01','2026-06-30','2026-07-01','2027-01-10','Evidence start','Target appraisal year','Single-family homes','Land only','Retained outside filter','Yes'])assert.ok(csv.includes(text));assert.equal(csv.split('\r\n').filter(Boolean).length,2);
 });
 test('PAR-32 loader requests only published years and preserves missing coverage',async()=>{
  const {getWindowActivity}=await import('../src/lib/supabase/property-activity.ts');
