@@ -1,3 +1,4 @@
+import {par28Fixture,par28Neighborhood} from './par28-fixture.mjs';
 import {activityViewFixture} from './activity-view-fixture.mjs';
 import {neighborhoodViewFixture} from './neighborhood-view-fixture.mjs';
 import {par11Fixture} from './par11-fixture.mjs';
@@ -45,7 +46,7 @@ createServer((req,res)=>{
    const call=async(sql,values=[]) => (await db.query(sql,values)).rows[0].result;
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
-   const visualFixture=par11Fixture(args.p_id) ?? par10Fixture(args.p_id);
+   const visualFixture=par28Fixture(args.p_id) ?? par11Fixture(args.p_id) ?? par10Fixture(args.p_id);
    if(visualFixture && ['property_overview_bundle','property_market_adjustment','property_profile','property_history'].includes(route)) {
     const reference={property_overview_bundle:visualFixture.overview,property_market_adjustment:visualFixture.adjustment,property_profile:visualFixture.overview.profile,property_history:visualFixture.overview.history};
     return send(200,reference[route]);
@@ -53,6 +54,7 @@ createServer((req,res)=>{
    if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
    else if(route==='property_market_adjustment')result=await call('select public.property_market_adjustment($1) result',[args.p_id]);
    else if(route==='property_neighborhood_activity')result=activityViewFixture(args.p_id,args.p_year??null);
+   else if(route==='property_neighborhood_analysis' && par28Fixture(args.p_id))result=par28Neighborhood(await call('select public.property_neighborhood_analysis($1,$2,$3) result',['100',args.p_phase??null,args.p_year??null]),args.p_id);
    else if(route==='property_neighborhood_analysis')result=neighborhoodViewFixture(await call('select public.property_neighborhood_analysis($1,$2,$3) result',[/^920[0-5]$/.test(args.p_id)?'100':args.p_id,args.p_phase??null,args.p_year??null]),args.p_id);
    else if(route==='property_neighborhood_v4')result=await call('select public.property_neighborhood_v4($1,$2) result',[args.p_id,args.p_source??null]);
    else if(route==='property_neighborhood_v3')result=await call('select public.property_neighborhood_v3($1,$2) result',[args.p_id,args.p_source??null]);

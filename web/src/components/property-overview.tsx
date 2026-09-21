@@ -59,6 +59,7 @@ export function PropertyOverview({
           <p>{[p.city, p.postal_code].filter(Boolean).join(", ")} · Appraisal District #{p.property_id}</p>
         </div>
 
+        <Link className="overview-secondary-action" href={`/property/${p.property_id}/print?release=${encodeURIComponent(current.dataset_id)}`}>Print / save property report</Link>
       </div>
       {p.values_under_review && (
         <div className="notice">
