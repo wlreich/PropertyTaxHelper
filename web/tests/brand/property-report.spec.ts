@@ -21,7 +21,7 @@ test('PAR-28 complete Letter reports preserve inventory, history and page furnit
   if(id==='999281')for(let i=0;i<26;i++)expect(text.match(new RegExp(`${2026-i-(i>15?1:0)}\\s*·\\s*Certified`,'g'))).toHaveLength(1);
  }
  await page.goto('/property/999280/print');await expect(page.getByRole('button',{name:'Print / save PDF',exact:true})).toBeEnabled();await page.addStyleTag({content:'@page {size:A4;} .property-report {--color-action:#333;--color-success:#666;--color-surface-info:#eee;--color-text:#111;--color-text-muted:#444;} .report-heading img {filter:grayscale(1);}'});
- const path=info.outputPath('dense-a4-grayscale.pdf');await page.pdf({path,preferCSSPageSize:true,printBackground:true});await info.attach('A4 grayscale',{path,contentType:'application/pdf'});expect(Number(execFileSync('python3',['-c','from pypdf import PdfReader; import sys; print(len(PdfReader(sys.argv[1]).pages))',path],{encoding:'utf8'}).trim())).toBe(8);
+ const path=info.outputPath('dense-a4-grayscale.pdf');await page.pdf({path,preferCSSPageSize:true,printBackground:false});await info.attach('A4 grayscale',{path,contentType:'application/pdf'});expect(Number(execFileSync('python3',['-c','from pypdf import PdfReader; import sys; print(len(PdfReader(sys.argv[1]).pages))',path],{encoding:'utf8'}).trim())).toBe(8);
 });
 
 test('PAR-28 keyboard print entry, retained release, narrow preview and return',async({page},info)=>{
