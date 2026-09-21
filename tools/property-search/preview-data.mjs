@@ -51,7 +51,8 @@ createServer((req,res)=>{
     const reference={property_overview_bundle:visualFixture.overview,property_market_adjustment:visualFixture.adjustment,property_profile:visualFixture.overview.profile,property_history:visualFixture.overview.history};
     return send(200,reference[route]);
    }
-   if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
+   if(route==='property_activity_match_inputs')result=await call('select public.property_activity_match_inputs($1,$2,$3) result',[args.p_id,args.p_source,args.p_ids]);
+   else if(route==='property_comparison_costs')result=await call('select public.property_comparison_costs($1,$2,$3) result',[args.p_anchor,args.p_source,typeof args.p_ids==='string'?args.p_ids.replace(/^[{]|[}]$/g,'').split(',').filter(Boolean):args.p_ids??[]]);
    else if(route==='property_market_adjustment')result=await call('select public.property_market_adjustment($1) result',[args.p_id]);
    else if(route==='property_neighborhood_activity')result=activityViewFixture(args.p_id,args.p_year??null);
    else if(route==='property_neighborhood_analysis' && par28Fixture(args.p_id))result=par28Neighborhood(await call('select public.property_neighborhood_analysis($1,$2,$3) result',['100',args.p_phase??null,args.p_year??null]),args.p_id);

@@ -75,3 +75,24 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  await db.exec("update public.property_search_state set dataset_id='22222222-2222-4222-8222-222222222222'; set role anon");
  assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,0);
 });
+
+test('activity matching batches published inputs without truncation or private access',async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ const anchor='11111111-1111-4111-8111-111111111111';await db.query('select tcad_ingest.publish_property_search($1)',[anchor]);const {old}=await seedComparisons(db);
+ // Cross the existing 32-item helper boundary with independently synthetic profiles.
+ for(let i=0;i<36;i++){
+  const id=String(3800+i);
+  await db.query("insert into public.property_search_documents select dataset_id,$1,address,city,postal_code,property_type,public.normalize_property_address(address),market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland from public.property_search_documents where property_id='120'",[id]);
+  await db.query("insert into public.property_snapshot_profiles select anchor_dataset_id,dataset_id,$1,snapshot from public.property_snapshot_profiles where property_id='120' and dataset_id=$2",[id,anchor]);
+ }
+ await db.exec('set role anon');
+ const call=async(id='100',source=anchor,ids=['120','123','103','999'])=>(await db.query('select public.property_activity_match_inputs($1,$2,$3) r',[id,source,ids])).rows[0].r;
+ const r=await call();assert.equal(r.available,true);assert.equal(r.items.some(x=>x.property_id==='103'),false);assert.equal(r.items.some(x=>x.property_id==='999'),false);assert.equal(r.items.find(x=>x.property_id==='123').market_value,null);assert.ok(!JSON.stringify(r).includes('PRIVATE'));
+ const comparison=(await db.query("select public.property_comparisons('100',$1,array['120']) r",[anchor])).rows[0].r;assert.deepEqual(r.items.find(x=>x.property_id==='120'),comparison.selected[0]);
+ const costs=(await db.query("select public.property_comparison_costs($1,$1,array['100','120','123','103','999']) r",[anchor])).rows[0].r;assert.deepEqual(r.cost_chunks[0],costs);
+ const many=await call('100',anchor,Array.from({length:36},(_,i)=>String(3800+i)));assert.equal(many.items.length,37);assert.equal(many.cost_chunks.length,2);assert.equal(many.cost_chunks.flatMap(c=>c.items).length,37);
+ assert.equal((await call('100',old,['120'])).items.find(x=>x.property_id==='120').market_value,390000);
+ assert.equal((await call('103')).available,false);assert.equal((await call('100','33333333-3333-4333-8333-333333333333')).available,false);await assert.rejects(call('100',anchor,Array(50001).fill('120')));await assert.rejects(db.query('select * from tcad_ingest.records'));
+ await db.exec("reset role; update public.property_search_documents set values_under_review=true where property_id='120'; set role authenticated");assert.equal((await call()).items.some(x=>x.property_id==='120'),false);
+ await db.exec("reset role; delete from public.property_search_state; set role anon");assert.equal((await call()).available,false);
+});

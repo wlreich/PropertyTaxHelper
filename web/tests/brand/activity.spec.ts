@@ -18,11 +18,11 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  expect(download.suggestedFilename()).toBe('ParcelSavvy-T2450-2027-realtor-shortlist.csv');
  const csv=await readFile((await download.path())!,'utf8');expect(csv).toContain('Sale unconfirmed');expect(csv).toContain('650000');expect(csv).toContain('2026-08-27');expect(csv).not.toContain('122 CYPRESS');expect(csv).toContain('Sale price reported by Appraisal District');expect(csv).not.toContain('TCAD');
  await section.getByRole('button',{name:'Clear selection'}).click();await expect(section.getByRole('checkbox').first()).not.toBeChecked();
- await section.getByRole('button',{name:'View all 7 →'}).click();await expect(rows).toHaveCount(7);
+ await section.getByRole('button',{name:'View all 7 → · newest first'}).click();await expect(rows).toHaveCount(7);
  await section.getByRole('combobox',{name:'Sort activity'}).selectOption('oldest');await expect(rows.first()).toContainText('May 25, 2026');
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await section.getByRole('combobox',{name:'Sort activity'}).selectOption('newest');await section.getByRole('button',{name:'Show first five'}).click();await section.getByRole('checkbox').first().check();
+ await section.getByRole('combobox',{name:'Sort activity'}).selectOption('newest');await section.getByRole('button',{name:'Show first five newest records'}).click();await section.getByRole('checkbox').first().check();
  await page.evaluate(()=>document.fonts.ready);
  const width=info.project.use.viewport!.width;
  if(width===375||width===1440){
