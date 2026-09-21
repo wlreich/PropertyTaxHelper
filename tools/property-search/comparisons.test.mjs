@@ -6,6 +6,10 @@ test('comparisons use one published source, preserve RLS, reject unsafe input an
  const db=await fixtureDatabase();t.after(()=>db.close());
  await db.query("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
  const {anchor,old}=await seedComparisons(db);
+ // Only this scenario needs proposal/interim rows; keep shared neighborhood fixtures unchanged.
+ for(const [source,date,eligible] of [['33333333-3333-4333-8333-333333333330','2025-05-08',true],['33333333-3333-4333-8333-333333333331','2025-07-03',false]]) {
+  await db.query(`insert into public.property_snapshot_profiles select anchor_dataset_id,$2::uuid,property_id,snapshot||jsonb_build_object('dataset_id',$2::text,'roll_stage','preliminary','export_date',$3::text,'preliminary_baseline_eligible',$4::boolean) from public.property_snapshot_profiles where anchor_dataset_id=$1 and dataset_id=$5 and property_id='100'`,[anchor,source,date,eligible,old]);
+ }
  const call=async(source=null,ids=[],q='',page=0)=>(await db.query('select public.property_comparisons($1,$2,$3,$4,$5) result',['100',source,ids,q,page])).rows[0].result;
  for(const role of ['anon','authenticated']){
   await db.exec(`set role ${role}`);
@@ -13,6 +17,10 @@ test('comparisons use one published source, preserve RLS, reject unsafe input an
   assert.equal(r.candidates.some(p=>['100','102','103'].includes(p.property_id)),false);
   assert.equal(r.candidates.find(p=>p.property_id==='120').market_value,400000);
   assert.equal(JSON.stringify(r).includes('PRIVATE'),false);
+  assert.equal(r.releases.find(x=>x.export_date==='2025-05-08').preliminary_baseline_eligible,true);
+  const interim=await call('33333333-3333-4333-8333-333333333331');
+  assert.equal(interim.release.preliminary_baseline_eligible,false);
+  assert.equal(interim.release.export_date,'2025-07-03');
   assert.equal((await db.query("select count(*)::int n from public.property_comparison_areas where property_id in ('102','103')")).rows[0].n,0);
   const historic=await call(old,['120','121']);assert.equal(historic.subject.market_value,420000);assert.equal(historic.selected.length,1);assert.equal(historic.selected[0].market_value,390000);
   assert.equal((await call('99999999-9999-4999-8999-999999999999')).status,'missing_snapshot');

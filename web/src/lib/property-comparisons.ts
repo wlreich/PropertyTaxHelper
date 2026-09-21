@@ -22,7 +22,7 @@ export type ComparisonProperty = {
   neighborhood: string | null; living_area: number | null; class_code: string | null;
   year_built: number | null; main_buildings: number;
 };
-export type ComparisonRelease = { dataset_id: string; tax_year: number; roll_stage: string; export_date: string | null };
+export type ComparisonRelease = { dataset_id: string; tax_year: number; roll_stage: string; export_date: string | null; preliminary_baseline_eligible?: boolean };
 export type ComparisonData = {
   anchor_id: string; release: ComparisonRelease; releases: ComparisonRelease[];
   subject: ComparisonProperty; candidates: ComparisonProperty[]; selected: ComparisonProperty[];

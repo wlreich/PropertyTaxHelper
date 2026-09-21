@@ -56,6 +56,13 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await expect(adjusted).toContainText('$390,000');
  await expect(adjusted).toContainText('2025 certified');
  await expect(adjusted).toContainText('Estimate method: TCAD formulas');
+ await expect(page.getByText('2025 matching tolerances have not been verified.',{exact:false})).toBeVisible();
+ await expect(page.getByText('Adjustment inputs are separate:',{exact:false})).toBeVisible();
+ const caveat=info.outputPath('prior-year-matching-caveat.png');await page.screenshot({path:caveat,fullPage:true});await info.attach('Prior-year matching caveat',{path:caveat,contentType:'image/png'});
+ await page.getByRole('button',{name:'View breakdown · 120 CYPRESS ST →',exact:true}).click();
+ await expect(page.getByRole('dialog')).toContainText('2025');
+ await expect(page.getByRole('dialog')).toContainText('R3');
+ await page.keyboard.press('Escape');
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
 });
 

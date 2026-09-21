@@ -19,8 +19,9 @@ function property(v:unknown):ComparisonProperty|null {
 function release(v:unknown):ComparisonRelease|null {
   if(!object(v)||!text(v.dataset_id)||!validSource(v.dataset_id)||!Number.isInteger(v.tax_year)||Number(v.tax_year)<1900||Number(v.tax_year)>2200
     ||!["preliminary","certified","supplemental"].includes(String(v.roll_stage))
+    ||!(v.preliminary_baseline_eligible==null||typeof v.preliminary_baseline_eligible==="boolean")
     ||!(v.export_date===null||typeof v.export_date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v.export_date))) return null;
-  return {dataset_id:v.dataset_id,tax_year:v.tax_year as number,roll_stage:v.roll_stage as string,export_date:v.export_date as string|null};
+  return {dataset_id:v.dataset_id,tax_year:v.tax_year as number,roll_stage:v.roll_stage as string,export_date:v.export_date as string|null,preliminary_baseline_eligible:typeof v.preliminary_baseline_eligible==="boolean"?v.preliminary_baseline_eligible:undefined};
 }
 export function parseComparison(value:unknown,id:string):ComparisonData|null {
   if(!object(value)||value.available!==true||value.status!=="ok"||!text(value.anchor_id)||!validSource(value.anchor_id))return null;

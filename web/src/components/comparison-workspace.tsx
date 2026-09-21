@@ -9,6 +9,7 @@ import {PropertySectionLink} from "./property-section-link";
 import {AdjustedComparisons} from "./adjusted-comparisons";
 import {ComparisonFacts,ComparisonSummary,DeedClue} from "./comparison-property-facts";
 import type {ComparisonEvidence} from "@/lib/comparison-evidence";
+import {snapshotLabel} from '@/lib/property-history';
 
 const number=(n:number|null,unit="")=>n===null?"Not reported":`${n.toLocaleString("en-US",{maximumFractionDigits:4})}${unit}`;
 function Match({subject,property}:{subject:ComparisonProperty;property:ComparisonProperty}) {
@@ -18,6 +19,7 @@ function Match({subject,property}:{subject:ComparisonProperty;property:Compariso
 export function ComparisonWorkspace({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery=""}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string}) {
   const router=useRouter();
   const view=initialView;
+  const matchingCaveat = `${data.release.tax_year} matching tolerances have not been verified. Suggestions use the ${comparisonMethod.year} size and age tolerances. Adjustment inputs are separate: estimates use the selected year’s published schedules where available and are withheld when required inputs are missing.`;
   const recommended=useMemo(()=>candidatePool(data),[data]);
   const active=initialIds===null?recommended.slice(0,3):data.selected;
   const activeIds=initialIds??active.map(p=>p.property_id);
@@ -87,12 +89,12 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
   }
   return <>
     <div className="comparison-title"><div><h2 ref={heading} tabIndex={-1}>{initialStep==="select"?"Choose homes to compare":"Compare similar homes"}</h2><p>{initialStep==="select"?"Edit your draft set. Apply it when you’re ready; Cancel keeps your active comparison.":`${selected.length} selected ${selected.length===1?"property":"properties"} compared with your home.`}</p></div>
-      <label className="comparison-release">Assessment release<select value={data.release.dataset_id} onChange={e=>releaseChange(e.target.value)}>{data.releases.map(r=><option key={r.dataset_id} value={r.dataset_id}>{r.tax_year} · {r.roll_stage} · {r.export_date??"Date not reported"}</option>)}</select></label>
+      <label className="comparison-release">Assessment release<select value={data.release.dataset_id} onChange={e=>releaseChange(e.target.value)}>{data.releases.map(r=><option key={r.dataset_id} value={r.dataset_id}>{snapshotLabel(r)} · {r.export_date??"Date not reported"}</option>)}</select></label>
     </div>
     {initialStep==="results"&&<div className="comparison-view-controls"><div><span className="comparison-view-label">View values as</span><div className="comparison-view-switch" role="group" aria-label="Comparison values"><button aria-pressed={view==="reported"} onClick={()=>changeView("reported")}>Reported values</button><button aria-pressed={view==="adjusted"} onClick={()=>changeView("adjusted")}>Estimated adjusted values</button></div></div><div className="comparison-result-actions"><button ref={editButton} className="comparison-add-link" onClick={editSelection}>Edit selection ({active.length})</button></div></div>}
     {message&&<p role="status" className="comparison-inline-note">{message}</p>}
-    {initialStep==="results"&&data.release.tax_year!==comparisonMethod.year&&<p className="comparison-inline-note"><strong>{data.release.tax_year} rules have not been verified; these estimates use the 2026 criteria.</strong></p>}
-    {initialStep==="select"&&<><div className="comparison-guidance"><p>Suggestions use recorded market area, class, size, and age. ParcelSavvy cannot verify every Appraisal District eligibility factor.{data.release.tax_year!==comparisonMethod.year&&<> <strong>{data.release.tax_year} rules have not been verified; these are the 2026 criteria.</strong></>}</p><PropertySectionLink target="comparison-rules-heading">How matching works</PropertySectionLink></div>
+    {initialStep==="results"&&data.release.tax_year!==comparisonMethod.year&&<p className="comparison-inline-note">{matchingCaveat}</p>}
+    {initialStep==="select"&&<><div className="comparison-guidance"><p>Suggestions use recorded market area, class, size, and age. ParcelSavvy cannot verify every Appraisal District eligibility factor.{data.release.tax_year!==comparisonMethod.year&&<> {matchingCaveat}</>}</p><PropertySectionLink target="comparison-rules-heading">How matching works</PropertySectionLink></div>
     <div className="comparison-mobile-action"><span><strong>{selected.length}</strong> selected</span><button type="button" onClick={showResults}>Apply selection</button></div>
     <div className="comparison-workspace">
       <section className="comparison-card comparison-suggestions" aria-labelledby="suggestions-heading">
@@ -132,7 +134,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
         <th scope="row"><Link href={`/property/${p.property_id}`}>{p.address}</Link><span className="comparison-small">{number(p.living_area,' sq ft')} · Built {p.year_built??'year not reported'}</span><DeedClue evidence={evidence[p.property_id]}/></th>
         <td><ComparisonFacts subject={data.subject} property={p}/></td><td data-label="Reported market" className="comparison-money">{currency(p.market_value)}</td><td data-label="Compared with your home">{p.market_value===null||data.subject.market_value===null?'Not available':p.market_value===data.subject.market_value?'Same value':`${currency(Math.abs(p.market_value-data.subject.market_value))} ${p.market_value>data.subject.market_value?'higher':'lower'}`}</td>
       </tr>)}</tbody></table></div>:<p className="comparison-inline-note">No homes selected. Use Edit selection to build your comparison.</p>}
-      <p className="comparison-small">Source: Appraisal District {data.release.tax_year} {data.release.roll_stage} records · Exported {data.release.export_date??'date not reported'}. Differences in reported values alone do not establish overassessment or tax savings.</p>
+      <p className="comparison-small">Source: Appraisal District {snapshotLabel(data.release)} records · Exported {data.release.export_date??'date not reported'}. Differences in reported values alone do not establish overassessment or tax savings.</p>
     </section>}
     {initialStep==="results"&&view==="adjusted"&&<AdjustedComparisons subject={data.subject} selected={selected} release={data.release} evidence={evidence}/>}
     {initialStep==="results"&&<section className="comparison-card comparison-results"><h3>Build evidence around meaningful differences</h3><p>Review recorded size, age, land and additional structures. Estimates help explain differences; they are not official appraisals.</p><Link className="comparison-text-button" href={`/protest-guide?property=${data.subject.property_id}`}>Review protest options →</Link></section>}

@@ -58,6 +58,11 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await page.locator("#about-records-heading").focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();
+  const sources = page.locator('.overview-source');
+  await expect(sources.getByRole('link', {name:'Check this property’s Appraisal District record (2026)',exact:false})).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/100/2026');
+  await expect(sources.getByRole('link', {name:'Download source appraisal export (ZIP)',exact:false})).toHaveAttribute('href',/\.zip$/i);
+  await expect(sources).toContainText('2026 certified countywide appraisal export');
+  const sourceCapture=info.outputPath('source-links.png');await sources.screenshot({path:sourceCapture});await info.attach('Source links',{path:sourceCapture,contentType:'image/png'});
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("definition").filter({hasText:"No longer separately listed"}),

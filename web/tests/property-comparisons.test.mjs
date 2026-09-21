@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {comparisonSummary,matchProperty,suggestions,selectedIds,candidatePool,candidatePage} from '../src/lib/property-comparisons.ts';
+import {snapshotLabel} from '../src/lib/property-history.ts';
 import {comparisonEvidence} from '../src/lib/comparison-evidence.ts';
 import {getComparisons,parseComparison} from '../src/lib/supabase/comparisons.ts';
 const base={property_id:'100',address:'SUBJECT',city:'CITY',property_type:'R',market_value:1285275,land_value:100000,land_acres:1,living_area:4410,class_code:'R3',year_built:2014,neighborhood:'T2450',main_buildings:1};
@@ -74,4 +75,15 @@ test('comparison deed clues use prior-year events, explicit coverage, and never 
  assert.equal(comparisonEvidence(data,'121',2026).deedDate,null);
  assert.equal(comparisonEvidence(data,'120',2025).available,false);
  assert.equal(comparisonEvidence(null,'120',2026).available,false);
+});
+
+test('comparison parser preserves baseline/interim metadata for the shared history label',()=>{
+ const release={dataset_id:'11111111-1111-4111-8111-111111111111',tax_year:2025,roll_stage:'preliminary',export_date:'2025-07-03',preliminary_baseline_eligible:false};
+ const raw={available:true,status:'ok',anchor_id:release.dataset_id,release,releases:[release],subject:base,candidates:[],selected:[],matches:[],candidate_limit_reached:false,search_has_more:false};
+ const parsed=parseComparison(raw,'100');
+ assert.equal(snapshotLabel(parsed.release),'2025 interim snapshot');
+ assert.equal(snapshotLabel(parsed.releases[0]),'2025 interim snapshot');
+ assert.equal(snapshotLabel({...parsed.release,preliminary_baseline_eligible:true}),'2025 preliminary');
+ assert.equal(snapshotLabel({tax_year:2026,roll_stage:'certified'}),'2026 certified');
+ assert.equal(parseComparison({...raw,release:{...release,preliminary_baseline_eligible:'false'}},'100'),null);
 });

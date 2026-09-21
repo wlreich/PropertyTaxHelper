@@ -207,7 +207,7 @@ export function preliminaryBaseline(snapshots: Snapshot[], current: Snapshot) {
       s.export_date < current.export_date,
   );
 }
-export const snapshotLabel = (s: Snapshot) => `${s.tax_year} ${s.preliminary_baseline_eligible === false ? "interim snapshot" : s.roll_stage}`;
+export const snapshotLabel = (s: Pick<Snapshot, 'tax_year' | 'roll_stage' | 'preliminary_baseline_eligible'>) => `${s.tax_year} ${s.preliminary_baseline_eligible === false ? "interim snapshot" : s.roll_stage}`;
 export function dateLabel(date: string | null) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) return "Export date not reported";
   const [year, month, day] = date.split("-").map(Number);
