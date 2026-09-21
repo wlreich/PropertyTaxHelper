@@ -55,9 +55,10 @@ test('PAR-32 date window survives shortlist, print, comparison views and return'
  await expect(activity.getByRole('button',{name:'Clear selection'})).toBeEnabled();await activity.getByRole('button',{name:'Clear selection'}).click();await expect(activity).not.toContainText('Some saved selections are outside this window');
  await activity.getByLabel('Preparing for').fill('2027');await activity.getByLabel('Evidence start').fill('2026-06-01');await activity.getByLabel('Evidence end').fill('2026-06-30');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(page).toHaveURL(/targetYear=2027/);await expect(activity.getByRole('button',{name:'Apply dates'})).toBeEnabled();
  await activity.getByRole('link',{name:'Compare properties using this evidence window'}).click();await expect(page.getByLabel('Preparing for')).toHaveValue('2027');await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
+ const shared=new URL(page.url());shared.searchParams.delete('targetYear');await page.goto(shared.pathname+shared.search);await expect(page.getByLabel('Evidence start')).toHaveValue('2026-06-01');
  await page.getByRole('button',{name:'Apply selection',exact:true}).last().click();await expect(page).toHaveURL(/evidenceStart=2026-06-01/);
- const clue=page.locator('.comparison-deed').first();await clue.locator('summary').click();await expect(clue).toContainText('2026-06-01–2026-06-30');await expect(clue).toContainText('Preparing for 2027');
- await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();await expect(page).toHaveURL(/targetYear=2027/);
+ const clue=page.locator('.comparison-deed').first();await clue.locator('summary').click();await expect(clue).toContainText('2026-06-01–2026-06-30');await expect(clue).toContainText('Preparing for 2026');
+ await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();await expect(page).toHaveURL(/targetYear=2026/);
  await page.getByRole('navigation',{name:'Property tools'}).getByRole('link',{name:'Neighborhood',exact:true}).click();await expect(activity.getByLabel('Evidence end')).toHaveValue('2026-06-30');
  await activity.getByLabel('Preparing for').fill('2025');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(activity).toContainText('Coverage unavailable for 2024');await expect(activity).toContainText('Unavailable years do not mean no properties sold');
 });
