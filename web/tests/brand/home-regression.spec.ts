@@ -232,3 +232,21 @@ test('initial pageshow cannot clear suggestions for a query already being typed'
   await expect(search).toHaveValue('1104 Paw Print');
   await expect(page.getByRole('option')).toHaveCount(1);
 });
+
+test('PAR-37 street-first discovery filters vacant lots and preserves residential keyboard selection', async ({page})=>{
+ await page.goto('/');
+ const search=page.getByRole('combobox');
+ await search.fill('high lonesome');
+ await expect(page.getByRole('option')).toHaveCount(2);
+ await expect(page.getByRole('listbox')).not.toContainText('736081');
+ await expect(page.getByRole('listbox')).toContainText('736083');
+ await expect(page.getByRole('listbox')).toContainText('736086');
+ await search.press('ArrowDown');await search.press('ArrowDown');await search.press('Enter');
+ await expect(page).toHaveURL(/\/property\/736086\?/);
+ await expect(page.getByRole('heading',{level:1})).toHaveText('1402 HIGH LONESOME');
+ await page.goto('/?q=high+lonesome');
+ await expect(page.locator('.result-card')).toHaveCount(2);
+ await expect(page.locator('.result-card').filter({hasText:'ID 736081'})).toHaveCount(0);
+ await page.goto('/?q=736081');
+ await expect(page.locator('.result-card')).toHaveAttribute('href',/\/property\/736081\?/);
+});
