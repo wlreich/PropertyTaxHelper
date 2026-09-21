@@ -33,6 +33,17 @@ test('admin access, saved drafts, phase previews and public isolation',async({pa
  await page.getByRole('combobox',{name:'Phase',exact:true}).selectOption('protest');
  await page.getByRole('button',{name:'Update preview'}).click();
  await expect(page.locator('#season-heading')).toContainText('Follow the available records');
+ const protestPreview=page.url();
+ const preparation=page.getByRole('link',{name:'Review preparation steps',exact:true});
+ await expect(preparation).toHaveAttribute('href','/protest-guide?property=100');
+ await preparation.focus();await preparation.press('Enter');
+ await expect(page).toHaveURL(/\/protest-guide\?property=100$/);
+ const returnLink=page.getByRole('link',{name:'← Back to property overview',exact:true});
+ await expect(returnLink).toHaveAttribute('href','/property/100');
+ await returnLink.focus();await returnLink.press('Enter');
+ await expect(page).toHaveURL(/\/property\/100$/);
+ await expect(page.getByRole('navigation',{name:'Property tools'})).toBeVisible();
+ await page.goto(protestPreview);
  await page.getByRole('combobox',{name:'Phase',exact:true}).selectOption('post');
  await page.getByRole('button',{name:'Update preview'}).click();
  await expect(page.locator('#season-heading')).toContainText('Review the result');

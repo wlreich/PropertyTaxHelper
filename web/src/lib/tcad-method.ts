@@ -1,6 +1,6 @@
 import { depreciationSchedules } from "./tcad-depreciation.ts";
 
-export const tcadMethod = {year:2026, version:"TCAD formulas · published age schedules · record-based improvements v4", mainAreaFactor:1};
+export const tcadMethod = {year:2026, version:"Appraisal District formulas · published age schedules · record-based improvements v4", mainAreaFactor:1};
 export function estimatePercentGood(classCode:string|null, taxYear:number, effectiveYear:number|null, actualYear:number|null) {
   const hasEffectiveYear=effectiveYear!==null && Number.isInteger(effectiveYear) && effectiveYear>=1800;
   const year=hasEffectiveYear ? effectiveYear : actualYear;
@@ -11,7 +11,7 @@ export function estimatePercentGood(classCode:string|null, taxYear:number, effec
   // Tables specify each age followed by a terminal 999 band; never extrapolate.
   const row=schedule.rows.find(([upperAge])=>upperAge>=age);
   if(!row) return null;
-  return {value:row[1],year,age,basis:`TCAD ${taxYear} published ${classCode} schedule ${schedule.pricingId}, condition A (average). Condition is assumed because it is not reported in these inputs; other depreciation adjustments are not included.${hasEffectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}`};
+  return {value:row[1],year,age,basis:`Appraisal District ${taxYear} published ${classCode} schedule ${schedule.pricingId}, condition A (average). Condition is assumed because it is not reported in these inputs; other depreciation adjustments are not included.${hasEffectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}`};
 }
 export type TcadInputs={market:number|null;land:number|null;area:number|null;classCode:string|null;
  mainRcn:number|null;mainRcnld:number|null;percentGood:number|null;nonliving:number|null;secondary:number|null;mass:number|null};
