@@ -5,7 +5,8 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.goto('/property/100/neighborhood');
  await expect(page.getByRole('heading',{name:'Your neighborhood, in context.',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
- await expect(page.locator('.activity-controls select')).toHaveCount(3);
+ await expect(page.locator('.activity-controls select')).toHaveCount(2);
+ await expect(page.getByRole('form',{name:'Evidence research window'})).toBeVisible();
  await expect(page.locator('.neighborhood-story')).toContainText('2026 certified');
  await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2026');
  await expect(page.locator('.neighborhood-results')).toContainText('inferred from proposed-to-certified reductions');

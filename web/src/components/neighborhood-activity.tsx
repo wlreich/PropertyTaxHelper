@@ -1,19 +1,19 @@
 'use client';
 import Link from 'next/link';
-import {useState} from 'react';
-import {useSearchParams} from 'next/navigation';
+import {useState,useTransition} from 'react';
+import {useSearchParams,useRouter} from 'next/navigation';
 import {EvidenceWindowControls} from './evidence-window-controls';
 import {evidenceParams,evidenceCoverage,activitySelection,type WindowActivity,type EvidenceWindow} from '@/lib/evidence-window';
 import {dateLabel} from '@/lib/property-history';
 import {activityKey,activityStatus,activityPrice,activityRows,activityWindowCsv,activityTypes,type ActivityFilter} from '@/lib/property-activity';
 
 export function NeighborhoodActivity({data,propertyId,window,error}:{data:WindowActivity|null;propertyId:string;window:EvidenceWindow;error?:string|null}){
- const query=useSearchParams();
- const [type,setType]=useState<ActivityFilter>((query.get('activityType')??'all') in activityTypes?query.get('activityType') as ActivityFilter??'all':'all'),[sort,setSort]=useState(query.get('activitySort')??'newest');
+ const query=useSearchParams(),router=useRouter();
+ const [type,setType]=useState<ActivityFilter>(Object.hasOwn(activityTypes,query.get('activityType')??'all')?query.get('activityType') as ActivityFilter??'all':'all'),[sort,setSort]=useState(['newest','oldest','address'].includes(query.get('activitySort')??'')?query.get('activitySort')!:'newest');
  const [expanded,setExpanded]=useState(false),[selected,setSelected]=useState<Set<string>>(activitySelection(query.get('activitySelected')));
- const pending=false,[notice,setNotice]=useState('');
+ const [pending,transition]=useTransition(),[notice,setNotice]=useState('');
  function remember(nextType=type,nextSort=sort,nextSelected=selected){const params=new URLSearchParams(query.toString());for(const [key,value] of evidenceParams(window))params.set(key,value);params.set('activityType',nextType);params.set('activitySort',nextSort);params.set('activitySelected',JSON.stringify([...nextSelected]));globalThis.history.replaceState(null,'',`?${params}#recent-activity`);}
- const controls=<EvidenceWindowControls key={JSON.stringify(window)} window={window} error={error}/>;
+ const controls=<EvidenceWindowControls key={JSON.stringify(window)} window={window} error={error} busy={pending} onNavigate={url=>transition(()=>router.push(url,{scroll:false}))}/>;
  if(!data||error)return <section id="recent-activity" className="neighborhood-panel neighborhood-activity" aria-labelledby="activity-heading"><h2 id="activity-heading">Recent sales &amp; ownership changes</h2>{controls}<p>Property activity is not available for this view. This does not mean no properties sold.</p><Link href={'/property/'+propertyId+'/neighborhood#recent-activity'}>Try the latest available activity</Link></section>;
  const rows=activityRows(data,type,sort),shown=expanded?rows:rows.slice(0,5),propertyCount=new Set(rows.map(r=>r.property_id)).size;
  const visibleKeys=new Set(rows.map(activityKey));
@@ -40,14 +40,14 @@ export function NeighborhoodActivity({data,propertyId,window,error}:{data:Window
   <p className="sr-only" role="status">{pending?'Loading property activity…':propertyCount+' properties; '+rows.length+' transaction records.'}</p>
   {rows.length?<table className="activity-table" aria-label="Recent property activity"><thead><tr><th scope="col">Property / select for shortlist</th><th scope="col">Deed / sale date</th><th scope="col">What the record tells us</th><th scope="col">Sale price</th></tr></thead>
    <tbody>{shown.map(r=><tr key={activityKey(r)} className={selected.has(activityKey(r))?'activity-selected':''}>
-    <th scope="row"><div className="activity-property"><label className="activity-check"><input type="checkbox" checked={selected.has(activityKey(r))} onChange={()=>toggle(activityKey(r))} aria-label={'Select '+r.address+', '+dateLabel(r.activity_date)}/></label><div><Link href={'/property/'+r.property_id}>{r.address||'Property '+r.property_id}</Link><span>Property {r.property_id}</span></div></div></th>
+    <th scope="row"><div className="activity-property"><label className="activity-check"><input type="checkbox" disabled={pending} checked={selected.has(activityKey(r))} onChange={()=>toggle(activityKey(r))} aria-label={'Select '+r.address+', '+dateLabel(r.activity_date)}/></label><div><Link href={'/property/'+r.property_id}>{r.address||'Property '+r.property_id}</Link><span>Property {r.property_id}</span></div></div></th>
     <td><span>{r.deed_date?'Deed':'Sale'}: </span>{dateLabel(r.activity_date)}{r.sale_date&&r.deed_date&&r.sale_date!==r.deed_date&&<small>Sale: {dateLabel(r.sale_date)}</small>}</td>
     <td><span className="activity-status">{activityStatus(r)}</span></td>
     <td><span className="activity-mobile-label">Sale price: </span>{activityPrice(r)}{r.price!==null&&<small>TCAD-reported</small>}{r.price_status==='multi_property'&&<small>Multi-property sale</small>}</td>
    </tr>)}</tbody></table>:<div className="activity-empty"><p>No matching activity appears in these records. Coverage is incomplete.</p>{type!=='all'&&<button className="activity-link" onClick={()=>{setType('all');remember('all');}}>Show all property types</button>}</div>}
   <div className="activity-shortlist"><div><p role="status">{selectedProperties} {selectedProperties===1?'property':'properties'} selected{chosen.length!==selectedProperties?' · '+chosen.length+' records':''}</p><p>Ask a realtor to confirm the sale and price.</p>{chosen.some(r=>!visibleKeys.has(activityKey(r)))&&<p>Includes selections outside this filter.</p>}</div>
    <button className="action-button" disabled={!chosen.length||pending} onClick={download}>Download realtor shortlist</button>
-   <button className="activity-link" disabled={!chosen.length} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
+   <button className="activity-link" disabled={!chosen.length||pending} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
   </div>
   {selected.size>chosen.length&&<p role="status">Some saved selections are outside this window or unavailable and are excluded from this export.</p>}
   <Link href={`/property/${propertyId}/compare?${evidenceParams(window)}`}>Compare properties using this evidence window</Link>

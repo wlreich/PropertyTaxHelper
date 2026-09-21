@@ -41,6 +41,7 @@ test('PAR-32 date window survives shortlist, print, comparison views and return'
  test.skip(info.project.name!=='width-1440','one focused integration journey');
  await page.goto('/property/100/neighborhood');const activity=page.locator('#recent-activity');
  await activity.getByLabel('Evidence start').fill('2026-06-01');await activity.getByLabel('Evidence end').fill('2026-06-30');await activity.getByRole('button',{name:'Apply dates'}).click();
+ await expect(page).toHaveURL(/evidenceStart=2026-06-01/);await expect(activity.getByRole('button',{name:'Apply dates'})).toBeEnabled();
  await expect(activity.locator('tbody tr')).toHaveCount(5);await activity.getByRole('checkbox').nth(1).check();
  await activity.getByRole('combobox',{name:'Property type',exact:true}).selectOption('land');
  const downloadPromise=page.waitForEvent('download');await activity.getByRole('button',{name:'Download realtor shortlist'}).click();const download=await downloadPromise;
