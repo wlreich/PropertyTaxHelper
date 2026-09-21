@@ -47,7 +47,7 @@ export function NeighborhoodActivity({data,propertyId,window,error}:{data:Window
    </tr>)}</tbody></table>:<div className="activity-empty"><p>No matching activity appears in these records. Coverage is incomplete.</p>{type!=='all'&&<button className="activity-link" onClick={()=>{setType('all');remember('all');}}>Show all property types</button>}</div>}
   <div className="activity-shortlist"><div><p role="status">{selectedProperties} {selectedProperties===1?'property':'properties'} selected{chosen.length!==selectedProperties?' · '+chosen.length+' records':''}</p><p>Ask a realtor to confirm the sale and price.</p>{chosen.some(r=>!visibleKeys.has(activityKey(r)))&&<p>Includes selections outside this filter.</p>}</div>
    <button className="action-button" disabled={!chosen.length||pending} onClick={download}>Download realtor shortlist</button>
-   <button className="activity-link" disabled={!chosen.length||pending} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
+   <button className="activity-link" disabled={!selected.size||pending} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
   </div>
   {selected.size>chosen.length&&<p role="status">Some saved selections are outside this window or unavailable and are excluded from this export.</p>}
   <Link href={`/property/${propertyId}/compare?${evidenceParams(window)}`}>Compare properties using this evidence window</Link>
