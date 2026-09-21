@@ -108,6 +108,7 @@ export async function rpc(
   args: Record<string, string | number | boolean | string[] | null>,
   config: Config,
   fetchRequest: typeof fetch,
+  method: "GET" | "POST" = "GET",
 ): Promise<unknown> {
   const url = config.SUPABASE_URL?.trim(),
     key = config.SUPABASE_PUBLISHABLE_KEY?.trim();
@@ -125,7 +126,7 @@ export async function rpc(
       },
     });
     const { data, error } = await client
-      .rpc(name, args, { get: true })
+      .rpc(name, args, { get: method === "GET" })
       .abortSignal(AbortSignal.timeout(DATABASE_REQUEST_TIMEOUT_MS));
     return error ? null : data;
   } catch {

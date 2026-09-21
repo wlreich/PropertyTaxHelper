@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useEffect,useMemo,useRef,useState,type FormEvent} from "react";
-import {comparisonMethod,comparisonSummary,matchProperty,candidatePool,candidatePage,tierNames,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
+import {comparisonMethod,comparisonMatch,matchingQualification,comparisonSummary,matchProperty,candidatePool,candidatePage,tierNames,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
 import {currency,parseSearch} from "@/lib/property-search";
 import {PropertySectionLink} from "./property-section-link";
 import {AdjustedComparisons} from "./adjusted-comparisons";
@@ -13,13 +13,13 @@ import {snapshotLabel} from '@/lib/property-history';
 
 const number=(n:number|null,unit="")=>n===null?"Not reported":`${n.toLocaleString("en-US",{maximumFractionDigits:4})}${unit}`;
 function Match({subject,property}:{subject:ComparisonProperty;property:ComparisonProperty}) {
-  const match=matchProperty(subject,property);
-  return <span className="comparison-tier">{match.tier===null?"Review differences":`Tier ${match.tier}`}</span>;
+  const match=comparisonMatch(subject,property);
+  return <span className="comparison-tier">{match.state==='ranked'?`Tier ${match.rank}`:match.label}</span>;
 }
 export function ComparisonWorkspace({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery=""}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string}) {
   const router=useRouter();
   const view=initialView;
-  const matchingCaveat = `${data.release.tax_year} matching tolerances have not been verified. Suggestions use the ${comparisonMethod.year} size and age tolerances. Adjustment inputs are separate: estimates use the selected year’s published schedules where available and are withheld when required inputs are missing.`;
+  const matchingCaveat = matchingQualification(data.release.tax_year);
   const recommended=useMemo(()=>candidatePool(data),[data]);
   const active=initialIds===null?recommended.slice(0,3):data.selected;
   const activeIds=initialIds??active.map(p=>p.property_id);

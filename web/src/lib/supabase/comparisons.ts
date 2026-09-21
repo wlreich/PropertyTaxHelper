@@ -7,7 +7,7 @@ const object=(v:unknown):v is Record<string,unknown>=>typeof v==="object" && v!=
 const text=(v:unknown):v is string=>typeof v==="string" && v.length<=250;
 const nullableText=(v:unknown)=>v===null||text(v);
 const amount=(v:unknown)=>v===null || typeof v==="number" && Number.isFinite(v) && v>=0;
-function property(v:unknown):ComparisonProperty|null {
+export function parseComparisonProperty(v:unknown):ComparisonProperty|null {
   if(!object(v)||!text(v.property_id)||!validPropertyId(v.property_id)||![v.address,v.city,v.property_type].every(text)
     ||![v.market_value,v.land_value,v.land_acres,v.living_area,v.year_built].every(amount)
     ||![v.neighborhood,v.class_code].every(nullableText)||!Number.isSafeInteger(v.main_buildings)||Number(v.main_buildings)<0) return null;
@@ -25,14 +25,14 @@ function release(v:unknown):ComparisonRelease|null {
 }
 export function parseComparison(value:unknown,id:string):ComparisonData|null {
   if(!object(value)||value.available!==true||value.status!=="ok"||!text(value.anchor_id)||!validSource(value.anchor_id))return null;
-  const subject=property(value.subject), current=release(value.release);
+  const subject=parseComparisonProperty(value.subject), current=release(value.release);
   if(!subject||subject.property_id!==String(Number(id))||!current||!Array.isArray(value.releases)||value.releases.length>100)return null;
   const releases=value.releases.map(release);
   if(releases.some(r=>!r)||!releases.some(r=>r?.dataset_id===current.dataset_id))return null;
   const lists:ComparisonProperty[][]=[];
   for(const [key,max] of [["candidates",2001],["selected",10],["matches",20]] as const){
     const list=value[key]; if(!Array.isArray(list)||list.length>max)return null;
-    const parsed=list.map(property);if(parsed.some(p=>!p)||new Set(parsed.map(p=>p!.property_id)).size!==parsed.length)return null;
+    const parsed=list.map(parseComparisonProperty);if(parsed.some(p=>!p)||new Set(parsed.map(p=>p!.property_id)).size!==parsed.length)return null;
     lists.push(parsed as ComparisonProperty[]);
   }
   if(typeof value.candidate_limit_reached!=="boolean"||typeof value.search_has_more!=="boolean")return null;

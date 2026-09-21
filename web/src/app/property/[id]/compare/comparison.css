@@ -35,9 +35,9 @@
 .comparison-candidates td:first-child { padding: var(--space-1); }
 .comparison-candidates input:disabled { cursor: not-allowed; }
 .comparison-candidate-selected { background: var(--color-surface-info); }
-.comparison-small { display: block; font-size: var(--text-label); color: var(--color-text-muted); font-weight: var(--weight-normal); margin-top: var(--space-1); }
+
 .comparison-money { font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.comparison-tier { display: inline-block; font-size: var(--text-label); font-weight: var(--weight-semibold); color: var(--color-brand-primary); background: var(--color-surface-info); border-radius: var(--radius-input); padding: var(--space-1) var(--space-2); }
+
 .comparison-text-button { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--color-action); text-decoration: underline; text-underline-offset: var(--space-1); font-size: var(--text-small); cursor: pointer; padding: var(--space-2) 0; margin-right: var(--space-3); }
 .comparison-inline-note { margin-block: var(--space-3); font-size: var(--text-small); color: var(--color-text-muted); }
 .comparison-selection ul { list-style: none; padding: 0; margin: var(--space-4) 0; }

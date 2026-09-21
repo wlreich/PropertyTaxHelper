@@ -1,0 +1,6 @@
+.comparison-small { display: block; font-size: var(--text-label); color: var(--color-text-muted); font-weight: var(--weight-normal); margin-top: var(--space-1); }
+.comparison-tier { display: inline-block; font-size: var(--text-label); font-weight: var(--weight-semibold); color: var(--color-brand-primary); background: var(--color-surface-info); border-radius: var(--radius-input); padding: var(--space-1) var(--space-2); }
+.activity-match { margin-top: var(--space-2); overflow-wrap: anywhere; }
+.activity-property .comparison-tier { display: inline-block; color: var(--color-brand-primary); }
+.activity-property .comparison-small { white-space: normal; }
+.activity-controls select { max-width: 100%; }

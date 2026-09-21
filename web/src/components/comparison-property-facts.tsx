@@ -1,13 +1,14 @@
-import {matchProperty,tierNames,type ComparisonProperty} from '@/lib/property-comparisons';
+import '@/styles/comparison-match.css';
+import {comparisonMatch,type ComparisonProperty} from '@/lib/property-comparisons';
 import {primaryBuilding} from '@/lib/tcad-costs';
 import {currency} from '@/lib/property-search';
 import type {ComparisonEvidence} from '@/lib/comparison-evidence';
 
 export function ComparisonFacts({subject,property}:{subject:ComparisonProperty;property:ComparisonProperty}) {
- const match=matchProperty(subject,property),main=primaryBuilding(property.costs);
+ const match=comparisonMatch(subject,property),main=primaryBuilding(property.costs);
  const extras=main?property.costs!.improvements.filter(b=>b.id!==main.id):[];
- return <><span className="comparison-tier">{match.tier===null?'Review differences':`Tier ${match.tier} · ${tierNames[match.tier]}`}</span>
-  <span className="comparison-small">{(match.tier===null?match.reasons:match.reasons.slice(2)).join(' · ')}</span>
+ return <><span className="comparison-tier">{match.label}</span>
+  <span className="comparison-small">{match.description}</span>
   {extras.length>0&&<strong className="comparison-structure">{extras.map(b=>`Additional structure${b.main_area!==null&&b.main_area>0?` · ${b.main_area.toLocaleString('en-US')} sq ft`:''}`).join('; ')}</strong>}
   {!main&&property.main_buildings>1&&<strong className="comparison-structure">Multiple living-area buildings recorded</strong>}</>;
 }

@@ -78,3 +78,14 @@ export function comparisonSummary(subject: ComparisonProperty, selected: Compari
   const difference=median!==null && subject.market_value!==null ? subject.market_value-median : null;
   return {count:n, missing:unique.length-n, median, difference, percent:median!==null && median>0 && difference!==null?difference/median*100:null};
 }
+
+export const matchingQualification = (year:number) => `${year} matching tolerances have not been verified. Suggestions use the ${comparisonMethod.year} size and age tolerances. Adjustment inputs are separate: estimates use the selected year’s published schedules where available and are withheld when required inputs are missing.`;
+export type MatchDescription = {label:string;description:string;rank:number;state:'ranked'|'nonmatch'|'unavailable'|'no_subject'};
+export const unavailableComparison:MatchDescription={label:'Not enough information to compare.',description:'Required property characteristics are not available for this appraisal release.',rank:100,state:'unavailable'};
+export function comparisonMatch(subject:ComparisonProperty|null|undefined,candidate:ComparisonProperty|null|undefined):MatchDescription {
+ if(!subject)return {label:'Select a property to compare.',description:'Choose your home to see how these properties match.',rank:101,state:'no_subject'};
+ const complete=(p:ComparisonProperty)=>!!p.neighborhood&&!!p.class_code&&!!p.property_type&&p.living_area!==null&&p.living_area>0&&p.year_built!==null&&p.year_built>0;
+ if(!candidate||!complete(subject)||!complete(candidate))return unavailableComparison;
+ const match=matchProperty(subject,candidate);
+ return {label:match.tier===null?'Review differences':`Tier ${match.tier} · ${tierNames[match.tier]}`,description:(match.tier===null?match.reasons:match.reasons.slice(2)).join(' · '),rank:match.rank,state:match.tier===null?'nonmatch':'ranked'};
+}
