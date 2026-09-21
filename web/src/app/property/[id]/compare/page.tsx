@@ -4,7 +4,7 @@ import {SiteHeader,SiteFooter} from "@/components/site-shell";
 import {PropertyNavigation} from "@/components/property-navigation";
 import {ComparisonWorkspace} from "@/components/comparison-workspace";
 import {getComparisons} from "@/lib/supabase/comparisons";
-import {getWindowActivity} from "@/lib/supabase/property-activity";
+import {getComparisonActivities} from "@/lib/supabase/property-activity";
 import {comparisonEvidence,type ComparisonEvidence} from "@/lib/comparison-evidence";
 import {candidatePool,selectedIds,validPropertyId} from "@/lib/property-comparisons";
 import "../property-overview.css";
@@ -29,7 +29,7 @@ export default async function ComparePage({params,searchParams}:{params:Promise<
   if(result.status==='ok'&&step==='results'&&!windowError) {
     const properties=selection===null?candidatePool(result.data).slice(0,3):result.data.selected;
     // Activity resolves current neighborhoods; historical release groups cannot safely share a representative.
-    const records=await Promise.all(properties.map(async p=>[p.property_id,await getWindowActivity(p.property_id,window)] as const));
+    const records=await getComparisonActivities(properties.map(p=>p.property_id),window);
     for(const [propertyId,data] of records)evidence[propertyId]=comparisonEvidence(data,propertyId,window);
   }
   return <><SiteHeader/><main id="main-content" className="main-shell profile-shell comparison-page">

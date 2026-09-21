@@ -7,6 +7,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
  await expect(page.locator('.activity-controls select')).toHaveCount(2);
  await expect(page.getByRole('form',{name:'Evidence research window'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Print / save PDF',exact:true})).toHaveAttribute('href',/targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31/);
  await expect(page.locator('.neighborhood-story')).toContainText('2026 certified');
  await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2026');
  await expect(page.locator('.neighborhood-results')).toContainText('inferred from proposed-to-certified reductions');

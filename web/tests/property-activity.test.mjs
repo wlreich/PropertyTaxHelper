@@ -67,3 +67,11 @@ test('PAR-32 loader requests only published years and preserves missing coverage
  assert.equal((await getWindowActivity('100',defaultEvidenceWindow(2027))).rows.length,7);assert.deepEqual(calls,[null]);
  }finally{globalThis.fetch=previous.fetch;for(const [key,value] of [['SUPABASE_URL',previous.url],['SUPABASE_PUBLISHABLE_KEY',previous.key]])if(value===undefined)delete process.env[key];else process.env[key]=value;}
 });
+
+test('PAR-32 comparison loads share annual data after resolving active neighborhoods',async()=>{
+ const {getComparisonActivities}=await import('../src/lib/supabase/property-activity.ts');
+ const previous={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_PUBLISHABLE_KEY,fetch:globalThis.fetch};process.env.SUPABASE_URL='http://127.0.0.1:4055';process.env.SUPABASE_PUBLISHABLE_KEY='sb_publishable_fixture';const calls=[];
+ try{globalThis.fetch=async input=>{const url=new URL(input);calls.push(url.searchParams.get('p_year'));const raw=activityViewFixture('100',url.searchParams.get('p_year'));raw.years=[2025,2026];return new Response(JSON.stringify(raw),{status:200});};
+ const records=await getComparisonActivities(['100','120'],defaultEvidenceWindow(2026));assert.equal(records.size,2);assert.strictEqual(records.get('100'),records.get('120'));assert.equal(records.get('100').datasets[0].year,2025);assert.deepEqual(calls,[null,null,'2025']);
+ }finally{globalThis.fetch=previous.fetch;for(const [key,value] of [['SUPABASE_URL',previous.url],['SUPABASE_PUBLISHABLE_KEY',previous.key]])if(value===undefined)delete process.env[key];else process.env[key]=value;}
+});
