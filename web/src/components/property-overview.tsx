@@ -6,7 +6,7 @@ import { ValueDrivers, RecordedPropertyDetails } from './property-value-details'
 import { capModel } from '@/lib/property-sections';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
-import { InterimChange, HomeownerNextSteps } from "./homeowner-story";
+import { InterimChange } from "./homeowner-story";
 import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
 import { SeasonNotice } from "./season-notice";
@@ -85,7 +85,7 @@ export function PropertyOverview({
       </nav>
       <div className="overview-layout">
         <div className="overview-content">
-          <SeasonNotice season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
+          <SeasonNotice propertyId={p.property_id} season={season} current={current} recordYear={p.tax_year} evidence={evidence} />
           <InterimChange current={current} initial={initial} />
           {(historyUnavailable || snapshots.length === 0) && (
             <div className="notice">
@@ -104,7 +104,6 @@ export function PropertyOverview({
           <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id), initial)} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
           <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
-          <HomeownerNextSteps address={p.address} />
           <section className="overview-context" aria-labelledby="context-heading">
             <h2 id="context-heading">Put your assessment in context</h2>
             <p>Compare homes with similar size, age, construction and land.{current.neighborhood ? ` Start with your Appraisal District neighborhood group, ${current.neighborhood}.` : ' Start with the available neighborhood records.'}</p>

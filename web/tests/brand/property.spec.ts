@@ -55,12 +55,6 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   }
   await expect(page.locator("#property-details")).toBeVisible();
   await expect(facts.first()).toBeVisible();
-  const agentQuestions=page.getByText('Questions for your agent',{exact:true});
-  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeHidden();
-  await agentQuestions.focus();await page.keyboard.press('Enter');
-  await expect(page.getByText('Which property facts or comparable properties support this year’s case?',{exact:true})).toBeVisible();
-  await expect(page.getByText('How was my fee calculated, and how does it relate to actual tax savings?',{exact:true})).toBeVisible();
-  await page.keyboard.press('Enter');
   await page.locator("#about-records-heading").focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();
@@ -91,7 +85,6 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(dialog).toContainText('Appraisal District status: EF');
   await expect(dialog).toContainText('FIXTURE TAX PARTNERS');
   await page.keyboard.press('Escape'); await expect(historyToggle).toBeFocused();
-  await expect(page.getByRole("link", {name:"Browse my street"})).toHaveCSS("color", "rgb(255, 255, 255)");
   const term = page.getByRole("button", {
     name: "Appraisal District market value",
     exact: false,
@@ -137,8 +130,6 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
     path: capture,
     contentType: "image/png",
   });
-  await page.getByRole("link", { name: "Browse my street" }).click();
-  await expect(page).toHaveURL(/q=N\+OAK\+ST/);
   await page.goto("/property/100?q=Oak&page=0&all=1");
   await page.getByRole("link", { name: "Back to search results" }).click();
   await expect(page).toHaveURL(/q=Oak.*all=1/);

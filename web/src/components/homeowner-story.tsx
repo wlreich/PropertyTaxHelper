@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { PropertySectionLink } from "./property-section-link";
-import { TermDefinition } from "./term-definition";
-import { currency, resultsUrl } from "@/lib/property-search";
-import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights, streetSearch } from "@/lib/homeowner-insights";
+import { currency } from "@/lib/property-search";
+import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights } from "@/lib/homeowner-insights";
 import { comparison, dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
 
 type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[];historical?:boolean};
@@ -108,28 +106,6 @@ export function Representation({evidence,year,unavailable}:{evidence:ProtestObse
     <ul className="homeowner-checklist"><li>Which property facts or comparable properties support this year’s case?</li><li>What is the latest status, and can I see any agreement or decision?</li></ul>
     <details className="homeowner-details"><summary>More questions for your agent</summary>
       <ul className="homeowner-checklist"><li>How was my fee calculated, and how does it relate to actual tax savings?</li><li>Is there anything I should document before next year?</li></ul>
-    </details>
-  </section>;
-}
-export function HomeownerNextSteps({address}:{address:string}) {
-  const street=streetSearch(address);
-  return <section className="overview-section homeowner-next" aria-labelledby="next-heading">
-    <h2 id="next-heading" tabIndex={-1}>What would you check next?</h2>
-    <p>Start with your own property, then look around. These are useful checks whether you work with an agent or prepare your own case.</p>
-    <ol className="homeowner-checklist">
-      <li><PropertySectionLink target="property-facts-heading">Check the basics</PropertySectionLink><span>Living area, land size and construction class: does the record describe your home?</span></li>
-      <li><PropertySectionLink target="features-heading">Review separately valued features</PropertySectionLink><span>Look for an incorrect pool, spa or other detail. Gather dated photos or documents for anything you question.</span></li>
-      <li><PropertySectionLink target="exemptions-heading">Check your exemptions</PropertySectionLink><span>Review what is recorded and the taxable value for each taxing authority.</span></li>
-      <li><strong>Look for a fair comparison</strong><span>Start with the same Appraisal District neighborhood group, then similar size, age, construction and land. A nearby home is not automatically comparable.</span></li>
-    </ol>
-    {street && <><Link className="action-button homeowner-primary-link" href={resultsUrl(street)}>Browse my street</Link><p className="overview-note">Searches addresses on your street. Use the results as a starting point, then compare the property details.</p></>}
-    <details className="homeowner-details"><summary>Questions for your agent</summary>
-      <ul className="homeowner-checklist"><li>Which property facts or comparable properties support this year’s case?</li><li>What is the latest status, and can I see any agreement or decision?</li><li>How was my fee calculated, and how does it relate to actual tax savings?</li><li>Is there anything I should document before next year?</li></ul>
-    </details>
-    <details className="homeowner-details"><summary>Could I prepare my own protest?</summary>
-      <p>Start by identifying a specific issue you can support: an incorrect property detail, documented condition, or a well-chosen comparison. Organize the evidence and the value you believe it supports.</p>
-      <p><TermDefinition term="Sales and assessment comparisons">Sales help evaluate market value. Assessment comparisons examine how similar properties are appraised. They support different questions; keep the evidence separate.</TermDefinition></p>
-      <p><a className="homeowner-text-link" href="https://traviscad.org/protests/">Read Appraisal District’s protest process and current requirements ↗</a></p>
     </details>
   </section>;
 }

@@ -874,24 +874,6 @@
   padding: var(--space-3) 0;
   min-height: var(--target-min);
 }
-.homeowner-primary-link {
-  display: inline-flex;
-  align-items: center;
-  background: var(--color-action);
-  color: var(--color-surface);
-  border-radius: var(--radius-input);
-  padding: var(--space-3) var(--space-6);
-  min-height: var(--target-min);
-  margin-top: var(--space-4);
-  font-weight: var(--weight-semibold);
-}
-.homeowner-primary-link:hover {
-  background: var(--color-action-hover);
-  color: var(--color-surface);
-}
-.homeowner-next > p {
-  margin-top: var(--space-3);
-}
 @media (max-width: 600px) {
   .homeowner-summary-comparisons {
     grid-template-columns: 1fr;

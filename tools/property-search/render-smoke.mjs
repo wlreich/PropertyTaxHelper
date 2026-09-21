@@ -131,7 +131,7 @@ try {
   assert.match(profile, /Agent: /);
   assert.match(profile, /What is the cap doing for you/);
   assert.match(profile, /View exemption details/);
-  assert.match(profile, /Browse my street/);
+  assert.doesNotMatch(profile, /Browse my street/);
   assert.match(profile, /View 2026 details/);
   assert.match(profile, /\$420,000/);
   assert.match(profile, /Separately valued features/);

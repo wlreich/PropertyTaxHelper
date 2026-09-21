@@ -98,8 +98,3 @@ export function featureHighlights(current: Snapshot | undefined, initial: Snapsh
     return {key:componentKey(c),name:componentName(c),value:currency(now[0].value),detail};
   }).slice(0,4);
 }
-// A starting search, not a geographic or comparable-property claim.
-export function streetSearch(address: string) {
-  const street=address.replace(/^\d+[A-Za-z]?(?:-\d+)?\s+/,"").replace(/\s+(?:UNIT|APT|SUITE|STE|#)\s*.*$/i,"").trim();
-  return street !== address && street.length >= 3 ? street : null;
-}
