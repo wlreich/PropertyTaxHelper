@@ -23,3 +23,10 @@ test('PAR-29 narrow keyboard print and Back retain research and shortlist state'
  await page.evaluate(()=>{window.print=()=>{document.body.dataset.printRequested='yes';};});const print=page.getByRole('button',{name:'Print or save as PDF'});await print.focus();await print.press('Enter');await expect(page.locator('body')).toHaveAttribute('data-print-requested','yes');
  const back=page.getByRole('link',{name:'Back to neighborhood analysis'});await expect(back).toHaveAttribute('href',`/property/100/neighborhood?${query}`);await back.focus();await back.press('Enter');await expect(page).toHaveURL(new RegExp('/property/100/neighborhood\\?'));await expect(page.locator('.activity-shortlist')).toContainText('2');
 });
+
+test('PAR-29 small cohort is count-first and chart ranges have text equivalents',async({page},info)=>{
+ test.skip(info.project.name!=='width-1440','One targeted report semantics check.');
+ await page.goto('/property/9203/neighborhood/print');
+ const metric=page.locator('.nbr-metrics > div').nth(1);await expect(metric.locator('dd').first()).toHaveText('3 matched homes');
+ const ranges=page.getByRole('list',{name:'Market-value ranges'});await expect(ranges.getByRole('listitem')).toHaveCount(8);await expect(ranges).toContainText('homes');await expect(ranges).toContainText('upper boundary excluded');
+});
