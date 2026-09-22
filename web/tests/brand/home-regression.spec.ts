@@ -250,3 +250,17 @@ test('PAR-37 street-first discovery filters vacant lots and preserves residentia
  await page.goto('/?q=736081');
  await expect(page.locator('.result-card')).toHaveAttribute('href',/\/property\/736081\?/);
 });
+
+test('street-first numbered suggestions normalize direction and ordinal variants',async({page})=>{
+ await page.goto('/');
+ const search=page.getByLabel('Property address or property ID');
+ for(const query of ['west 36','w 36th']) {
+  await search.fill(query);
+  const listbox=page.getByRole('listbox',{name:'Matching property addresses'});
+  await expect(listbox).toBeVisible();
+  await expect(listbox.getByRole('option').filter({hasText:'1800 W 36 ST'})).toHaveCount(1);
+  await expect(listbox).not.toContainText('1800 E 36 ST');
+  await expect(listbox).not.toContainText('1800 W 37 ST');
+  await expect(listbox).not.toContainText('1800 W 136 ST');
+ }
+});
