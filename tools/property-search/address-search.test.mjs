@@ -19,13 +19,13 @@ test('address variants and guarded spelling suggestions run through the public R
   for(const q of ['W 36','west 36','w 36th','W 36 ST','West 36th Street']) {
    const r=await suggest(q);
    assert.ok(r.items.some(x=>x.property_id==='990000'),q);
-   assert.ok(!r.items.some(x=>['990001','990003','990004','990023'].includes(x.property_id)),q);
+   assert.ok(!r.items.some(x=>['990001','990003','990004','990023','990024'].includes(x.property_id)),q);
   }
   assert.ok((await suggest('36th Street')).items.some(x=>x.property_id==='990000'));
-  for(const q of ['1800 W 36 S','1800 W 36 ST FIX','1800 W 36 ST FIXTURE C','1800 W 36 ST FIXTURE CITY 787']) {
+  for(const q of ['1800 W 36 S','1800 W 36 ST FIX','1800 W 36 ST FIXTURE C','1800 W 36 ST FIXTURE CITY 787','W 36 S','W 36 ST FIX','W 36 ST 787']) {
    const r=await suggest(q);
    assert.ok(r.items.some(x=>x.property_id==='990000'),q);
-   assert.ok(!r.items.some(x=>['990001','990003','990004'].includes(x.property_id)),q);
+   assert.ok(!r.items.some(x=>['990001','990003','990004','990023','990024'].includes(x.property_id)),q);
   }
   for(const q of ['1800 West 36th Street','1800 W 36 ST','1800 W 36th St.']) {
    const r=await search(q); assert.equal(r.match_mode,'standard');
