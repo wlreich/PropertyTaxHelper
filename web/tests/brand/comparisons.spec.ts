@@ -88,3 +88,30 @@ test('draft limit, cancellation, empty sets and unavailable saved properties',as
  await expect(page.getByText('Some saved selections are unavailable in this release and were left out.',{exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Edit selection (1)',exact:true})).toBeVisible();
 });
+
+
+test('ownership disclosures require a recorded change in both value modes',async({page},info)=>{
+ test.skip(page.viewportSize()!.width===768,'Mixed ownership evidence at desktop and narrow mobile.');
+ await page.goto('/property/100/compare?step=results&selected=120,121,122&targetYear=2027');
+ const reported=page.getByRole('region',{name:'Reported comparison values'});
+ await expect(reported.locator('.comparison-deed')).toHaveCount(1);
+ await expect(reported.locator('.comparison-deed summary')).toHaveText('Ownership change · 2026-06-20');
+ await expect(page.getByText('Ownership-change coverage is unavailable for some selected properties.',{exact:false})).toBeVisible();
+ await reported.locator('.comparison-deed summary').focus();await page.keyboard.press('Enter');
+ await expect(reported.locator('.comparison-deed')).toContainText('Recorded date: 2026-06-20');
+ await expect(reported.locator('.comparison-deed')).toContainText('does not necessarily mean the property was sold');
+ await page.screenshot({path:info.outputPath('mixed-ownership-reported.png'),fullPage:true});
+ await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();
+ const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
+ await expect(adjusted.locator('.comparison-rows .comparison-deed')).toHaveCount(1);
+ await expect(adjusted).toContainText('3 of 3 selected properties');
+ await expect(adjusted).toContainText('$460,000');
+ for(const id of ['120','121','122']){
+  await page.getByRole('button',{name:new RegExp('View breakdown · '+id+' ')}).click();
+  await expect(page.getByRole('dialog').locator('.comparison-deed')).toHaveCount(id==='120'?1:0);
+  await page.keyboard.press('Escape');
+ }
+ await page.screenshot({path:info.outputPath('mixed-ownership-adjusted.png'),fullPage:true});
+ await expect(page.getByRole('button',{name:'Edit selection (3)',exact:true})).toBeVisible();
+ await expect(page.getByText(/No deed clue|Deed evidence unavailable/)).toHaveCount(0);
+});

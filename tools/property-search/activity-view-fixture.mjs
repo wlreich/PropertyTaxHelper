@@ -1,6 +1,6 @@
 // Synthetic activity for browser and export checks. No homeowner source records.
 export function activityViewFixture(id='100',requested=null){
- if(id==='9205'||!['100','9200','9201','9202','9203','9204','9290'].includes(id))return {status:'unavailable'};
+ if(id==='9205'||!['100','120','121','9200','9201','9202','9203','9204','9290'].includes(id))return {status:'unavailable'};
  const year=requested===null?2026:Number(requested);if(![2026,2025].includes(year))return {status:'unavailable'};
  const base=(pid,key,day,extra={})=>({property_id:pid,event_key:key,address:pid+' CYPRESS ST',city:'FIXTURE CITY',property_type:'single_family',deed_date:year+'-'+day,sale_date:null,activity_date:year+'-'+day,filed_date:null,instrument:'SYNTHETIC-'+key,deed_type:'WD',sale_type:null,sale_source:null,status:'deed_change',price:null,price_status:'not_reported',match_method:null,deed_source:'supplemental',...extra});
  const rows=[
