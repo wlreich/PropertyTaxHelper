@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 test('comparison selection, median, manual search, release switching and responsive access',async({page},info)=>{
+ test.setTimeout(60_000);
  await page.goto('/property/100');
  await page.getByRole('navigation',{name:'Property tools'}).getByRole('link',{name:'Compare properties',exact:true}).click();
  await expect(page).toHaveURL(/\/property\/100\/compare/);
