@@ -288,7 +288,7 @@ test("all-parcels mode reaches the RPC and survives navigation", async () => {
 });
 
 test('numbered street queries and unit shorthand pass input validation', () => {
- for(const q of ['W 36 ST','36 Street','West 36th Street','1800 W 36th St','700 Paw Print Dr #2']) assert.equal(parseSearch(q).error,null);
+ for(const q of ['W 36','west 36','w 36th','W 36 ST','36 Street','West 36th Street','1800 W 36th St','700 Paw Print Dr #2']) assert.equal(parseSearch(q).error,null);
 });
 test('possible matches survive response validation and unknown modes fail closed', async () => {
  const r=await searchProperties('Prnit',0,config,async()=>Response.json({...search,match_mode:'possible'}));

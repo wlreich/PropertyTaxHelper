@@ -65,7 +65,9 @@ test('PAR-37 source-backed vacancy regression fails before the fix and passes af
    await db.query('update public.property_search_state set dataset_id=$1',[candidate]);
    await db.exec('set role anon');
    for(const suggest of [true,false]){
-    assert.deepEqual(new Set(ids(await run('high lonesome',suggest))),new Set(['736083','736086']));
+    const highLonesome=ids(await run('high lonesome',suggest));
+    if(suggest) assert.deepEqual(highLonesome,['736083','736086']);
+    else assert.deepEqual(new Set(highLonesome),new Set(['736083','736086']));
     assert.deepEqual(ids(await run('1402 High Lonesome',suggest)),['736086']);
     assert.deepEqual(ids(await run('000736081',suggest)),['736081'],'exact ID remains available');
     assert.equal((await run('VACANTONLY',suggest)).items.length,0);
