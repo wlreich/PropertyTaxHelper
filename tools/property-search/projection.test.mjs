@@ -16,9 +16,10 @@ export async function fixtureDatabase({ beforeAcreageFix = false, beforeParkland
   );
   const migrations = await readdir(directory);
   const parklandMigration = migrations.find(x => x.endsWith("_property_parkland_filter.sql"));
+  const vacantLotsMigration = migrations.find(x => x.endsWith("_residential_discovery_vacant_lots.sql"));
   // Upgrade fixtures stop before the target migration, including all later dependents.
   for (const filename of migrations
-    .filter((x) => !(beforeVacantLots && x.endsWith("_residential_discovery_vacant_lots.sql")) && x.endsWith(".sql") && !(beforeAcreageFix && x >= "20260908183146") && !(beforeParkland && x >= parklandMigration))
+    .filter((x) => x.endsWith(".sql") && !(beforeVacantLots && x >= vacantLotsMigration) && !(beforeAcreageFix && x >= "20260908183146") && !(beforeParkland && x >= parklandMigration))
     .sort())
     await db.exec(await readFile(`${directory}/${filename}`, "utf8"));
   await db.query(
