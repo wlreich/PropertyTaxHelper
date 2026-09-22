@@ -67,7 +67,7 @@ test('tier filtering uses the entire unique pool before sorting and pagination',
  assert.equal(candidatePage(base,[],'all','match',0).total,0);
 });
 
-test('comparison deed clues use prior-year events, explicit coverage, and never infer prices',()=>{
+test('comparison ownership changes use prior-year events, explicit coverage, and never infer prices',()=>{
  const data={year:2025,sources:{appraisal_export_date:'2026-07-18',sales_export_date:'2026-08-27'},rows:[{property_id:'120',deed_date:'2025-06-20',price:650000},{property_id:'120',deed_date:'2026-01-02',price:900000}]};
  const e=comparisonEvidence(data,'120',2026);
  assert.equal(e.deedDate,'2025-06-20');assert.equal(e.start,'2025-01-01');assert.equal(e.end,'2025-12-31');
