@@ -22,6 +22,11 @@ test('address variants and guarded spelling suggestions run through the public R
    assert.ok(!r.items.some(x=>['990001','990003','990004'].includes(x.property_id)),q);
   }
   assert.ok((await suggest('36th Street')).items.some(x=>x.property_id==='990000'));
+  for(const q of ['1800 W 36 S','1800 W 36 ST FIX','1800 W 36 ST FIXTURE C','1800 W 36 ST FIXTURE CITY 787']) {
+   const r=await suggest(q);
+   assert.ok(r.items.some(x=>x.property_id==='990000'),q);
+   assert.ok(!r.items.some(x=>['990001','990003','990004'].includes(x.property_id)),q);
+  }
   for(const q of ['1800 West 36th Street','1800 W 36 ST','1800 W 36th St.']) {
    const r=await search(q); assert.equal(r.match_mode,'standard');
    assert.deepEqual(r.items.map(x=>x.property_id),['990000','990006','990007']);
