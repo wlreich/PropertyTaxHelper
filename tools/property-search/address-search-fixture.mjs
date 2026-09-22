@@ -6,4 +6,9 @@ export async function seedAddressSearch(db) {
        'property_id',$1::text,'address',$2::text,'search_text',public.normalize_property_address($2::text||' FIXTURE CITY 78700')))).*
       from public.property_search_documents d where property_id='100'`, [String(990000+i),address]);
   }
+  await db.query(`insert into public.property_search_documents
+    select (jsonb_populate_record(null::public.property_search_documents,to_jsonb(d)||jsonb_build_object(
+     'property_id','990024','address','1800 E 36 ST','city','WEST LAKE HILLS',
+     'search_text',public.normalize_property_address('1800 E 36 ST WEST LAKE HILLS 78746')))).*
+    from public.property_search_documents d where property_id='100'`);
 }
