@@ -89,6 +89,38 @@ function HomeFooter() {
   );
 }
 
+function AssessmentReleaseContent({
+  heading,
+  exportNote,
+}: {
+  heading: string;
+  exportNote: string | null;
+}) {
+  return (
+    <>
+      <div>
+        <strong>{heading}</strong>
+        <p>
+          Compare preliminary and certified values, see available protest
+          records, and understand what happened across your local neighborhood.
+        </p>
+      </div>
+      {exportNote && <span>{exportNote}</span>}
+    </>
+  );
+}
+
+async function CurrentAssessmentRelease() {
+  const activeRelease = await getActiveRelease();
+  return (
+    <AssessmentReleaseContent
+      {...homepageReleaseCopy(
+        activeRelease.status === "ok" ? activeRelease.data : null,
+      )}
+    />
+  );
+}
+
 export default function Home(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return <Suspense fallback={<PropertyLoading />}><HomeContent {...props} /></Suspense>;
 }
@@ -102,10 +134,6 @@ async function HomeContent({
   const { q, page, error } = parseSearch(
     typeof params.q === "string" ? params.q : "",
     typeof params.page === "string" ? params.page : "0",
-  );
-  const activeRelease = !q ? await getActiveRelease() : null;
-  const releaseCopy = homepageReleaseCopy(
-    activeRelease?.status === "ok" ? activeRelease.data : null,
   );
   const result = q && !error ? await searchProperties(q, page) : null;
 
@@ -362,15 +390,13 @@ async function HomeContent({
               className={styles.seasonCallout}
               aria-label="Current assessment release"
             >
-              <div>
-                <strong>{releaseCopy.heading}</strong>
-                <p>
-                  Compare preliminary and certified values, see available
-                  protest records, and understand what happened across your
-                  local neighborhood.
-                </p>
-              </div>
-              {releaseCopy.exportNote && <span>{releaseCopy.exportNote}</span>}
+              <Suspense
+                fallback={
+                  <AssessmentReleaseContent {...homepageReleaseCopy(null)} />
+                }
+              >
+                <CurrentAssessmentRelease />
+              </Suspense>
             </section>
 
             <section
