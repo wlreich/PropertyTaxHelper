@@ -20,7 +20,7 @@ test('PAR-10 reference sections: authority arithmetic, dynamic features, accessi
   const facts=page.locator('#property-details');
   for(const value of ['3 full + 1 half','1,121 sq ft','2012','R3','T2450','$42,809','$13,261']) await expect(facts).toContainText(value);
   await expect(facts.getByRole('link',{name:'Check the full property record',exact:false})).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/736164/2026');
-  for(const name of ['View exemption details','How this works','View all separately valued features (12)','About construction class and neighborhood']) {
+  for(const name of ['View exemption details','How the estimate works','View all separately valued features (12)','About construction class and neighborhood']) {
     const disclosure=page.locator('summary').filter({hasText:name});
     await disclosure.focus(); await page.keyboard.press('Enter');
     await expect(disclosure.locator('..')).toHaveAttribute('open','');

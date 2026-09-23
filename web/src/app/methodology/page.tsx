@@ -16,6 +16,7 @@ export default function MethodologyPage() {
     <nav aria-label="On this page">
       <a href="#sources">Sources and methodology</a>{" · "}
       <a href="#values">Understanding values</a>{" · "}
+      <a href="#market-adjustments">Market-area estimates</a>{" · "}
       <a href="#comparisons">Comparisons</a>{" · "}
       <a href="#protests">Protest evidence</a>
     </nav>
@@ -57,6 +58,13 @@ export default function MethodologyPage() {
         <li><strong>Tax bill:</strong> the amount charged depends on taxable values, adopted tax rates, and any applicable tax limitations. A change in market value alone does not establish the change in your bill.</li>
       </ul>
       <p>Read the <a href="https://comptroller.texas.gov/taxes/property-tax/valuing-property.php">Texas Comptroller’s explanation of property values and appraisal limits</a> and <a href="https://comptroller.texas.gov/taxes/property-tax/exemptions/">property tax exemptions</a>. ParcelSavvy’s source labels distinguish recorded amounts from estimates.</p>
+    </section>
+    <section id="market-adjustments" aria-labelledby="market-adjustments-heading">
+      <h2 id="market-adjustments-heading">How market-area multiplier estimates work</h2>
+      <p>The Appraisal District applies a market-area multiplier to modeled building costs after adjustments for age and wear. Land is valued separately. ParcelSavvy isolates the estimated effect of changing that multiplier; it does not estimate every reason a property’s value changed.</p>
+      <p>For each year, ParcelSavvy starts with the first eligible preliminary property record and holds its supported building inputs constant. A home is included only when a residential building is verified and those inputs reproduce the recorded preliminary improvement value within $1. Incomplete or unreconciled inputs remain unavailable rather than becoming zero.</p>
+      <p>The neighborhood median summarizes the signed estimates for qualifying homes, including decreases and no change. It is not a whole-neighborhood total, a complete appraisal, tax savings, or proof that an appraisal is wrong. The applicable factor years, schedule links, qualifying count, exclusions and property source date appear with each result.</p>
+      <p>Read the Appraisal District’s <a href="/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8">2026 residential valuation manual, page 8</a> and <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf#page=12">2026 Mass Appraisal Report, page 12</a> for the source method. ParcelSavvy does not reconstruct the sales selected by the district.</p>
     </section>
     <section id="comparisons" aria-labelledby="comparisons-heading">
       <h2 id="comparisons-heading">How comparisons work</h2>

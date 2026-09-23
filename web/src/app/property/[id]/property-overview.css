@@ -132,6 +132,7 @@
 .section-disclosure { margin-top: var(--space-3); font-size: var(--text-small); }
 .section-disclosure summary { cursor: pointer; color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); }
 .section-disclosure p, .section-disclosure ul { margin-top: var(--space-3); }
+.section-disclosure-link { text-decoration: underline; text-underline-offset: var(--space-1); }
 .exemption-breakdowns, .property-feature-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); margin-block: var(--space-4); }
 .exemption-breakdowns h4 { margin-bottom: var(--space-2); }
 .exemption-breakdowns dl > div { display: flex; justify-content: space-between; gap: var(--space-3); }
