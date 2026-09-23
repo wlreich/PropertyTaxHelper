@@ -182,13 +182,47 @@ test('PAR-8 footer methodology destinations, content, Back and accessibility', a
     await expect(page).toHaveURL(/\/methodology$/);
     await expect(page.getByRole('heading', { level:1, name:'Data & methodology' })).toBeVisible();
     for (const id of ['sources','values','comparisons','protests']) await expect(page.locator(`#${id}`)).toBeVisible();
-    await expect(page.getByRole('link',{name:'report a data issue',exact:true})).toHaveAttribute('href','/report-data-issue');
+    for (const heading of ['Sources and methodology','Where the data comes from','How we use it','What the data can and cannot tell you','Independent of the Appraisal District']) {
+      await expect(page.getByRole('heading', { name:heading, exact:true })).toBeVisible();
+    }
+    for (const obsolete of ['Sources and dates','2026 values','2025 history','Supplemental protest evidence','source inventory checked']) {
+      await expect(page.getByText(obsolete, { exact:false })).toHaveCount(0);
+    }
+    await expect(page.getByText(/Last updated/)).toHaveCount(0);
+    await expect(page.getByRole('link',{name:'Review official property records',exact:true})).toHaveAttribute('href','https://traviscad.org/propertysearch/');
+    await expect(page.getByRole('link',{name:'Report a data issue',exact:true}).first()).toHaveAttribute('href','/report-data-issue');
     expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path:info.outputPath('methodology.png'),fullPage:true});
     await page.goBack();
     await expect(page).toHaveURL(path==='/' ? /\/$/ : /q=1104\+Paw/);
   }
+
+  await page.goto('/contact');
+  await page.getByRole('contentinfo').getByRole('link', { name:'Data & methodology', exact:true }).click();
+  await expect(page).toHaveURL(/\/methodology$/);
+
+  const officialRecords = page.getByRole('link', { name:'Review official property records', exact:true });
+  const reportIssue = page.getByRole('link', { name:'Report a data issue', exact:true }).first();
+  for (const width of [320,390,768,1440]) {
+    await page.setViewportSize({ width, height:1000 });
+    const cards = page.locator('#sources > div').first().locator(':scope > div');
+    const [sourceCard, useCard] = await Promise.all([cards.nth(0).boundingBox(), cards.nth(1).boundingBox()]);
+    expect(sourceCard).not.toBeNull();
+    expect(useCard).not.toBeNull();
+    if (width <= 390) expect(useCard!.y).toBeGreaterThan(sourceCard!.y + sourceCard!.height);
+    else expect(Math.abs(useCard!.y - sourceCard!.y)).toBeLessThanOrEqual(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `overflow at ${width}px`).toBe(true);
+    if (width === 390 || width === 1440) await page.screenshot({path:info.outputPath(`methodology-${width}.png`),fullPage:true});
+  }
+  await page.setViewportSize({ width:390, height:1000 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  expect(await page.evaluate(() => Array.from(document.querySelectorAll('body *')).filter(element => element.getBoundingClientRect().right > innerWidth + 1).map(element => ({ tag:element.tagName, className:element.className, right:element.getBoundingClientRect().right }))), 'overflow at 200% zoom').toEqual([]);
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await officialRecords.focus();
+  await expect(officialRecords).toBeFocused();
+  await reportIssue.focus();
+  await expect(reportIssue).toBeFocused();
 });
 
 test('PAR-7 text alignment, responsive footer, enlarged text and tooltip', async ({ page }, info) => {

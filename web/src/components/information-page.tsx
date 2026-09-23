@@ -9,18 +9,20 @@ export function InformationPage({
   title,
   intro,
   updated = "September 16, 2026",
+  wide = false,
   children,
 }: {
   eyebrow: string;
   title: string;
   intro: string;
   updated?: string | null;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <>
       <SiteHeader />
-      <main id="main-content" className={styles.page}>
+      <main id="main-content" className={`${styles.page}${wide ? ` ${styles.widePage}` : ""}`}>
         <Link href="/" className={styles.backLink}>
           ← Back to ParcelSavvy
         </Link>

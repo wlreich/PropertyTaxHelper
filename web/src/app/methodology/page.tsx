@@ -10,25 +10,43 @@ export default function MethodologyPage() {
     eyebrow="Understand the evidence"
     title="Data & methodology"
     intro="Where the numbers come from, what our comparisons mean, and what the records cannot tell us."
-    updated="September 19, 2026"
+    updated={null}
+    wide
   >
     <nav aria-label="On this page">
-      <a href="#sources">Sources and dates</a>{" · "}
+      <a href="#sources">Sources and methodology</a>{" · "}
       <a href="#values">Understanding values</a>{" · "}
       <a href="#comparisons">Comparisons</a>{" · "}
       <a href="#protests">Protest evidence</a>
     </nav>
-    <section id="sources" aria-labelledby="sources-heading">
-      <h2 id="sources-heading">Sources and dates</h2>
-      <p>ParcelSavvy uses public Travis Central Appraisal District (TCAD) appraisal exports, property and improvement records, protest supplements, and published appraisal schedules. We are independent of TCAD. Its official records remain the place to verify your property.</p>
-      <p>The source inventory checked on September 19, 2026 includes:</p>
-      <dl className={styles.contactList}>
-        <div><dt>2026 values</dt><dd>April 2 preliminary export and July 18 certified export. Search results use the certified release. The export timestamp is shown with the results.</dd></div>
-        <div><dt>2025 history</dt><dd>May 8 preliminary, July 3 interim, and July 19 certified exports. The July 3 file is labeled preliminary in the source, but may already contain protest changes, so it is not used as the original proposed value. May 8 values that conflict with a recorded appeal starting value are also excluded from preliminary comparisons.</dd></div>
-        <div><dt>Supplemental protest evidence</dt><dd>2025 and 2026 protest supplements, including public observations dated April 29 and September 13, 2026, plus records without a reported export date. These update protest evidence; they do not replace the July 18 certified values.</dd></div>
-        <div><dt>Comparison inputs</dt><dd>Selected-year property and improvement records, TCAD’s 2026 sale and equity adjustment methodology, and published 2025 and 2026 class/age depreciation schedules. Methods and assumptions are shown beside the comparison grid.</dd></div>
-      </dl>
-      <p>A source date describes that file or observation, not the date a protest happened. It is not a universal “current through” date for the entire site. Coverage varies by property, and a missing year or record is not evidence that nothing happened. Use the source labels on each property for the records available there.</p>
+    <section id="sources" className={styles.methodologySection} aria-labelledby="sources-heading">
+      <h2 id="sources-heading">Sources and methodology</h2>
+      <p>ParcelSavvy brings together public appraisal records to make property values, changes, and comparisons easier to understand. The details below explain where the information comes from, how we use it, and where its limits matter.</p>
+      <div className={styles.methodologyCards}>
+        <div className={styles.methodologyCard}>
+          <h3>Where the data comes from</h3>
+          <p>ParcelSavvy uses public records published by the Travis Central Appraisal District (TCAD), including appraisal exports, property and improvement details, protest-related records, deeds, and published appraisal schedules. We may combine records released at different points in the appraisal cycle to show how a property’s assessment changed over time.</p>
+        </div>
+        <div className={styles.methodologyCard}>
+          <h3>How we use it</h3>
+          <p>We organize the records into a clearer property history and use available characteristics such as location, size, age, land, and improvements to support property and neighborhood comparisons. When TCAD publishes adjustment schedules or methodology, we use them to help explain the district’s reported values.</p>
+        </div>
+      </div>
+      <div className={styles.methodologyLimits}>
+        <h3>What the data can and cannot tell you</h3>
+        <p>Public records may be corrected, supplemented, or released on different schedules. Some results are estimates or observations derived from those records and are labeled accordingly. A value reduction does not necessarily equal tax savings, and a comparison is not a prediction of a protest outcome.</p>
+        <p><strong>Where timing matters, ParcelSavvy shows the applicable source date with the property or result.</strong></p>
+      </div>
+      <div className={styles.officialCallout}>
+        <div>
+          <h3>Independent of the Appraisal District</h3>
+          <p>ParcelSavvy does not create or change official appraisal records. TCAD’s records remain the official source for your property. Verify important details with the Appraisal District and report anything that appears incorrect.</p>
+        </div>
+        <div className={styles.methodologyActions}>
+          <a className={styles.methodologyAction} href={appraisalDistrict.propertySearchUrl} target="_blank" rel="noreferrer" aria-label="Review official property records">Review official property records <span aria-hidden="true">→</span></a>
+          <Link className={styles.methodologyAction} href="/report-data-issue" aria-label="Report a data issue">Report a data issue <span aria-hidden="true">→</span></Link>
+        </div>
+      </div>
     </section>
     <section id="values" aria-labelledby="values-heading">
       <h2 id="values-heading">Market value is not your tax bill</h2>
@@ -56,11 +74,10 @@ export default function MethodologyPage() {
       <p><strong>Recorded evidence</strong> comes from a protest flag, an appraisal review board case, or a supplemental protest record. An agent listed for a year does not prove that agent handled a particular case.</p>
       <p><strong>Inferred observations</strong> are different: neighborhood protest metrics also include properties whose eligible preliminary market value fell before certification, even if a protest record is missing. A reduction can have other causes. Read the population and denominator notes alongside neighborhood metrics; these groups do not establish that protesting caused the difference.</p>
       <p>A property may show a recorded protest with no reduction, or a reduction without a recorded protest. “Looks like a successful protest” indicates a reduction alongside recorded evidence, not proof of causation. Missing evidence is not proof that no protest was filed.</p>
-      <p><strong>A value reduction is not tax savings.</strong> If market value remains above the capped value, a market reduction may leave the current taxable value unchanged. Exemptions and tax rates also affect the bill. ParcelSavvy does not promise savings.</p>
+      <p>If market value remains above the capped value, a market reduction may leave the current taxable value unchanged. Exemptions and tax rates also affect the bill. ParcelSavvy does not promise savings.</p>
     </section>
-    <section aria-labelledby="verify-heading">
-      <h2 id="verify-heading">Verify a record or report a problem</h2>
-      <p><a href={appraisalDistrict.propertySearchUrl} target="_blank" rel="noreferrer">Open TCAD’s official property search ↗</a> for the district’s records. If a value, exemption, address, or source label looks wrong, <Link href="/report-data-issue">report a data issue</Link> with the property ID and the source you are comparing.</p>
+    <section aria-labelledby="availability-heading">
+      <h2 id="availability-heading">Unavailable or conflicting records</h2>
       <p>Unavailable or conflicting values remain unknown rather than becoming zero. Confidential records are excluded from public search, and address searches omit identified parkland. An exact property ID can still find a published park parcel.</p>
     </section>
   </InformationPage>;
