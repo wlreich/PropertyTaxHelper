@@ -35,6 +35,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(aboutContent).toContainText('Source: Appraisal District, 2026 certified, exported Jul 18, 2026.');
  await expect(aboutContent).toContainText('Counts lead when fewer than 10 homes qualify.');
  await expect(aboutContent).toContainText('Missing values and zero denominators are unavailable, not zero percent.');
+ await expect(aboutContent).toContainText('Appraisal reductions are before exemptions.');
  await expect(aboutContent).toContainText('later Appraisal District corrections may not appear here');
  await expect(aboutContent).toContainText('ParcelSavvy is independent of the Appraisal District.');
  await expect(aboutContent).toContainText('2026 certified · Jul 18, 2026:');
