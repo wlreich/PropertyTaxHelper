@@ -30,8 +30,11 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await expect(dialog).toBeVisible();await expect(page.getByRole('dialog')).toHaveCount(1);
   await page.screenshot({path:info.outputPath('par25-year-summary.png')});
   await expect(dialog).toContainText('Certified change from 2024: market Not available');
-  await dialog.locator('summary').filter({hasText:'Source releases'}).click();
+  await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
   for(const value of ['May 8, 2025','2025 interim snapshot','Jul 3, 2025','Jul 19, 2025','Residence homestead','Home & improvements'])await expect(dialog).toContainText(value);
+  await expect(dialog).toContainText('Date and time as supplied:');
+  await expect(dialog).not.toContainText('Export timestamp');
+  await expect(dialog).not.toContainText('Source releases, interim values & exemptions');
   await dialog.locator('summary').filter({hasText:'Dated protest'}).click();await expect(dialog).toContainText('No protest found');
   await dialog.getByRole('button',{name:'Close record'}).focus();await page.keyboard.press('Shift+Tab');
   expect(await dialog.evaluate(n=>n.contains(document.activeElement))).toBe(true);
@@ -63,7 +66,7 @@ test('PAR-25 one, five and six years stay bounded through navigation and dialogs
       await expect(history.locator('.annual-value-row')).toHaveCount(1);await expect(history.locator('[role="status"]')).toContainText('Page 2 of 2');
       await expect(history.getByRole('button',{name:'Older years'})).toBeDisabled();
       const trigger=history.getByRole('button',{name:'View 2021 details'});await trigger.click();
-      const dialog=page.getByRole('dialog');await dialog.locator('summary').filter({hasText:'Source releases'}).click();
+      const dialog=page.getByRole('dialog');await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
       await expect(dialog).toContainText('Apr 2, 2021');await dialog.getByRole('button',{name:'Close record'}).click();
       await expect(trigger).toBeFocused();await expect(history.locator('.annual-value-row')).toHaveCount(1);
       await history.screenshot({path:info.outputPath('par25-older-page.png')});
@@ -85,7 +88,7 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
   await page.goto('/property/999119');const row=page.locator('[data-year="2025"]');
   for(const i of [0,2])await expect(row.locator('td').nth(i)).toContainText('Not available');
   await page.getByRole('button',{name:'View 2025 details'}).click();const dialog=page.getByRole('dialog');
-  await dialog.locator('summary').filter({hasText:'Source releases'}).click();await expect(dialog).toContainText('$1,365,039');
+  await dialog.locator('summary').filter({hasText:'Assessment records'}).click();await expect(dialog).toContainText('$1,365,039');
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});expect(await dialog.evaluate(n=>n.scrollWidth<=n.clientWidth)).toBe(true);
 });
 
