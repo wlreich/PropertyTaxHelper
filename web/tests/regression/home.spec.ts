@@ -26,7 +26,12 @@ test('H01: copy inventory, responsive evidence and read-only suggestion dialog',
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(trigger).toBeFocused();
-  await page.screenshot({ path: info.outputPath('home-full.png'), fullPage: true });
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 960 });
+    await expect(trustSection).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await trustSection.screenshot({ path: info.outputPath(`home-trust-${width}.png`) });
+  }
   expect(errors).toEqual([]);
 });
 
