@@ -126,22 +126,11 @@ export function PropertyOverview({
           </section>
           <AnnualAssessmentHistory />
           <section className="overview-source">
-            <p>Latest assessment shown: {snapshotLabel(current)} record · {current.export_date ? dateLabel(current.export_date) : current.export_time_raw ?? "Export date not reported"}. Later Appraisal District corrections may exist.</p>
-            <details className="homeowner-details"><summary id="about-records-heading">Sources &amp; calculation details</summary>
-            <p>These dated Appraisal District records may not reflect today’s property or protest status. Preliminary values can change; a missing protest entry does not establish whether a protest was filed, and an agent assignment does not confirm who handled the case.</p>
-            <p>
-              Later corrections may appear in Appraisal District’s live records. Export times
-              are shown as supplied without an assumed timezone. Only available,
-              records from comparable releases are shown; missing records are not treated as
-              zero.
-            </p>
-            <p>Feature values are shown as recorded and may not add up to the main improvement total. A later missing record does not erase earlier evidence.</p>
-            <p>Bold changes are at least $25,000, or at least 10% and $10,000. Size alone does not establish an error. Positive emphasis is reserved for a qualified preliminary-to-certified reduction with recorded protest evidence.</p>
-            <a href={source.parcelHref}>
-              Check this property’s Appraisal District record ({p.tax_year}) ↗
-            </a>
+            <p>Latest assessment shown: {snapshotLabel(current)} record · {current.export_date ? dateLabel(current.export_date) : current.export_time_raw ?? "Source date not reported"}.</p>
+            <p className="overview-source-links"><a href={source.parcelHref}>Official Appraisal District property record ({p.tax_year}) ↗</a><Link href={`/report-data-issue?property=${p.property_id}`}>Report a data issue</Link></p>
+            <details className="homeowner-details"><summary id="about-records-heading">About these assessment records</summary>
+            <p>ParcelSavvy uses dated Appraisal District releases. The District may correct records later, and preliminary and final values can differ. Missing or withheld records remain unavailable; ParcelSavvy does not treat them as zero.</p>
             <p><a href={source.downloadHref}>{source.downloadLabel} ↗</a><br />{source.description}</p>
-            <Link href={`/report-data-issue?property=${p.property_id}`}>Something looks wrong? Report a data issue</Link>
             </details>
           </section>
         </div>
