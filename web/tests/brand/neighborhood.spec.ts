@@ -11,6 +11,15 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(page.locator('.neighborhood-story')).toContainText('2026 certified');
  await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2026');
  await expect(page.locator('.neighborhood-results')).toContainText('inferred from proposed-to-certified reductions');
+ const results=page.locator('.neighborhood-results');
+ await expect(results.getByText('Cap comparison uses reduced homes that started above their recorded 2026 preliminary cap, with a valid threshold.',{exact:true})).toHaveCount(1);
+ await expect(results.getByText('Reduction counts use homes with both proposed and certified values.',{exact:true})).toHaveCount(1);
+ await expect(results.getByText('Identified activity includes public protest records and activity inferred from proposed-to-certified reductions. Records may be incomplete; an absent entry does not establish that no protest occurred.',{exact:true})).toHaveCount(1);
+ await expect(results.getByText('Homes with identified protest activity').locator('..').locator('dd')).toHaveAttribute('aria-describedby','identified-protest-activity-note');
+ await expect(results.getByText('Homes receiving a reduction').locator('..').locator('dd')).toHaveAttribute('aria-describedby','reduction-denominator-note');
+ await expect(results.getByText('Reduced below the recorded cap').locator('..').locator('dd')).toHaveAttribute('aria-describedby','cap-denominator-note');
+ await expect(page.getByText('Nearby properties are not automatically comparable.',{exact:true})).toHaveCount(1);
+ await expect(page.getByText(/A deed change can be a sale or another kind of transfer/)).toHaveCount(1);
  const sections=await page.locator('.neighborhood-analysis h2').allTextContents();
  expect(sections.indexOf('Where your home sits')).toBeLessThan(sections.indexOf('One driver of proposed values: the market-area multiplier'));
  expect(sections.indexOf('One driver of proposed values: the market-area multiplier')).toBeLessThan(sections.indexOf('Look across years, without changing views.'));
@@ -21,6 +30,17 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.getByRole('button',{name:'Market value',exact:true}).click();
  const disclosure=page.locator('summary').filter({hasText:'More annual outcomes and comparisons'});await disclosure.focus();await page.keyboard.press('Enter');
  await expect(disclosure).toHaveAttribute('aria-expanded','true');await expect(page.locator('.neighborhood-results').getByRole('table')).toBeVisible();await page.keyboard.press('Enter');await expect(disclosure).toHaveAttribute('aria-expanded','false');
+ const about=page.locator('summary').filter({hasText:'About this analysis'});await about.focus();await page.keyboard.press('Enter');await expect(about).toHaveAttribute('aria-expanded','true');
+ const aboutContent=about.locator('..');
+ await expect(aboutContent).toContainText('Source: Appraisal District, 2026 certified, exported Jul 18, 2026.');
+ await expect(aboutContent).toContainText('Counts lead when fewer than 10 homes qualify.');
+ await expect(aboutContent).toContainText('Missing values and zero denominators are unavailable, not zero percent.');
+ await expect(aboutContent).toContainText('later Appraisal District corrections may not appear here');
+ await expect(aboutContent).toContainText('ParcelSavvy is independent of the Appraisal District.');
+ await expect(aboutContent).toContainText('2026 certified · Jul 18, 2026:');
+ await expect(page.getByText('ParcelSavvy is independent of the Appraisal District. Verify property details and official notices with the district.',{exact:true})).toHaveCount(0);
+ await expect(page.getByText(/This pattern alone does not establish that a value is incorrect/)).toHaveCount(0);
+ await expect(page.getByText(/These groups do not establish what an agent or protest caused/)).toHaveCount(0);
  const compare=page.getByRole('link',{name:'Compare similar homes',exact:true});await expect(compare).toHaveAttribute('href',/\/property\/100\/compare\?release=/);
  await expect(page.getByRole('link',{name:'Read the protest guide →'})).toHaveAttribute('href','/protest-guide?property=100');
  await expect(page.getByRole('link',{name:'Support this project →'})).toHaveAttribute('href','https://donate.stripe.com/6oUaEP7jn6l39fSgXg7AI00');
@@ -42,7 +62,7 @@ test('neighborhood period labels, additional history and missing or small sample
  await page.goto('/property/9202/neighborhood');const more=page.locator('summary').filter({hasText:'More available year pairs'});await more.click();await expect(page.getByRole('heading',{name:'Proposed values: 2024 → 2025'})).toBeVisible();
  await page.goto('/property/9203/neighborhood');await expect(page.locator('.neighborhood-carry .neighborhood-big')).toHaveText('3 of 3 homes back at or above the prior proposal');
  await page.goto('/property/9205/neighborhood');await expect(page.locator('.neighborhood-carry .neighborhood-big')).toHaveText('Not available');await expect(page.locator('.neighborhood-carry')).toContainText('No homes with a qualifying reduction');
- await page.goto('/property/9204/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('Not available');await expect(page.locator('.neighborhood-results')).toContainText('Missing results are not zero reductions');await expect(page.locator('.neighborhood-page')).not.toContainText(/NaN|Infinity|96\.5%|at least 5%/);await expect(page.locator('.neighborhood-story .neighborhood-metrics')).not.toContainText('$0');
+ await page.goto('/property/9204/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('Not available');await expect(page.locator('.neighborhood-results')).toContainText('Missing results are not zero reductions');await expect(page.locator('summary').filter({hasText:'About this analysis'}).locator('..')).toContainText('zero denominators are unavailable, not zero percent');await expect(page.locator('.neighborhood-page')).not.toContainText(/NaN|Infinity|96\.5%|at least 5%/);await expect(page.locator('.neighborhood-story .neighborhood-metrics')).not.toContainText('$0');
 });
 test('neighborhood responsive layout and zoom',async({page},info)=>{
  await page.goto('/property/9200/neighborhood');await expect(page.locator('.neighborhood-carry')).toBeVisible();await expect(page.locator('.neighborhood-carry')).toContainText('at least 10%');await page.evaluate(()=>document.fonts.ready);

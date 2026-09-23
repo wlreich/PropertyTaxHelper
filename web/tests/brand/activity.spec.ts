@@ -6,7 +6,9 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  const section=page.locator('#recent-activity'),rows=section.locator('tbody tr');
  await expect(section.getByRole('heading')).toHaveText('Recent sales & ownership changes');
  await expect(section.locator('.activity-count')).toContainText('6 properties');
+ await expect(section.locator('.activity-count')).toHaveAttribute('aria-describedby','activity-coverage-note activity-record-note');
  await expect(rows).toHaveCount(5);
+ await expect(rows.filter({hasText:'Deed change · Sale unconfirmed'})).toHaveCount(2);
  await expect(section.getByRole('button',{name:'Download realtor shortlist'})).toBeDisabled();
  const first=section.getByRole('checkbox').first();await first.focus();await page.keyboard.press('Space');await expect(first).toBeChecked();
  await section.getByRole('combobox',{name:'Property type',exact:true}).selectOption('land');
@@ -26,6 +28,7 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  await page.evaluate(()=>document.fonts.ready);
  const width=info.project.use.viewport!.width;
  if(width===375||width===1440){
+  if(width===375)await page.setViewportSize({width:390,height:1000});
   const path=info.outputPath('activity-'+width+'.png');const png=await section.screenshot({path});await info.attach('Activity layout',{path,contentType:'image/png'});
   // Bounded synthetic screenshots remain reviewable when artifact downloads are unavailable.
   if(process.env.CI){const b64=png.toString('base64');for(let i=0;i<b64.length;i+=4000)console.log('ACTIVITY_REVIEW_'+width+'_'+i+':'+b64.slice(i,i+4000));}
@@ -34,7 +37,7 @@ test('activity filters, keyboard selection, shortlist and responsive layout',asy
  if(width===375){await page.setViewportSize({width:320,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
  await section.getByLabel('Preparing for').fill('2026');await section.getByRole('button',{name:'Apply dates'}).click();await expect(section.locator('.activity-count')).toContainText('1 property with recorded activity');
  await page.goto('/property/9204/neighborhood');await expect(page.locator('#recent-activity')).toContainText('No matching activity appears');
- await page.goto('/property/9205/neighborhood');await expect(page.locator('#recent-activity')).toContainText('This does not mean no properties sold');
+ await page.goto('/property/9205/neighborhood');const unavailable=page.locator('#recent-activity');await expect(unavailable).toContainText('Property activity is not available for this view. This does not mean no properties sold.');
 });
 
 test('PAR-32 date window survives shortlist, print, comparison views and return',async({page},info)=>{
