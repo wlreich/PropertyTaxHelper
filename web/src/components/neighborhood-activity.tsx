@@ -33,11 +33,11 @@ export function NeighborhoodActivity({data,propertyId,window,error,matches=null,
  return <section id="recent-activity" className="neighborhood-panel neighborhood-activity" aria-labelledby="activity-heading" aria-busy={pending}>
   <h2 id="activity-heading">Recent sales &amp; ownership changes</h2>
   {controls}
-  <p className="activity-coverage">{evidenceCoverage(data)}. Coverage is incomplete; export dates are not transaction dates.</p>
+  <p id="activity-coverage-note" className="activity-coverage">{evidenceCoverage(data)}. Coverage is incomplete; export dates are not transaction dates.</p>
   {(data.missingYears.length>0||data.failedYears.length>0)&&<p>Unavailable years do not mean no properties sold.</p>}
-  <p className="activity-count">{propertyCount.toLocaleString('en-US')} {propertyCount===1?'property':'properties'} with recorded activity in this window · {data.neighborhood??'Neighborhood'} · {activityTypes[type]}</p>
-  <p className="neighborhood-note">Includes records with a deed or sale date in the window; their other dates may fall outside it. Find properties to ask a realtor about. A deed change can be a sale or another kind of transfer.<br/>{rows.every(r=>r.price===null)?'Individual sale prices are not reported for these candidates; ask a realtor to confirm the transaction and price.':'Available prices are reported by Appraisal District. Ask a realtor to verify the sale, price, and circumstances.'}</p>
-  {propertyId?<p className="neighborhood-note">Similarity uses your home’s {releaseLabel??'selected appraisal release'}, separately from the research dates. Tiers describe size, age, class and market-area similarities; they are not verified full Appraisal District scores or evidence of a sale.</p>:<p>Select a property to compare.</p>}
+  <p className="activity-count" aria-describedby="activity-coverage-note activity-record-note">{propertyCount.toLocaleString('en-US')} {propertyCount===1?'property':'properties'} with recorded activity in this window · {data.neighborhood??'Neighborhood'} · {activityTypes[type]}</p>
+  <p id="activity-record-note" className="neighborhood-note">Includes records with a deed or sale date in the window; their other dates may fall outside it. Find properties to ask a realtor about. A deed change can be a sale or another kind of transfer.<br/>{rows.every(r=>r.price===null)?'Individual sale prices are not reported for these candidates; ask a realtor to confirm the transaction and price.':'Available prices are reported by Appraisal District. Ask a realtor to verify the sale, price, and circumstances.'}</p>
+  {propertyId?<p className="neighborhood-note">Similarity uses your home’s {releaseLabel??'selected appraisal release'}, separately from the research dates. Tiers describe size, age, class and market-area similarities; they are not verified full Appraisal District scores.</p>:<p>Select a property to compare.</p>}
   {currentMatches&&currentMatches.year!==comparisonMethod.year&&<p className="neighborhood-note">{matchingQualification(currentMatches.year)}</p>}
   <div className="activity-controls">
 
@@ -60,6 +60,7 @@ export function NeighborhoodActivity({data,propertyId,window,error,matches=null,
   <Link href={`/property/${propertyId}/compare?${evidenceParams(window)}`}>Compare properties using this evidence window</Link>
   {notice&&<p className="neighborhood-note" role="status">{notice}</p>}
   <div className="activity-pagination"><p>Showing {shown.length} of {rows.length} transaction records</p>{rows.length>5&&<button className="activity-link" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'Show first five'+(sort==='closest'?' closest matches':sort==='oldest'?' oldest records':sort==='address'?' by address':' newest records'):'View all '+rows.length+' →'+(sort==='closest'?' · closest matches first':sort==='oldest'?' · oldest first':sort==='address'?' · by address':' · newest first')}</button>}</div>
-  {data.datasets.map(d=><p key={d.year} className="activity-source">{d.year} activity sources: Appraisal District export {dateLabel(d.sources.appraisal_export_date)}; supplemental deed and sale export {dateLabel(d.sources.sales_export_date)}. Nearby properties are not automatically comparable.</p>)}
+  {data.datasets.map(d=><p key={d.year} className="activity-source">{d.year} activity sources: Appraisal District export {dateLabel(d.sources.appraisal_export_date)}; supplemental deed and sale export {dateLabel(d.sources.sales_export_date)}.</p>)}
+  <p className="activity-source">Nearby properties are not automatically comparable.</p>
  </section>;
 }
