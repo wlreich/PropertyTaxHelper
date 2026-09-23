@@ -84,6 +84,7 @@ export function AdjustedComparisons({ subject, selected, release, evidence, insp
   return <section className="comparison-card comparison-adjusted" aria-labelledby="adjusted-comparison-heading">
     <h3 ref={comparisonHeading} className="comparison-sr-only" id="adjusted-comparison-heading" tabIndex={-1}>ParcelSavvy estimated adjusted values</h3>
 
+    <p className="comparison-adjusted-note">Adjusted values estimate how selected properties might compare after accounting for recorded differences. They are ParcelSavvy estimates, not official appraisals or tax savings.</p>
     <ComparisonSummary value={subject.market_value} median={adjusted.median} difference={adjusted.difference} percent={adjusted.percent} adjusted/>
     <p className="comparison-small">Reported median before adjustments: {currency(reported.median)} · {reported.count} properties.</p>
     <p className="comparison-adjusted-note" role="status">{selected.length === 0 ? "Edit the comparison set to choose properties for adjustment." : `${adjusted.count} of ${results.length} selected properties have estimated adjusted values. ${adjusted.excluded ? `${adjusted.excluded} properties without an estimate are excluded from the adjusted median.` : "Both medians use the same properties."}`} Your property is excluded from both medians.{reported.missing > 0 ? ` ${reported.missing} missing reported values are also excluded from the reported median.` : ""}</p>
@@ -95,7 +96,6 @@ export function AdjustedComparisons({ subject, selected, release, evidence, insp
       {rows}
     </div>}
     {selected.length>0&&adjusted.count===0&&<p className="comparison-inline-note">No complete estimates are available for this set. Open a breakdown to review missing inputs, or use Reported values.</p>}
-    <p className="comparison-adjusted-note"><strong>Not an official Appraisal District appraisal.</strong> Estimates follow the Appraisal District’s documented adjustment formulas using reported costs and features, with approximations where inputs are unavailable; the Appraisal District’s actual adjustments may differ. Method {ADJUSTMENT_METHOD_VERSION}.</p>
-    <p className="comparison-adjusted-note">Source: Appraisal District {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version}. Values are not tax savings.</p>
+    <p className="comparison-adjusted-note">Source: Appraisal District {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version} · {ADJUSTMENT_METHOD_VERSION}.</p>
   </section>;
 }

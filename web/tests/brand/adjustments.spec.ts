@@ -6,8 +6,8 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
  await expect(page.getByRole('heading',{name:'Compare similar homes',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
+ await expect(adjusted.getByText('Adjusted values estimate how selected properties might compare after accounting for recorded differences. They are ParcelSavvy estimates, not official appraisals or tax savings.',{exact:true})).toBeVisible();
  await expect(adjusted).toContainText('3 of 3 selected properties have estimated adjusted values');
- await expect(adjusted).toContainText('Not an official Appraisal District appraisal.');
  await expect(adjusted).toContainText('PS-ADJ-2026.3');
  await expect(adjusted).toContainText('$460,000');
  await expect(adjusted).toContainText('Reported median before adjustments: $460,000');
@@ -25,7 +25,14 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await page.keyboard.press('Escape');
  await expect(page.locator('#adjustment-breakdown')).toHaveCount(0);
  await expect(first).toBeFocused();
- await page.keyboard.press('Enter');
+ const adjustedMethod=page.getByText('How adjusted values work',{exact:true});
+ await expect(adjustedMethod).toHaveCount(1);
+ await adjustedMethod.focus();await page.keyboard.press('Enter');
+ await expect(adjustedMethod.locator('..')).toHaveAttribute('open','');
+ await expect(page.getByText(/review every input, signed amount, assumption, formula, and source/)).toBeVisible();
+ await expect(page.getByText('For parcels with multiple improvements, the highest-reported-value improvement supplies living area, class, and depreciation inputs; non-living details and other improvements are adjusted separately.',{exact:false})).toBeVisible();
+ await expect(page.getByText('Each adjustment is truncated to whole dollars after unit rates are rounded to cents.',{exact:false})).toBeVisible();
+ await first.focus();await page.keyboard.press('Enter');
  await expect(page.locator('#adjustment-breakdown')).toBeVisible();
  await page.getByRole('button',{name:'Close breakdown ×',exact:true}).click();
  await expect(first).toBeFocused();
