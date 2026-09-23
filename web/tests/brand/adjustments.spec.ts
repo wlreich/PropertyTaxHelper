@@ -30,6 +30,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await adjustedMethod.focus();await page.keyboard.press('Enter');
  await expect(adjustedMethod.locator('..')).toHaveAttribute('open','');
  await expect(page.getByText(/review every input, signed amount, assumption, formula, and source/)).toBeVisible();
+ await expect(page.getByText('For parcels with multiple improvements, the highest-reported-value improvement supplies living area, class, and depreciation inputs; non-living details and other improvements are adjusted separately.',{exact:false})).toBeVisible();
  await expect(page.getByText('Each adjustment is truncated to whole dollars after unit rates are rounded to cents.',{exact:false})).toBeVisible();
  await first.focus();await page.keyboard.press('Enter');
  await expect(page.locator('#adjustment-breakdown')).toBeVisible();
