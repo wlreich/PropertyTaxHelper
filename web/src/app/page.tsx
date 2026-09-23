@@ -459,15 +459,17 @@ async function HomeContent({
                 <li>
                   <h3>Answers in plain language</h3>
                   <p>
-                    See what changed, how nearby homes compare, and where the
-                    records leave questions.
+                    Understand what changed in your assessment, how the
+                    Appraisal District arrived there, and which details deserve
+                    a closer look.
                   </p>
                 </li>
                 <li>
-                  <h3>You decide what comes next</h3>
+                  <h3>Evidence you can use</h3>
                   <p>
-                    Explore the information at your own pace. No pressure to
-                    protest and no promises of savings.
+                    Review your value history, compare nearby homes, and
+                    identify the questions worth asking before you decide
+                    whether to protest.
                   </p>
                 </li>
               </ul>

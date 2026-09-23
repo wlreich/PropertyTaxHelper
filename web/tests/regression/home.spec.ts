@@ -6,6 +6,17 @@ test('H01: copy inventory, responsive evidence and read-only suggestion dialog',
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  const trustSection = page.locator('#about');
+  await expect(trustSection.getByRole('heading', { level: 2 })).toHaveText('Independent by design. Built for homeowners.');
+  await expect(trustSection.getByRole('heading', { level: 3 })).toHaveText([
+    'Independent perspective',
+    'Answers in plain language',
+    'Evidence you can use',
+  ]);
+  await expect(trustSection).toContainText('Understand what changed in your assessment, how the Appraisal District arrived there, and which details deserve a closer look.');
+  await expect(trustSection).toContainText('Review your value history, compare nearby homes, and identify the questions worth asking before you decide whether to protest.');
+  await expect(trustSection).not.toContainText('You decide what comes next');
+  await expect(trustSection).not.toContainText('Explore the information at your own pace');
   await page.evaluate(() => document.fonts.ready);
   await info.attach('home-copy.txt', { body: await page.locator('body').innerText(), contentType: 'text/plain' });
   const trigger = page.getByRole('button', { name: 'Suggest a feature or metric' });
