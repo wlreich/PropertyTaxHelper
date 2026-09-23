@@ -4,6 +4,10 @@
   padding: var(--space-8) 0 var(--space-16);
 }
 
+.widePage {
+  width: min(calc(100% - 96px), var(--content-width));
+}
+
 .backLink {
   display: inline-block;
   margin-bottom: var(--space-8);
@@ -147,9 +151,87 @@
   background: var(--color-action-hover);
 }
 
+.methodologyCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.methodologyCard {
+  padding: var(--space-8);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.methodologySection {
+  max-width: none !important;
+}
+
+.methodologySection > h2 {
+  margin-bottom: var(--space-3);
+  font-size: clamp(1.75rem, 3vw, var(--text-h1));
+  line-height: var(--line-h1);
+}
+
+.methodologySection > p {
+  max-width: 1080px;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.methodologyCard h3,
+.methodologyLimits h3,
+.officialCallout h3 {
+  margin-top: 0;
+  color: var(--color-brand-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-h3);
+  line-height: var(--line-h3);
+}
+
+.methodologyLimits {
+  margin-top: var(--space-8);
+}
+
+.officialCallout {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-info);
+}
+
+.methodologyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.methodologyAction {
+  display: inline-flex;
+  min-height: var(--target-min);
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-action);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.methodologyAction:hover {
+  color: var(--color-action-hover);
+}
+
 @media (max-width: 700px) {
   .page {
     padding-top: var(--space-6);
+  }
+
+  .widePage {
+    width: min(calc(100% - 32px), var(--content-width));
   }
 
   .header,
@@ -160,6 +242,25 @@
 
   .notice {
     padding: var(--space-4);
+  }
+
+  .methodologyCards {
+    grid-template-columns: 1fr;
+  }
+
+  .methodologyCard,
+  .officialCallout {
+    padding: var(--space-4);
+  }
+
+  .methodologyActions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .methodologySection > p {
+    font-size: 1.125rem;
   }
 
   .primaryAction {
