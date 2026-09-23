@@ -6,7 +6,7 @@ import {useEffect,useMemo,useRef,useState,type FormEvent} from "react";
 import {comparisonMethod,comparisonMatch,matchingQualification,comparisonSummary,matchProperty,candidatePool,candidatePage,tierNames,type ComparisonData,type ComparisonProperty} from "@/lib/property-comparisons";
 import {currency,parseSearch} from "@/lib/property-search";
 import {PropertySectionLink} from "./property-section-link";
-import {AdjustedComparisons} from "./adjusted-comparisons";
+import {AdjustedComparisons,type ComparisonInspection} from "./adjusted-comparisons";
 import {ComparisonFacts,ComparisonSummary,DeedClue} from "./comparison-property-facts";
 import type {ComparisonEvidence} from "@/lib/comparison-evidence";
 import {snapshotLabel} from '@/lib/property-history';
@@ -16,7 +16,14 @@ function Match({subject,property}:{subject:ComparisonProperty;property:Compariso
   const match=comparisonMatch(subject,property);
   return <span className="comparison-tier">{match.state==='ranked'?`Tier ${match.rank}`:match.label}</span>;
 }
-export function ComparisonWorkspace({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery=""}:{data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string}) {
+type WorkspaceProps = {data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string};
+export function ComparisonWorkspace(props: WorkspaceProps) {
+  // The page keys this boundary by subject, release, mode and applied selection.
+  // Only the draft editor remounts on step changes, so Cancel keeps the inspection.
+  const [inspection,setInspection] = useState<ComparisonInspection | null>(null);
+  return <ComparisonWorkspaceContent key={props.initialStep} {...props} inspection={inspection} setInspection={setInspection}/>;
+}
+function ComparisonWorkspaceContent({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery="",inspection,setInspection}:WorkspaceProps & {inspection:ComparisonInspection|null;setInspection:(value:ComparisonInspection|null)=>void}) {
   const router=useRouter();
   const view=initialView;
   const matchingCaveat = matchingQualification(data.release.tax_year);
@@ -75,7 +82,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
     for(const [key,value] of new URLSearchParams(evidenceQuery))params.set(key,value);
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
-  function showResults() {navigate('results',selected.map(p=>p.property_id),view,'edit');}
+  function showResults() {setInspection(null);navigate('results',selected.map(p=>p.property_id),view,'edit');}
   function editSelection() {navigate('select',activeIds);}
   function cancelSelection() {navigate('results',activeIds,view,'edit');}
   function candidateRow(p:ComparisonProperty) {
@@ -136,7 +143,7 @@ export function ComparisonWorkspace({data,initialIds,initialView="reported",init
       </tr>)}</tbody></table></div>:<p className="comparison-inline-note">No homes selected. Use Edit selection to build your comparison.</p>}
       <p className="comparison-small">Source: Appraisal District {snapshotLabel(data.release)} records · Exported {data.release.export_date??'date not reported'}. Differences in reported values alone do not establish overassessment or tax savings.</p>
     </section>}
-    {initialStep==="results"&&view==="adjusted"&&<AdjustedComparisons subject={data.subject} selected={selected} release={data.release} evidence={evidence}/>}
+    {initialStep==="results"&&view==="adjusted"&&<AdjustedComparisons subject={data.subject} selected={selected} release={data.release} evidence={evidence} inspection={inspection} setInspection={setInspection}/>}
     {initialStep==="results"&&<section className="comparison-card comparison-results"><h3>Build evidence around meaningful differences</h3><p>Review recorded size, age, land and additional structures. Estimates help explain differences; they are not official appraisals.</p><Link className="comparison-text-button" href={`/protest-guide?property=${data.subject.property_id}`}>Review protest options →</Link></section>}
     <details className="comparison-card comparison-method"><summary id="comparison-rules-heading">How matching works</summary><p>These comparison rules are based on the Appraisal District’s 2026 Sale and Equity Grids methodology.</p>
       <p>Equity searches use the same market area and state classification. The Appraisal District scores differences in condition, class, living area, and year built. These tiers describe progressively wider search criteria.</p>
