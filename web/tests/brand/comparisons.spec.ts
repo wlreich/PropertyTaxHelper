@@ -104,12 +104,12 @@ test('ownership disclosures require a recorded change in both value modes',async
  await page.screenshot({path:info.outputPath('mixed-ownership-reported.png'),fullPage:true});
  await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
- await expect(adjusted.locator('.comparison-rows .comparison-deed')).toHaveCount(1);
+ await expect(adjusted.locator('.comparison-compact-row .comparison-deed')).toHaveCount(1);
  await expect(adjusted).toContainText('3 of 3 selected properties');
  await expect(adjusted).toContainText('$460,000');
  for(const id of ['120','121','122']){
   await page.getByRole('button',{name:new RegExp('View breakdown · '+id+' ')}).click();
-  await expect(page.getByRole('dialog').locator('.comparison-deed')).toHaveCount(id==='120'?1:0);
+  await expect(page.locator('#adjustment-breakdown').locator('.comparison-deed')).toHaveCount(id==='120'?1:0);
   await page.keyboard.press('Escape');
  }
  await page.screenshot({path:info.outputPath('mixed-ownership-adjusted.png'),fullPage:true});
