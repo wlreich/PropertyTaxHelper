@@ -57,11 +57,16 @@ test("combined property view: dates, missing feature, exemptions, keyboard and r
   await expect(facts.first()).toBeVisible();
   await page.locator("#about-records-heading").focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("These dated Appraisal District records may not reflect today’s property or protest status.", {exact:false})).toBeVisible();
+  await expect(page.getByText("ParcelSavvy uses dated Appraisal District releases.", {exact:false})).toBeVisible();
   const sources = page.locator('.overview-source');
-  await expect(sources.getByRole('link', {name:'Check this property’s Appraisal District record (2026)',exact:false})).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/100/2026');
+  await expect(sources).toContainText('Latest assessment shown: 2026 certified record · Jul 18, 2026');
+  await expect(sources.getByRole('link', {name:'Official Appraisal District property record (2026)',exact:false})).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/100/2026');
+  await expect(sources.getByRole('link', {name:'Report a data issue',exact:true})).toHaveAttribute('href','/report-data-issue?property=100');
   await expect(sources.getByRole('link', {name:'Download source appraisal export (ZIP)',exact:false})).toHaveAttribute('href',/\.zip$/i);
   await expect(sources).toContainText('2026 certified countywide appraisal export');
+  await expect(sources).not.toContainText('Sources & calculation details');
+  await expect(sources).not.toContainText('Later Appraisal District corrections may exist');
+  await expect(sources).not.toContainText('Bold changes are at least');
   const sourceCapture=info.outputPath('source-links.png');await sources.screenshot({path:sourceCapture});await info.attach('Source links',{path:sourceCapture,contentType:'image/png'});
   await page.keyboard.press("Enter");
   await expect(
@@ -214,6 +219,50 @@ test('PAR-44 release callout and support action reflow at focused widths', async
   }
 });
 
+test('PAR-45 assessment-record disclosure stays concise, reachable and readable', async ({page}, info) => {
+  test.skip(info.project.name !== 'width-1440', 'Runs the focused 390/1440 property disclosure matrix once.');
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({width, height:1000});
+    await page.goto('/property/100');
+    const sources=page.locator('.overview-source');
+    await expect(sources).toContainText('Latest assessment shown: 2026 certified record · Jul 18, 2026');
+    const official=sources.getByRole('link',{name:'Official Appraisal District property record (2026)',exact:false});
+    await expect(official).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/100/2026');
+    await expect(sources.getByRole('link',{name:'Report a data issue',exact:true})).toHaveAttribute('href','/report-data-issue?property=100');
+    const disclosure=sources.locator('details');
+    const summary=disclosure.getByText('About these assessment records',{exact:true});
+    await summary.focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).toHaveAttribute('open','');
+    await expect(disclosure).toContainText('The District may correct records later, and preliminary and final values can differ.');
+    await expect(disclosure).toContainText('Missing or withheld records remain unavailable; ParcelSavvy does not treat them as zero.');
+    for(const removed of ['Sources & calculation details','Later corrections may appear','Export times are shown','Bold changes are at least'])await expect(sources).not.toContainText(removed);
+    const headingLevels=await page.locator('main h1, main h2, main h3').evaluateAll(nodes=>nodes.filter(node=>node.getClientRects().length>0).map(node=>Number(node.tagName.slice(1))));
+    for(let i=1;i<headingLevels.length;i++)expect(headingLevels[i]-headingLevels[i-1]).toBeLessThanOrEqual(1);
+    const linkBoxes=await sources.getByRole('link').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect()).map(box=>({left:box.left,right:box.right})));
+    for(const box of linkBoxes){expect(box.left).toBeGreaterThanOrEqual(0);expect(box.right).toBeLessThanOrEqual(width+1);}
+    expect((await new AxeBuilder({page}).include('.overview-source').analyze()).violations).toEqual([]);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await sources.screenshot({path:info.outputPath(`par45-record-disclosure-${width}.png`)});
+    await summary.focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure).not.toHaveAttribute('open','');
+  }
+
+  await page.setViewportSize({width:390,height:1000});
+  await page.goto('/property/100');
+  await page.locator('#about-records-heading').click();
+  await page.evaluate(()=>{document.documentElement.style.zoom='2';});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:info.outputPath('par45-record-disclosure-390-200-percent.png'),fullPage:true});
+
+  await page.evaluate(()=>{document.documentElement.style.zoom='';});
+  await page.goto('/property/999118');
+  await expect(page.locator('.overview-source')).toContainText('2027 preliminary record');
+  await expect(page.locator('[data-year="2027"]')).toContainText('Preliminary only');
+  await page.locator('#about-records-heading').click();
+  await expect(page.locator('.overview-source')).toContainText('Missing or withheld records remain unavailable');
+});
 
 test('PAR-9 approved Figma reference property 736164', async ({page},info) => {
   await page.goto('/property/736164');
