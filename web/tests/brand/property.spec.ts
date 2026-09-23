@@ -190,7 +190,8 @@ test('PAR-44 release callout and support action reflow at focused widths', async
     await page.setViewportSize({width, height:1000});
     await page.goto('/');
     const callout=page.getByLabel('Current assessment release');
-    await expect(callout).toContainText('Latest published assessment records are available');
+    await expect(callout).toContainText('2026 certified assessment records are available');
+    await expect(callout).toContainText('Appraisal District export: 07/18/2026 16:27');
     await expect(callout).not.toContainText('2026 certified results are available');
     await expect(callout).not.toContainText('Certified value export: Jul 18, 2026');
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

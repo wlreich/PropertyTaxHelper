@@ -19,6 +19,7 @@ export type Release = {
   roll_stage: string;
   export_time_raw: string | null;
 };
+export const HOME_RELEASE_REQUEST_TIMEOUT_MS = 1_500;
 export type SearchResults = Release & {
   match_mode: "standard" | "possible";
   items: (SearchItem & { is_parkland: boolean })[];
@@ -185,6 +186,61 @@ export async function searchProperties(
       limit_reached: v.limit_reached,
     },
   };
+}
+export async function getActiveRelease(
+  config: Config = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
+  },
+  fetchRequest: typeof fetch = fetch,
+  timeoutMs = HOME_RELEASE_REQUEST_TIMEOUT_MS,
+): Promise<Result<Release>> {
+  const url = config.SUPABASE_URL?.trim();
+  const key = config.SUPABASE_PUBLISHABLE_KEY?.trim();
+  if (!url || !key?.startsWith("sb_publishable_"))
+    return { status: "unavailable" };
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(),
+    Math.min(Math.max(timeoutMs, 1), HOME_RELEASE_REQUEST_TIMEOUT_MS),
+  );
+  try {
+    const client = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      global: {
+        fetch: (input, init) =>
+          fetchRequest(input, { ...init, cache: "no-store" }),
+      },
+    });
+    const { data, error } = await client
+      .from("property_releases")
+      .select("tax_year,roll_stage,export_time_raw")
+      .limit(1)
+      .abortSignal(controller.signal);
+    if (
+      error ||
+      !Array.isArray(data) ||
+      data.length !== 1 ||
+      !release(data[0])
+    )
+      return { status: "unavailable" };
+    return {
+      status: "ok",
+      data: {
+        tax_year: data[0].tax_year,
+        roll_stage: data[0].roll_stage,
+        export_time_raw: data[0].export_time_raw,
+      },
+    };
+  } catch {
+    return { status: "unavailable" };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 export async function searchPropertySuggestions(
   q: string,

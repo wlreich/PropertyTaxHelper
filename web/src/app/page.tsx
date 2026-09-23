@@ -10,6 +10,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { TermDefinition } from "@/components/term-definition";
 import styles from "./search-page.module.css";
 import { appraisalDistrict } from "@/lib/appraisal-district";
+import { homepageReleaseCopy } from "@/lib/home-release";
 import {
   parseSearch,
   currency,
@@ -18,7 +19,7 @@ import {
   resultsUrl,
   noResultsGuidance,
 } from "@/lib/property-search";
-import { searchProperties } from "@/lib/supabase/properties";
+import { getActiveRelease, searchProperties } from "@/lib/supabase/properties";
 
 export const maxDuration = 30;
 
@@ -101,6 +102,10 @@ async function HomeContent({
   const { q, page, error } = parseSearch(
     typeof params.q === "string" ? params.q : "",
     typeof params.page === "string" ? params.page : "0",
+  );
+  const activeRelease = !q ? await getActiveRelease() : null;
+  const releaseCopy = homepageReleaseCopy(
+    activeRelease?.status === "ok" ? activeRelease.data : null,
   );
   const result = q && !error ? await searchProperties(q, page) : null;
 
@@ -358,13 +363,14 @@ async function HomeContent({
               aria-label="Current assessment release"
             >
               <div>
-                <strong>Latest published assessment records are available</strong>
+                <strong>{releaseCopy.heading}</strong>
                 <p>
                   Compare preliminary and certified values, see available
                   protest records, and understand what happened across your
                   local neighborhood.
                 </p>
               </div>
+              {releaseCopy.exportNote && <span>{releaseCopy.exportNote}</span>}
             </section>
 
             <section

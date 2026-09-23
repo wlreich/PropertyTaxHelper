@@ -8,7 +8,8 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toHaveCount(0);
   expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
   const releaseCallout=page.getByLabel('Current assessment release');
-  await expect(releaseCallout).toContainText('Latest published assessment records are available');
+  await expect(releaseCallout).toContainText('2026 certified assessment records are available');
+  await expect(releaseCallout).toContainText('Appraisal District export: 07/18/2026 16:27');
   await expect(releaseCallout).not.toContainText('2026 certified results are available');
   await expect(releaseCallout).not.toContainText('Certified value export: Jul 18, 2026');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();

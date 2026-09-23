@@ -4,7 +4,9 @@ import {
   searchProperties,
   searchPropertySuggestions,
   getProperty,
+  getActiveRelease,
 } from "../src/lib/supabase/properties.ts";
+import { homepageReleaseCopy } from "../src/lib/home-release.ts";
 import {
   parseSearch,
   normalizeAddress,
@@ -97,6 +99,37 @@ test("valid search uses a read-only, uncached RPC and returns a strict field lis
   });
   assert.equal(r.status, "ok");
   assert.deepEqual(r.data.items, [{ ...item, is_parkland: false }]);
+});
+test("active release metadata is bounded, strict, and has a durable fast fallback", async () => {
+  const r = await getActiveRelease(config, async (input, init) => {
+    const u = new URL(input);
+    assert.equal(u.pathname, "/rest/v1/property_releases");
+    assert.equal(u.searchParams.get("select"), "tax_year,roll_stage,export_time_raw");
+    assert.equal(u.searchParams.get("limit"), "1");
+    assert.equal(init.method, "GET");
+    assert.equal(init.cache, "no-store");
+    assert.ok(init.signal instanceof AbortSignal);
+    return Response.json([{...release, private_field:"must not pass through"}]);
+  });
+  assert.deepEqual(r,{status:"ok",data:release});
+  assert.deepEqual(homepageReleaseCopy(r.data),{
+    heading:"2026 certified assessment records are available",
+    exportNote:"Appraisal District export: 07/18/2026 16:27",
+  });
+  assert.deepEqual(homepageReleaseCopy(null),{
+    heading:"Latest published assessment records are available",
+    exportNote:null,
+  });
+
+  for (const payload of [[],[release,release],[{...release,tax_year:"2026"}]])
+    assert.equal((await getActiveRelease(config,async()=>Response.json(payload))).status,"unavailable");
+
+  const started=Date.now();
+  const unavailable=await getActiveRelease(config,(_input,init)=>new Promise((_resolve,reject)=>{
+    init.signal.addEventListener("abort",()=>reject(init.signal.reason),{once:true});
+  }),25);
+  assert.deepEqual(unavailable,{status:"unavailable"});
+  assert.ok(Date.now()-started<500);
 });
 test("typeahead uses the capped suggestion RPC and returns only display fields", async () => {
   const r = await searchPropertySuggestions(

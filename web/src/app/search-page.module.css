@@ -319,10 +319,12 @@
 }
 
 .seasonCallout > span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--color-action);
   font-size: var(--text-label);
   font-weight: var(--weight-semibold);
-  white-space: nowrap;
+  text-align: right;
 }
 
 .questions h2,
@@ -829,7 +831,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .seasonCallout > span { white-space: normal; }
+  .seasonCallout > span { text-align: left; }
   .hero > *, .questions > *, .support > *, .trust > * { min-width: 0; overflow-wrap: anywhere; }
 
   .questions {
