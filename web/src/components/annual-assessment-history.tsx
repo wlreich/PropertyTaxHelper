@@ -23,11 +23,11 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
     <p className="overview-note">Certified change from {row.year - 1}: market {changeLabel(row.annual)}; assessed {changeLabel(row.annualAssessed)}.</p>
     <p><strong>Protest record: {protestStatus(row, protestsUnavailable)}</strong>{row.within && row.within.dollars < 0 && !row.protests.some(p => p.recorded) && ' · A reduction does not establish that a protest was filed.'}</p>
     <p className="overview-note">The records do not establish what caused a reduction or who handled the case.</p>
-    <details className="annual-record-disclosure"><summary>Source releases, interim values &amp; exemptions</summary>
+    <details className="annual-record-disclosure"><summary>Assessment records &amp; exemptions</summary>
     <div className="annual-source-list">
       {row.sources.map(source => <section key={source.id} aria-label={`${source.label} · ${source.date}`}>
         <h3>{source.label}</h3>
-        <p className="overview-note">Source date: {source.date}{source.rawDate && <span> · Export timestamp: {source.rawDate}</span>}</p>
+        <p className="overview-note">Source date: {source.date}{source.rawDate && <span> · Date and time as supplied: {source.rawDate}</span>}</p>
         <dl className="annual-source-values">
           {[['Market value', source.market], ['After cap', source.assessed], ['Land', source.land], ['Home & improvements', source.improvements]].map(([name, value]) =>
             <div key={String(name)}><dt>{name}</dt><dd>{amount(value as number | null)}</dd></div>)}
@@ -46,7 +46,7 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
       {p.agent ? ` · ${p.agent}` : ' · Agent not identified'}
       {p.codes.length > 0 && ` · Appraisal District status: ${p.codes.join(', ')}`}
     </li>)}</ul> : !protestsUnavailable && <p>No protest found in available records for {row.year}.</p>}
-    <p className="overview-note">A missing entry does not rule out a protest. Agent assignments do not confirm who handled a case. Status codes are shown as supplied; their definitions have not been verified. These are dated records, not tax bills.</p>
+    <p className="overview-note">A missing entry does not rule out a protest. Agent assignments do not confirm who handled a case. Status codes are shown as supplied; their definitions have not been verified. The values shown here are not tax bills.</p>
     </details>
   </div>;
 }
