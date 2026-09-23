@@ -91,6 +91,8 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
 
 test('PAR-25 partial outages preserve known protest records without inferring unchecked status',async({page})=>{
  await page.goto('/property/999120');const history=page.locator('.annual-history');
+ await expect(page.getByRole('heading',{name:'Assessment history is temporarily unavailable'})).toBeVisible();
+ await expect(page.getByRole('main')).not.toContainText('Snapshot comparisons are temporarily unavailable');
  await expect(history).toContainText('Some assessment history is temporarily unavailable');
  await expect(history.locator('.annual-value-row')).toHaveCount(1);
  await expect(history.locator('[data-year="2025"]')).toContainText('Recorded');

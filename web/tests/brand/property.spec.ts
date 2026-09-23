@@ -163,19 +163,55 @@ test('PAR-9 current assessment leads the page and context actions preserve the p
   if(info.project.use.viewport!.width===1440) expect((await hero.boundingBox())!.width).toBe(1200);
   await expect(page.locator('.overview-context').getByRole('link',{name:'Compare similar properties',exact:true})).toHaveAttribute('href','/property/100/compare');
   await expect(page.getByRole('link',{name:'Explore my neighborhood',exact:true})).toHaveAttribute('href','/property/100/neighborhood');
-  await expect(page.getByRole('link',{name:'Make a donation',exact:false})).toHaveAttribute('href','/support');
+  const supportLink=page.locator('.overview-context').getByRole('link',{name:'Support ParcelSavvy',exact:false});
+  await expect(supportLink).toHaveAttribute('href','/support');
+  await expect(page.locator('.overview-source')).not.toContainText('comparable snapshots');
+  await expect(page.getByRole('main')).not.toContainText('preliminary snapshot');
   await expect(page.locator('.overview-source')).toContainText('Jul 18, 2026');
   await expect(page.getByRole('main')).not.toContainText('TCAD');
   const heroCapture=info.outputPath('current-assessment.png');
   await hero.screenshot({path:heroCapture});
   await info.attach('Current assessment hero',{path:heroCapture,contentType:'image/png'});
-  const contextCapture=info.outputPath('context-and-donation.png');
+  const contextCapture=info.outputPath('context-and-support.png');
   await page.locator('.overview-context').screenshot({path:contextCapture});
-  await info.attach('Context and donation',{path:contextCapture,contentType:'image/png'});
+  await info.attach('Context and support',{path:contextCapture,contentType:'image/png'});
+  await supportLink.click();
+  await expect(page).toHaveURL(/\/support$/);
+  await expect(page.getByText('Contributions are not charitable donations and are not tax-deductible.')).toBeVisible();
   // This parcel has no detailed history and a US-format export timestamp.
   await page.goto('/property/505?q=Parkdemo&page=1&all=1');
   await expect(page.getByRole('link',{name:'Back to search results'})).toHaveAttribute('href','/?q=Parkdemo&page=1&all=1');
   await expect(page.locator('.current-assessment')).toContainText('Comparable preliminary value unavailable');
+});
+
+test('PAR-44 release callout and support action reflow at focused widths', async ({page}, info) => {
+  test.skip(info.project.name !== 'width-1440', 'Runs the focused 390/1440 visual matrix once.');
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({width, height:1000});
+    await page.goto('/');
+    const callout=page.getByLabel('Current assessment release');
+    await expect(callout).toContainText('2026 certified assessment records are available');
+    await expect(callout).toContainText('Appraisal District export: 07/18/2026 16:27');
+    await expect(callout).not.toContainText('2026 certified results are available');
+    await expect(callout).not.toContainText('Certified value export: Jul 18, 2026');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await callout.screenshot({path:info.outputPath(`release-callout-${width}.png`)});
+
+    await page.goto('/property/100');
+    const support=page.locator('.overview-donation');
+    await expect(support.getByRole('link',{name:'Support ParcelSavvy',exact:false})).toHaveAttribute('href','/support');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await support.screenshot({path:info.outputPath(`property-support-${width}.png`)});
+  }
+
+  await page.setViewportSize({width:390,height:1000});
+  for (const route of ['/', '/property/100']) {
+    await page.goto(route);
+    await expect(route==='/'?page.getByLabel('Current assessment release'):page.locator('.overview-donation')).toBeVisible();
+    await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:info.outputPath(`${route==='/'?'home':'property'}-390-200-percent.png`),fullPage:true});
+  }
 });
 
 

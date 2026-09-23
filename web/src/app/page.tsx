@@ -10,6 +10,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { TermDefinition } from "@/components/term-definition";
 import styles from "./search-page.module.css";
 import { appraisalDistrict } from "@/lib/appraisal-district";
+import { homepageReleaseCopy } from "@/lib/home-release";
 import {
   parseSearch,
   currency,
@@ -18,7 +19,7 @@ import {
   resultsUrl,
   noResultsGuidance,
 } from "@/lib/property-search";
-import { searchProperties } from "@/lib/supabase/properties";
+import { getActiveRelease, searchProperties } from "@/lib/supabase/properties";
 
 export const maxDuration = 30;
 
@@ -85,6 +86,38 @@ function HomeFooter() {
         </span>
       </div>
     </footer>
+  );
+}
+
+function AssessmentReleaseContent({
+  heading,
+  exportNote,
+}: {
+  heading: string;
+  exportNote: string | null;
+}) {
+  return (
+    <>
+      <div>
+        <strong>{heading}</strong>
+        <p>
+          Compare preliminary and certified values, see available protest
+          records, and understand what happened across your local neighborhood.
+        </p>
+      </div>
+      {exportNote && <span>{exportNote}</span>}
+    </>
+  );
+}
+
+async function CurrentAssessmentRelease() {
+  const activeRelease = await getActiveRelease();
+  return (
+    <AssessmentReleaseContent
+      {...homepageReleaseCopy(
+        activeRelease.status === "ok" ? activeRelease.data : null,
+      )}
+    />
   );
 }
 
@@ -357,15 +390,13 @@ async function HomeContent({
               className={styles.seasonCallout}
               aria-label="Current assessment release"
             >
-              <div>
-                <strong>2026 certified results are available</strong>
-                <p>
-                  Compare preliminary and certified values, see available
-                  protest records, and understand what happened across your
-                  local neighborhood.
-                </p>
-              </div>
-              <span>Certified value export: Jul 18, 2026</span>
+              <Suspense
+                fallback={
+                  <AssessmentReleaseContent {...homepageReleaseCopy(null)} />
+                }
+              >
+                <CurrentAssessmentRelease />
+              </Suspense>
             </section>
 
             <section

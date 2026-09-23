@@ -38,7 +38,7 @@ export default async function ReportDataIssuePage({
           <li>the property address or TCAD property ID;</li>
           <li>the ParcelSavvy page address where you saw the issue;</li>
           <li>what appears incorrect and what you expected instead;</li>
-          <li>the appraisal year or snapshot, if relevant; and</li>
+          <li>the appraisal year or source date, if relevant; and</li>
           <li>a link or non-sensitive excerpt from an official source, if available.</li>
         </ul>
         <p>

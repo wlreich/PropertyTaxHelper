@@ -7,6 +7,11 @@ test('brand, search, definitions and accessible responsive layout', async ({page
   await expect(page.getByRole('heading',{level:1})).toHaveText('What happened to your property appraisal?');
   await expect(page.getByRole('heading',{name:'Your records become a story you can use.'})).toHaveCount(0);
   expect(await page.locator('#questions').evaluate(el=>el.previousElementSibling?.getAttribute('aria-label'))).toBe('Current assessment release');
+  const releaseCallout=page.getByLabel('Current assessment release');
+  await expect(releaseCallout).toContainText('2026 certified assessment records are available');
+  await expect(releaseCallout).toContainText('Appraisal District export: 07/18/2026 16:27');
+  await expect(releaseCallout).not.toContainText('2026 certified results are available');
+  await expect(releaseCallout).not.toContainText('Certified value export: Jul 18, 2026');
   await expect(page.getByRole('heading',{name:'Useful property information shouldn’t disappear behind a paywall.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Independent by design. Built for homeowners.'})).toBeVisible();
   await expect(page.locator('aside').getByRole('link',{name:'Support ParcelSavvy'})).toHaveAttribute('href','/support');
@@ -90,6 +95,8 @@ test('launch information pages are complete, linked and accessible',async({page}
   }
   await page.goto('/report-data-issue?property=100');
   await expect(page.getByRole('link',{name:'Start a data-issue email'})).toHaveAttribute('href',/property\+100|property%20100/);
+  await expect(page.getByRole('main')).toContainText('the appraisal year or source date, if relevant');
+  await expect(page.getByRole('main')).not.toContainText('the appraisal year or snapshot');
   await page.goto('/support');
   await expect(page.getByRole('link',{name:'Continue to secure checkout'})).toHaveAttribute('href','https://donate.stripe.com/6oUaEP7jn6l39fSgXg7AI00');
 });

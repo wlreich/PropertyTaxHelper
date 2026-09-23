@@ -21,7 +21,7 @@ export function ValueDrivers({ current, previous, adjustment, propertyId }: { cu
     <details className="section-disclosure"><summary>How this works</summary>
       <p>The Appraisal District adjusts modeled improvement values using a neighborhood multiplier. Land is valued separately. The estimate reuses the validated preliminary model, changing only the multiplier and holding other inputs fixed; it is not the total annual improvement-value change or tax savings.</p>
       {summary?.previous && summary.current && <p>Multiplier comparison: {summary.previous.year} to {summary.current.year}, neighborhood {data?.neighborhood}.</p>}
-      {home?.preliminary_date && <p>Inputs from the {home.preliminary_date} preliminary snapshot. The columns above use the current {current.tax_year} {current.roll_stage} record{previous ? ` against ${previous.tax_year} certified values` : ''}.</p>}
+      {home?.preliminary_date && <p>Inputs from the {home.preliminary_date} preliminary record. The columns above use the current {current.tax_year} {current.roll_stage} record{previous ? ` against ${previous.tax_year} certified values` : ''}.</p>}
       {home && home.status !== 'ok' && <p>Estimate unavailable: {adjustmentReasons[home.status]}.</p>}
       <p>Building costs, depreciation, property details and overrides can also change recorded value. Components must reconcile to the preliminary improvement value before an estimate is shown. Missing years are not treated as unchanged multipliers.</p>
       {data && <ul>{data.history.map(h => <li key={h.year}><a href={`/data/tcad/${h.filename}#page=${h.page}`}>{h.year} Appraisal District multiplier schedule, p. {h.page}</a></li>)}</ul>}

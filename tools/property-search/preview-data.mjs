@@ -43,6 +43,10 @@ createServer((req,res)=>{
    await db.exec('reset role');
    await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[authenticated?actor:'',authenticated?JSON.stringify({session_id:session}):'{}']);
    await db.exec(authenticated?'set role authenticated':'set role anon');
+   if(url.pathname==='/rest/v1/property_releases') {
+    const releases=(await db.query('select tax_year,roll_stage,export_time_raw from public.property_releases order by published_at desc limit 1')).rows;
+    return send(200,releases);
+   }
    const call=async(sql,values=[]) => (await db.query(sql,values)).rows[0].result;
    let result;
    const route=url.pathname.replace('/rest/v1/rpc/','');
