@@ -48,7 +48,7 @@ export default function ProtestGuidePage() {
         {protestGuide.introduction.map(block => <GuideMarkdown key={block.id} markdown={block.markdown} label="Introduction" />)}
       </section>} closing={<section className="guide-print-panel" aria-labelledby="take-guide"><h2 id="take-guide">Take the guide with you.</h2><p>The complete guide, examples and preparation checklist. Formatted for reading offline and printing without the website navigation.</p><DownloadGuide /><p>Free access. No account required.</p></section>} /></div>
       <section className="guide-about" aria-labelledby="guide-disclaimer"><div className="guide-container"><h2 id="guide-disclaimer">{protestGuide.disclaimer.title}</h2>{protestGuide.disclaimer.blocks.map(block => <GuideMarkdown key={block.id} markdown={block.markdown} label="About this guide" />)}
-        <nav aria-label="Official guide sources"><a href="https://comptroller.texas.gov/taxes/property-tax/">Texas Comptroller</a><a href="https://traviscad.org/protests">Travis Appraisal District</a><a href="https://traviscad.org/arbhearings">Travis ARB</a></nav>
+        <nav aria-label="Official guide sources"><a href="https://comptroller.texas.gov/taxes/property-tax/">Texas Comptroller</a><a href="https://traviscad.org/protests">Travis Central Appraisal District</a><a href="https://traviscad.org/arbhearings">Travis ARB</a></nav>
         <p className="guide-reviewed">Content version {protestGuide.contentVersion} · Reviewed {date}</p>
       </div></section>
     </main>

@@ -18,7 +18,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await expect(panel).toContainText('2 matched homes');
  await panel.getByText('How the estimate works',{exact:true}).click();
  await expect(panel).toContainText('2 of 5 included homes');
- await expect(panel).toContainText('2 homes: preliminary snapshot unavailable');
+ await expect(panel).toContainText('2 homes: preliminary record unavailable');
  await expect(panel.getByRole('link',{name:'Appraisal District schedule, page 26'})).toHaveAttribute('href','/data/tcad/2026_Market_Adjustments.pdf#page=26');
  for(const name of ['2025_Market_Adjustments.pdf','2026_Market_Adjustments.pdf','2026_Residential_Valuation_Manual.pdf']){
   const response=await page.request.get(`/data/tcad/${name}`);

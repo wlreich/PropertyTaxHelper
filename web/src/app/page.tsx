@@ -358,14 +358,13 @@ async function HomeContent({
               aria-label="Current assessment release"
             >
               <div>
-                <strong>2026 certified results are available</strong>
+                <strong>Latest published assessment records are available</strong>
                 <p>
                   Compare preliminary and certified values, see available
                   protest records, and understand what happened across your
                   local neighborhood.
                 </p>
               </div>
-              <span>Certified value export: Jul 18, 2026</span>
             </section>
 
             <section

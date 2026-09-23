@@ -98,7 +98,7 @@ export function PropertyOverview({
             <div className="notice">
               <h2>
                 {historyUnavailable
-                  ? "Snapshot comparisons are temporarily unavailable"
+                  ? "Assessment history is temporarily unavailable"
                   : "More comparison data needed"}
               </h2>
               <p>
@@ -121,7 +121,7 @@ export function PropertyOverview({
             <div className="overview-donation">
               <h3>A clearer picture, for every homeowner.</h3>
               <p>If this helped you understand your assessment, help keep ParcelSavvy free.</p>
-              <Link href="/support">Make a donation ↗</Link>
+              <Link href="/support">Support ParcelSavvy ↗</Link>
             </div>
           </section>
           <AnnualAssessmentHistory />
@@ -132,7 +132,7 @@ export function PropertyOverview({
             <p>
               Later corrections may appear in Appraisal District’s live records. Export times
               are shown as supplied without an assumed timezone. Only available,
-              comparable snapshots are shown; missing records are not treated as
+              records from comparable releases are shown; missing records are not treated as
               zero.
             </p>
             <p>Feature values are shown as recorded and may not add up to the main improvement total. A later missing record does not erase earlier evidence.</p>

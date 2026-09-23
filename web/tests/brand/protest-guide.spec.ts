@@ -13,6 +13,9 @@ test('approved initial states, shared shell, hearing content, responsive layout 
   await page.goto('/protest-guide');
   await expect(page.getByRole('heading', {name:'Your appraisal deserves a second look.'})).toBeVisible();
   await expect(page.locator('.brand-logo')).toBeVisible();
+  const officialSources=page.getByRole('navigation',{name:'Official guide sources'});
+  await expect(officialSources.getByRole('link',{name:'Travis Central Appraisal District',exact:true})).toHaveAttribute('href','https://traviscad.org/protests');
+  await expect(officialSources.getByRole('link',{name:'Travis Appraisal District',exact:true})).toHaveCount(0);
   const desktop = page.viewportSize()!.width > 900;
   const hearing = page.locator('#arb-hearing-toggle');
   await expect(hearing).toHaveAttribute('aria-expanded', String(desktop));
