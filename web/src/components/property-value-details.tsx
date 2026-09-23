@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { currency } from '@/lib/property-search';
 import { annualChange, propertyFeatures, valueDriverSummary } from '@/lib/property-sections';
 import { constructionClasses, propertyFacts, type Snapshot } from '@/lib/property-history';
@@ -12,19 +13,21 @@ export function ValueDrivers({ current, previous, adjustment, propertyId }: { cu
   return <section className="overview-section property-section" id="market-adjustment" aria-labelledby="market-adjustment-heading">
     <h2 id="market-adjustment-heading" tabIndex={-1}>Why did your value change?</h2>
     <p>{valueDriverSummary(current, previous)}</p>
+    <p>ParcelSavvy estimates how the Appraisal District’s market-area multiplier affected the building value. Land and other valuation changes are separate.</p>
     <dl className="value-driver-columns">
       <div><dt>Land</dt><dd className="driver-value">{currency(current.land_value)}</dd><dd>{annualChange(previous?.land_value, current.land_value, previous?.tax_year)}</dd></div>
       <div><dt>Home &amp; improvements</dt><dd className="driver-value">{currency(current.improvement_value)}</dd><dd>{annualChange(previous?.improvement_value, current.improvement_value, previous?.tax_year)}</dd></div>
-      <div><dt>Neighborhood multiplier</dt><dd className="driver-value">{summary?.previous && summary.current ? `${factor(summary.previous.factor)} → ${factor(summary.current.factor)}` : 'Not available'}</dd><dd>Estimated effect: {effect === null || effect === undefined ? 'Not available' : `${effect > 0 ? '+' : effect < 0 ? '−' : ''}${currency(Math.abs(effect))}`}</dd></div>
+      <div><dt>Market-area multiplier</dt><dd className="driver-value">{summary?.previous && summary.current ? `${factor(summary.previous.factor)} → ${factor(summary.current.factor)}` : 'Not available'}</dd><dd>Estimated effect: {effect === null || effect === undefined ? 'Not available' : `${effect > 0 ? '+' : effect < 0 ? '−' : ''}${currency(Math.abs(effect))}`}</dd></div>
     </dl>
-    <p className="overview-note">The multiplier estimate changes only that factor, holding other inputs fixed. It can differ from the actual increase.</p>
-    <details className="section-disclosure"><summary>How this works</summary>
-      <p>The Appraisal District adjusts modeled improvement values using a neighborhood multiplier. Land is valued separately. The estimate reuses the validated preliminary model, changing only the multiplier and holding other inputs fixed; it is not the total annual improvement-value change or tax savings.</p>
-      {summary?.previous && summary.current && <p>Multiplier comparison: {summary.previous.year} to {summary.current.year}, neighborhood {data?.neighborhood}.</p>}
+    <p className="overview-note">{summary?.previous && summary.current ? `${summary.previous.year} ${factor(summary.previous.factor)} → ${summary.current.year} ${factor(summary.current.factor)}. ` : ''}The estimate changes only the multiplier while holding the same year’s supported building inputs constant. It is not a complete appraisal, tax saving, or proof the appraisal is wrong.</p>
+    <details className="section-disclosure"><summary>How the estimate works</summary>
+      <p>ParcelSavvy uses the first eligible preliminary record for {data?.year ?? current.tax_year}. It holds the supported current-year building inputs constant and changes only the multiplier. A home qualifies only when a residential building is verified and those inputs reproduce the recorded preliminary improvement value within $1. Incomplete or unreconciled inputs are excluded rather than treated as zero.</p>
+      {summary?.previous && summary.current && <p>Multiplier comparison: {summary.previous.year} {factor(summary.previous.factor)} to {summary.current.year} {factor(summary.current.factor)}, market area {data?.neighborhood}.</p>}
       {home?.preliminary_date && <p>Inputs from the {home.preliminary_date} preliminary record. The columns above use the current {current.tax_year} {current.roll_stage} record{previous ? ` against ${previous.tax_year} certified values` : ''}.</p>}
       {home && home.status !== 'ok' && <p>Estimate unavailable: {adjustmentReasons[home.status]}.</p>}
-      <p>Building costs, depreciation, property details and overrides can also change recorded value. Components must reconcile to the preliminary improvement value before an estimate is shown. Missing years are not treated as unchanged multipliers.</p>
+      <p>Building costs, depreciation, property details, land and overrides can also change the recorded value. Those changes can offset or add to the multiplier effect. Missing years are not treated as unchanged multipliers.</p>
       {data && <ul>{data.history.map(h => <li key={h.year}><a href={`/data/tcad/${h.filename}#page=${h.page}`}>{h.year} Appraisal District multiplier schedule, p. {h.page}</a></li>)}</ul>}
+      <p><Link className="section-disclosure-link" href="/methodology#market-adjustments">Read Data &amp; methodology</Link> for source, eligibility and limitation details.</p>
     </details>
   </section>;
 }
