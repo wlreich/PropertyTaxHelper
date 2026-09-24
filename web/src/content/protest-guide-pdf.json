@@ -1,9 +1,9 @@
 {
-  "contentVersion": "2026-09-19.1",
+  "contentVersion": "2026-09-19.2",
   "reviewedDate": "2026-09-19",
-  "sha256": "0bfa04bcc500a74615c2fa41009adc587d852db16718bd65d98e0935eb7bd59e",
+  "sha256": "da543a05c7cefe464b6e030617a760df2a024316cc2e2fc32b92db53c1265772",
   "inputs": {
-    "src/content/protest-guide.json": "671a3d1373bf10f49f8b57f657f52ee2d679e413c94ad1b697a89f2c10e96fb9",
+    "src/content/protest-guide.json": "fa5a376b94474f17c72f8ac173f6531704afa548a7e802df08e7a70f9e5f53eb",
     "scripts/generate-guide-pdf.py": "93e40be02ae0b03fed28a43da6dc4f7a138e397df98596c684cbcb313fdca287",
     "scripts/guide-pdf-requirements.txt": "e30ad60e05bfd76a9ba49c39c7313bc0908bbb222e5a31c36ad5130695bc5c21",
     "fonts/inter-latin-wght-normal.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",

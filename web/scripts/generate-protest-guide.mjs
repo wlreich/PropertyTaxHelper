@@ -54,7 +54,7 @@ export function generateGuide(source) {
   calendar.markdown = calendarBody.join('\n\n');
   const guide = {
     schemaVersion: 1,
-    contentVersion: '2026-09-19.1',
+    contentVersion: '2026-09-19.2',
     reviewedDate: '2026-09-19',
     title: intro[0].slice(2),
     sourceSha256: createHash('sha256').update(source).digest('hex'),
