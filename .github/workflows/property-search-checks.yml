@@ -27,27 +27,37 @@ jobs:
             web/package-lock.json
             tools/property-search/package-lock.json
       - name: Install website dependencies
+        id: install_web
         run: npm ci --prefix web
       - name: Check website and brand
+        id: web_verify
         run: npm run verify --prefix web
       - name: Verify complete printable guide content
+        id: guide_content
         run: |
           python3 -m pip install pypdf==6.10.0 markdown-it-py==4.2.0
           python3 web/scripts/test-guide-pdf.py
       - name: Install local database test engine
+        id: install_fixture
         run: npm ci --prefix tools/property-search --ignore-scripts
       - name: Test annual market-factor parser
+        id: market_factors
         run: python3 -m unittest discover -s tools/market-adjustments -p "test_*.py"
       - name: Test publication and access controls
+        id: database
         run: npm test --prefix tools/property-search
       - name: Exercise rendered pages with synthetic data
+        id: rendered_pages
         run: node tools/property-search/render-smoke.mjs
       - name: Install Chromium for accessibility and responsive checks
+        id: install_browser
         working-directory: web
         run: npx playwright install --with-deps chromium
       - name: Check keyboard access, accessibility and responsive layouts
+        id: site_browser
         run: npm run test:brand-browser --prefix web
       - name: Check protest guide and PDF delivery
+        id: guide_browser
         run: npm run test:guide-browser --prefix web
       - name: Preserve browser reports and review screenshots
         if: always()
@@ -60,3 +70,29 @@ jobs:
             web/guide-report
             web/guide-test-results
           if-no-files-found: ignore
+      - name: Summarize validation areas
+        if: always()
+        env:
+          VALIDATION_STEPS: ${{ toJSON(steps) }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os
+          areas = {
+              "install_web": "Website dependencies",
+              "web_verify": "Website build, types, unit tests and brand",
+              "guide_content": "Printable guide content",
+              "install_fixture": "Synthetic database setup",
+              "market_factors": "Market-factor parser",
+              "database": "Database, search and access controls",
+              "rendered_pages": "Rendered-page smoke",
+              "install_browser": "Browser installation",
+              "site_browser": "Site-wide browser checks, including comparisons and printed reports",
+              "guide_browser": "Protest Guide browser and PDF delivery",
+          }
+          steps = json.loads(os.environ["VALIDATION_STEPS"])
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("## Website validation\n\nThe legacy workflow name is Property search checks; it validates the whole site.\n\n| Area | Result |\n| --- | --- |\n")
+              for key, label in areas.items():
+                  summary.write(f"| {label} | {steps.get(key, {}).get('outcome', 'not run')} |\n")
+              summary.write("\nFor browser failures, open the failed step for the named spec and download the parcelsavvy-brand-review artifact. A comparison or print failure does not establish a search regression.\n")
+          PYTHON
