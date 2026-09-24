@@ -26,11 +26,11 @@ export default function MethodologyPage() {
       <div className={styles.methodologyCards}>
         <div className={styles.methodologyCard}>
           <h3>Where the data comes from</h3>
-          <p>ParcelSavvy uses public records published by the Travis Central Appraisal District (TCAD), including appraisal exports, property and improvement details, protest-related records, deeds, and published appraisal schedules. We may combine records released at different points in the appraisal cycle to show how a property’s assessment changed over time.</p>
+          <p>ParcelSavvy uses public records published by the Travis Central Appraisal District (TCAD), including appraisal exports, property, building and feature details, protest-related records, deeds, and published appraisal schedules. We may combine records released at different points in the appraisal cycle to show how a property’s assessment changed over time.</p>
         </div>
         <div className={styles.methodologyCard}>
           <h3>How we use it</h3>
-          <p>We organize the records into a clearer property history and use available characteristics such as location, size, age, land, and improvements to support property and neighborhood comparisons. When TCAD publishes adjustment schedules or methodology, we use them to help explain the district’s reported values.</p>
+          <p>We organize the records into a clearer property history and use available characteristics such as location, size, age, land, buildings, and features to support property and neighborhood comparisons. When TCAD publishes adjustment schedules or methodology, we use them to help explain the district’s reported values.</p>
         </div>
       </div>
       <div className={styles.methodologyLimits}>
@@ -61,19 +61,20 @@ export default function MethodologyPage() {
     </section>
     <section id="market-adjustments" aria-labelledby="market-adjustments-heading">
       <h2 id="market-adjustments-heading">How market-area multiplier estimates work</h2>
-      <p>The Appraisal District applies a market-area multiplier to modeled building costs after adjustments for age and wear. Land is valued separately. ParcelSavvy isolates the estimated effect of changing that multiplier; it does not estimate every reason a property’s value changed.</p>
-      <p>For each year, ParcelSavvy starts with the first eligible preliminary property record and holds its supported building inputs constant. A home is included only when a residential building is verified and those inputs reproduce the recorded preliminary improvement value within $1. Incomplete or unreconciled inputs remain unavailable rather than becoming zero.</p>
+      <p>The district estimates the cost of rebuilding your home and features such as garages and pools, then reduces that estimate for age and condition. This is the starting cost estimate before the neighborhood factor is applied. Land is valued separately.</p>
+      <p>The Appraisal District applies a neighborhood factor to its estimated rebuilding cost after accounting for age and condition. In simplified form, the cost model is land value + neighborhood factor × rebuilding cost after depreciation. ParcelSavvy estimates how changing that factor affects modeled value while keeping the other inputs the same; it does not estimate every reason a property’s value changed.</p>
+      <p>For each year, ParcelSavvy starts with the first eligible preliminary property record and holds its supported rebuilding-cost inputs constant. A home is included only when a residential building is verified and those inputs reproduce the Appraisal District&apos;s recorded preliminary value of the home and other features within $1. That recorded non-land value is not a rebuilding-cost estimate. Incomplete or unreconciled inputs remain unavailable rather than becoming zero.</p>
       <p>The neighborhood median summarizes the signed estimates for qualifying homes, including decreases and no change. It is not a whole-neighborhood total, a complete appraisal, tax savings, or proof that an appraisal is wrong. The applicable factor years, schedule links, qualifying count, exclusions and property source date appear with each result.</p>
       <p>Read the Appraisal District’s <a href="/data/tcad/2026_Residential_Valuation_Manual.pdf#page=8">2026 residential valuation manual, page 8</a> and <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf#page=12">2026 Mass Appraisal Report, page 12</a> for the source method. ParcelSavvy does not reconstruct the sales selected by the district.</p>
     </section>
     <section id="comparisons" aria-labelledby="comparisons-heading">
       <h2 id="comparisons-heading">How comparisons work</h2>
       <p>Open a property and choose <strong>Compare properties</strong>. Suggested properties use the recorded market area, construction class, living area, and age. A nearby property is not automatically a suitable comparable. Our matching is a partial check, not TCAD’s complete selection process.</p>
-      <p>Equity comparisons start with the comparable’s market assessment, then adjust for differences in land, living area, construction class, depreciation, non-living features, additional improvements, and neighborhood multiplier. Each adjustment makes the comparable more like the subject property. The median summarizes the selected properties with complete adjustment inputs; it is not an appraisal or a guaranteed protest outcome.</p>
+      <p>Equity comparisons start with the comparable’s market assessment, then adjust for differences in land, living area, construction class, depreciation, non-living features, additional buildings and features, and neighborhood multiplier. Rebuilding cost before depreciation is the starting construction estimate. Rebuilding cost after depreciation accounts for age and condition; percent good is the percentage of estimated rebuilding cost that remains. Each adjustment makes the comparable more like the subject property. The median summarizes the selected properties with complete adjustment inputs; it is not an appraisal or a guaranteed protest outcome.</p>
       <p>Improvement IDs determine how structures and features are grouped. A pool or porch attached to an additional improvement stays with that improvement; it is not counted again with the primary building.</p>
       <div className={styles.notice}>
         <h3>What is estimated or unavailable?</h3>
-        <p>Physical condition is not reported in these inputs. Depreciation estimates use the selected year’s published class/age schedule and assume average condition. Actual year built substitutes when depreciation year is missing. Unsupported years or missing required costs remain unknown. Equal neighborhood factors may be assumed within the same recorded market area when a factor cannot be recovered.</p>
+        <p>Physical condition is not reported in these inputs. Depreciation estimates use the selected year’s published class/age schedule and assume average condition. Actual year built substitutes when depreciation year is missing. Unsupported years or missing required rebuilding-cost inputs remain unknown. Equal neighborhood factors may be assumed within the same recorded market area when a factor cannot be recovered.</p>
         <p>These assumptions are visible in the grid’s details. Sales calculations require an explicitly supplied adjusted sale price; we do not turn assessments into sale prices or guess missing sale adjustments. A different market-area multiplier adjustment has formula tests, but has not been reconciled against an observed nonzero worked example.</p>
       </div>
     </section>

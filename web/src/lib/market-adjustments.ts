@@ -2,11 +2,11 @@ export const adjustmentReasons = {
   ok: 'Estimate available',
   missing_preliminary: 'Preliminary record unavailable',
   unmatched_neighborhood: 'Same neighborhood not verified in both years',
-  missing_prior_home: 'Prior-year residential improvement not verified',
+  missing_prior_home: 'Prior-year residential building not verified',
   missing_factor: 'Annual factor pair unavailable',
-  unverified_components: 'Improvement components incomplete',
+  unverified_components: 'Rebuilding-cost components incomplete',
   unverified_buildings: 'Single residential building not verified',
-  does_not_reconcile: 'Components do not reproduce the preliminary improvement value',
+  does_not_reconcile: 'Components do not reproduce the preliminary value of the home and other features',
 };
 export type AdjustmentHome = {property_id:string;status:keyof typeof adjustmentReasons;effect:number|null;actual_change:number|null;preliminary_date:string|null;prior_preliminary_date:string|null};
 export type MarketAdjustment = {year:number;neighborhood:string;history:{year:number;factor:number;page:number;filename:string;sha256:string}[];homes:AdjustmentHome[]};

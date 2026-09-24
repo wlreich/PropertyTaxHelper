@@ -31,7 +31,7 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await page.screenshot({path:info.outputPath('par25-year-summary.png')});
   await expect(dialog).toContainText('Certified change from 2024: market Not available');
   await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
-  for(const value of ['May 8, 2025','2025 interim snapshot','Jul 3, 2025','Jul 19, 2025','Residence homestead','Home & improvements'])await expect(dialog).toContainText(value);
+  for(const value of ['May 8, 2025','2025 interim snapshot','Jul 3, 2025','Jul 19, 2025','Residence homestead','Home & other features'])await expect(dialog).toContainText(value);
   await expect(dialog).toContainText('Date and time as supplied:');
   await expect(dialog).not.toContainText('Export timestamp');
   await expect(dialog).not.toContainText('Source releases, interim values & exemptions');

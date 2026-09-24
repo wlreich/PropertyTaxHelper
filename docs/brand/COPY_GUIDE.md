@@ -14,6 +14,16 @@ Use sentence case, active voice, specific nouns and short labels. Define technic
 
 Distinguish market value, appraised value, assessed value and the actual tax bill. Verify jurisdiction-specific definitions before adding legal guidance. Do not call a difference an error or label a property overassessed unless supporting evidence warrants it. Never infer trends from one imported year. Do not call land segments homes, bedrooms or living area. Preserve units, including decimal acreage, and distinguish unknown from zero.
 
+### Rebuilding-cost and recorded-value language
+
+Use **estimated rebuilding cost before depreciation** for replacement cost new (RCN). A compact input label may use **rebuilding cost per sq ft** when the nearby explanation makes the before-depreciation basis clear. Use **estimated rebuilding cost, adjusted for age and condition** or the compact label **rebuilding cost after depreciation** for RCNLD. Define **percent good** in detail as the percentage of estimated rebuilding cost remaining after depreciation.
+
+Use **value of home and other features** or compact **Home & other features** for the Appraisal District's recorded `improvement_value` and other already-multiplied non-land totals. Make clear that this is a recorded non-land value, not a rebuilding-cost estimate. Use **home, other buildings, and features** for physical improvements when context permits. Preserve statutory **new improvements**, official titles and quotations, and internal identifiers where their technical or legal meaning matters.
+
+On first useful mention, explain what the district estimates, whose estimate it is, whether depreciation and the neighborhood factor have been applied, and that land is separate. Do not imply an insurance estimate, builder quote, site inspection, or known physical condition. Keep average-condition assumptions and substitutions for missing effective age visible where they affect the estimate.
+
+Describe a market-area multiplier as a factor applied to estimated rebuilding cost after accounting for age and condition. State the dollar contribution with its supported source year and correct direction; do not hard-code a positive sign, year, factor, or amount. Keep a concise visible qualification that land and other inputs are separate and the isolated factor effect is not necessarily the total annual change or tax savings. A percentage change in the factor is not the same percentage change in rebuilding cost, home prices, or the entire appraisal.
+
 ## Use / avoid
 
 | Use | Avoid |

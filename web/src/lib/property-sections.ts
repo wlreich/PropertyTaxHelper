@@ -52,10 +52,10 @@ export function annualChange(before: number | null | undefined, after: number | 
 export function valueDriverSummary(current: Snapshot, previous?: Snapshot) {
   const land = comparison(previous?.land_value, current.land_value);
   const home = comparison(previous?.improvement_value, current.improvement_value);
-  if (!land || !home) return 'Land and improvement values are shown separately. A complete prior-year comparison is not available.';
-  if (land.dollars === 0 && home.dollars !== 0) return `Land stayed the same. The recorded ${home.dollars > 0 ? 'increase' : 'decrease'} was in your home and improvements.`;
-  if (land.dollars === 0 && home.dollars === 0) return 'Land and improvement values stayed the same.';
-  return `Land value ${land.dollars > 0 ? 'rose' : 'fell'}. Home and improvement values ${home.dollars === 0 ? 'stayed the same' : home.dollars > 0 ? 'rose' : 'fell'}.`;
+  if (!land || !home) return 'Land and the value of the home and other features are shown separately. A complete prior-year comparison is not available.';
+  if (land.dollars === 0 && home.dollars !== 0) return `Land stayed the same. The recorded ${home.dollars > 0 ? 'increase' : 'decrease'} was in the value of your home and other features.`;
+  if (land.dollars === 0 && home.dollars === 0) return 'Land and the value of the home and other features stayed the same.';
+  return `Land value ${land.dollars > 0 ? 'rose' : 'fell'}. The value of the home and other features ${home.dollars === 0 ? 'stayed the same' : home.dollars > 0 ? 'rose' : 'fell'}.`;
 }
 
 export function propertyFeatures(current: Snapshot, previous?: Snapshot) {
