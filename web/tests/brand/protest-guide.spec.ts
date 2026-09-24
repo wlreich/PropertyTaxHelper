@@ -79,6 +79,9 @@ test('stable chapter fragments open on reload and back/forward; multiple chapter
 
 test('all chapters, examples, sources and tables survive; 200% text and zoom reflow', async ({page}, info) => {
   await page.goto('/protest-guide');
+  // Wait for the client-initialized disclosure state before sending a key.
+  // Native details are already usable before hydration; that state is tested separately.
+  await expect(page.locator('#tax-system-toggle')).toHaveAttribute('aria-expanded', 'false');
   for (const chapter of protestGuide.chapters) {
     const button = page.locator(`#${chapter.anchor}-toggle`);
     if (await button.getAttribute('aria-expanded') !== 'true') {

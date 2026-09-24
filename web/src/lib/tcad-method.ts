@@ -11,7 +11,7 @@ export function estimatePercentGood(classCode:string|null, taxYear:number, effec
   // Tables specify each age followed by a terminal 999 band; never extrapolate.
   const row=schedule.rows.find(([upperAge])=>upperAge>=age);
   if(!row) return null;
-  return {value:row[1],year,age,basis:`Appraisal District ${taxYear} published ${classCode} schedule ${schedule.pricingId}, condition A (average). Condition is assumed because it is not reported in these inputs; other depreciation adjustments are not included.${hasEffectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}`};
+  return {value:row[1],year,age,basis:`Appraisal District ${taxYear} published ${classCode} schedule ${schedule.pricingId}, condition A (average). Percent good is the percentage of estimated rebuilding cost remaining after depreciation. Condition is assumed because it is not reported in these inputs; other depreciation adjustments are not included.${hasEffectiveYear?"":" Actual year built substitutes for an unreported depreciation year."}`};
 }
 export type TcadInputs={market:number|null;land:number|null;area:number|null;classCode:string|null;
  mainRcn:number|null;mainRcnld:number|null;percentGood:number|null;nonliving:number|null;secondary:number|null;mass:number|null};

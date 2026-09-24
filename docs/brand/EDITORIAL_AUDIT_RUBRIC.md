@@ -28,6 +28,16 @@ Copy should earn its place by answering one of those questions. Remove text that
 - Define an unavoidable appraisal term before explaining why it matters.
 - Do not surface internal import, RPC, migration, reconciliation, or publication mechanics.
 
+### Distinguish rebuilding costs from recorded non-land values
+
+- Use **estimated rebuilding cost before depreciation** for RCN and **estimated rebuilding cost, adjusted for age and condition** or **rebuilding cost after depreciation** for RCNLD.
+- Define **percent good** as the percentage of estimated rebuilding cost remaining after depreciation when the term is necessary in detailed methodology.
+- Label the recorded `improvement_value` or another already-multiplied non-land total **value of home and other features** or **Home & other features**. State that it is the district's recorded non-land value, not a rebuilding-cost estimate.
+- Use **home, other buildings, and features** for physical improvements where ordinary wording is accurate. Preserve statutory **new improvements**, official source wording and internal identifiers.
+- At first useful mention, identify the district as the estimator, explain whether depreciation and the neighborhood factor have been applied, and state that land is separate.
+- Do not imply that the estimate is a builder or insurance quote, that ParcelSavvy inspected condition, or that a factor increase is the same percentage increase in rebuilding cost, home prices, or the entire appraisal.
+- Keep the factor's supported dollar contribution visible with the correct year and direction. State nearby that land and other input changes are separate and that the isolated contribution is not necessarily the total annual change or tax savings.
+
 ### Use “Appraisal District” deliberately
 
 - Use **Appraisal District** in general interface explanations after the jurisdiction is already clear.
@@ -118,4 +128,3 @@ Do not bulk-edit:
 - Run focused unit/browser coverage for affected routes plus lint, build, type, and brand checks.
 - Check 375, 768, and 1440 px when text length, wrapping, navigation, a panel, or a printable layout changes.
 - Do not regenerate a PDF or run unrelated end-to-end suites for a wording-only change unless the PDF shares that content.
-

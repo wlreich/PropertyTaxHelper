@@ -68,7 +68,7 @@ export function AssessmentSequence({current,initial,previous}:Omit<Context,"enti
         {s.market_value !== null && <span className="homeowner-bar-track" aria-hidden="true"><span style={{width:`${maximum>0 ? ((s.market_value ?? 0)/maximum)*100 : 0}%`}} /></span>}
       </li>)}
     </ol>
-    {landUnchanged && <p className="overview-note">Land value stayed the same from the first proposed value to this {current?.roll_stage} record.{improvementDrop ? " The market-value decrease came from the improvement value." : ""}</p>}
+    {landUnchanged && <p className="overview-note">Land value stayed the same from the first proposed value to this {current?.roll_stage} record.{improvementDrop ? " The market-value decrease came from the recorded value of the home and other features." : ""}</p>}
   </>;
 }
 export function FeatureHighlights({current,initial,previous}:Omit<Context,"entity"|"evidence">) {

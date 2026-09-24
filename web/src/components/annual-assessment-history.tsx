@@ -17,7 +17,7 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
       <thead><tr><th scope="col">Value</th><th scope="col">Proposed</th><th scope="col">Certified</th></tr></thead>
       <tbody>{([
         ['Market', row.preliminary, row.market], ['After cap', row.preliminaryAssessed, row.assessed],
-        ['Land', row.preliminaryLand, row.certifiedLand], ['Home & improvements', row.preliminaryImprovements, row.certifiedImprovements],
+        ['Land', row.preliminaryLand, row.certifiedLand], ['Home & other features', row.preliminaryImprovements, row.certifiedImprovements],
       ] as const).map(([label, before, after]) => <tr key={label}><th scope="row">{label}</th><td>{amount(before)}</td><td>{amount(after)}</td></tr>)}</tbody>
     </table>
     <p className="overview-note">Certified change from {row.year - 1}: market {changeLabel(row.annual)}; assessed {changeLabel(row.annualAssessed)}.</p>
@@ -29,7 +29,7 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
         <h3>{source.label}</h3>
         <p className="overview-note">Source date: {source.date}{source.rawDate && <span> · Date and time as supplied: {source.rawDate}</span>}</p>
         <dl className="annual-source-values">
-          {[['Market value', source.market], ['After cap', source.assessed], ['Land', source.land], ['Home & improvements', source.improvements]].map(([name, value]) =>
+          {[['Market value', source.market], ['After cap', source.assessed], ['Land', source.land], ['Home & other features', source.improvements]].map(([name, value]) =>
             <div key={String(name)}><dt>{name}</dt><dd>{amount(value as number | null)}</dd></div>)}
         </dl>
         <p>Recorded exemptions: {source.exemptions.length ? source.exemptions.join(' · ') : 'Not reported'}</p>

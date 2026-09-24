@@ -46,6 +46,9 @@ const note = (text: string, title?: string, emphasis = false): ReportBlock => ({
 const table = (title: string, columns: string[], rows: ReportRow[]): ReportBlock => ({kind:'table',title,columns,rows});
 const row = (id: string, ...cells: string[]): ReportRow => ({id,cells});
 const difference = (subject: number | null, group: number | null) => subject === null || group === null || group <= 0 ? 'Unavailable' : `${signed(subject-group)} (${pct((subject/group-1)*100)})`;
+const factorEffectSentence = (effect: number, year: number) => effect === 0
+  ? `Using ${year} costs, keeping the previous year's factor would give the same modeled market value.`
+  : `Using ${year} costs, this is approximately ${money(Math.abs(effect))} ${effect > 0 ? 'higher' : 'lower'} than keeping the previous year's factor.`;
 
 export function buildPropertyReport(input: PropertyReportInput) {
   const {property:p, reportDate} = input;
@@ -101,8 +104,8 @@ export function buildPropertyReport(input: PropertyReportInput) {
     id:`feature-${id}-${i}`,cells:[`${componentName(c)} · ${c.code}${c.class_code ? ` · Class ${c.class_code}` : ''}`,number(c.area,['250','251','252'].includes(c.code) ? ' rooms' : ['1ST','2ND','3RD','041','011','095'].includes(c.code) ? ' sq ft' : ['522','604','447'].includes(c.code) ? ' units' : ' (source units)'),c.year_built === null ? 'Unavailable' : String(c.year_built),money(c.value)],
     note:[c.description && componentName(c).toLowerCase()!==c.description.toLowerCase() ? `Recorded description: ${c.description}` : '',story.previous ? featureChanges.find(f=>f.key===componentKey(c) && !f.change.startsWith('Newly listed'))?.change : ''].filter(Boolean).join(' ') || undefined,
   })))));
-  if (!current.components.length) inventory.push(note('Detailed improvement and feature records are unavailable. Missing records do not prove a structure or feature is absent.'));
-  inventory.push(note('Feature values can be nested within improvement totals; do not add them to the total again. Condition and effective-age fields are not supplied by the current public record contract. Multiple structures remain grouped by their recorded improvement IDs. Newly listed records do not prove new construction.'));
+  if (!current.components.length) inventory.push(note('Detailed building and feature records are unavailable. Missing records do not prove a structure or feature is absent.'));
+  inventory.push(note('Feature values may be included in building totals; do not add them again. Condition and effective age are unavailable. Buildings are grouped by recorded improvement ID. Newly listed records do not prove new construction.'));
   if (story.previous && !compact) {
     const changes=featureChanges.filter(f=>f.value==='No longer separately listed');
     if(changes.length)inventory.push(table('Features no longer separately listed',['Feature','Current record','Comparison'],changes.map((f,i)=>row(`feature-change-${i}`,f.label,f.value,f.change))));
@@ -112,16 +115,17 @@ export function buildPropertyReport(input: PropertyReportInput) {
   if (!compact || current.land_value!==null || current.improvement_value!==null) {
     const valuation: ReportBlock[] = [table('Recorded valuation components',['Component',story.previous ? `${story.previous.tax_year} certified` : 'Prior year',`${current.tax_year} ${current.roll_stage}`,'Annual change'],[
       row('value-land','Land',money(story.previous?.land_value),money(current.land_value),story.previous?.land_value != null && current.land_value !== null ? signed(current.land_value-story.previous.land_value) : 'Unavailable'),
-      row('value-improvements','Home & improvements',money(story.previous?.improvement_value),money(current.improvement_value),story.previous?.improvement_value != null && current.improvement_value !== null ? signed(current.improvement_value-story.previous.improvement_value) : 'Unavailable'),
+      row('value-improvements','Home & other features',money(story.previous?.improvement_value),money(current.improvement_value),story.previous?.improvement_value != null && current.improvement_value !== null ? signed(current.improvement_value-story.previous.improvement_value) : 'Unavailable'),
       row('value-total','Total market value',money(story.previous?.market_value),money(current.market_value),story.previous?.market_value != null && current.market_value !== null ? signed(current.market_value-story.previous.market_value) : 'Unavailable'),
-    ]),note(valueDriverSummary(current,story.previous))];
+    ]),note(`“Home & other features” is the district’s non-land value after applicable factors, not rebuilding cost. ${valueDriverSummary(current,story.previous)}`)];
     const adjustment=input.adjustment;
     if(adjustment && adjustment.year===current.tax_year && adjustment.neighborhood===current.neighborhood && !p.values_under_review) {
       const a=adjustmentSummary(adjustment),own=adjustment.homes.find(h=>h.property_id===p.property_id);
       valuation.push(table('Market-area multiplier',['Year','Published multiplier'],adjustment.history.map(h=>row(`factor-${h.year}`,`${h.year}`,`${h.factor.toFixed(2)}×`))));
-      if(own?.effect!==null && own?.effect!==undefined)valuation.push(note(`Estimated effect on this home: ${signed(own.effect)}. Changes only the multiplier, holding the other ${adjustment.year} preliminary inputs fixed. This is not the annual change or an explanation of the full certified result. Preliminary sources: ${dateLabel(own.prior_preliminary_date)} and ${dateLabel(own.preliminary_date)}.`, 'One input to the proposed valuation',true));
+      valuation.push(note('The district estimates rebuilding costs for the home, garages and pools, reduces them for age and condition, then applies the neighborhood factor. Land is separate.'));
+      if(own?.effect!==null && own?.effect!==undefined)valuation.push(note(`Estimated factor effect: ${signed(own.effect)}. ${factorEffectSentence(own.effect,adjustment.year)} Land and other inputs held fixed; not the total annual change or tax savings. Preliminary sources: ${dateLabel(own.prior_preliminary_date)} and ${dateLabel(own.preliminary_date)}.`, 'One input to the proposed valuation',true));
       else valuation.push(note(`Isolated multiplier effect unavailable: ${own ? adjustmentReasons[own.status] : 'property estimate not supplied'}.`));
-      if(a.percent!==null)valuation.push(note(`Multiplier change: ${pct(a.percent)}. The multiplier adjusts building value after allowance for age and wear; land is separate. Published source: ${a.current?.filename ?? 'Unavailable'}, page ${a.current?.page ?? 'unavailable'}.`));
+      if(a.percent!==null)valuation.push(note(`Multiplier change: ${pct(a.percent)}. This percentage describes the factor, not rebuilding costs, home prices or the entire appraisal. Published source: ${a.current?.filename ?? 'Unavailable'}, page ${a.current?.page ?? 'unavailable'}.`));
     } else valuation.push(note('A same-year, same-neighborhood multiplier estimate is unavailable for this report.'));
     sections.push({id:'valuation',title:'What makes up your value',blocks:valuation});
   }
