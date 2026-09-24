@@ -15,6 +15,8 @@ The public contract is `web/src/content/protest-guide.json`. Next.js consumers c
 
 `reviewedDate` is the supplied research date, not the build date or a claim of legal review. `contentVersion` identifies editorial releases; `schemaVersion` identifies the contract shape. `sourceSha256` ties the export to the exact source snapshot. Renderers must consume this contract instead of keeping their own copies of the prose.
 
+Content version `2026-09-19.2` is a September 24 copy revision that clarifies rebuilding-cost terminology in the comparable-sales guidance. The reviewed date remains September 19 because this revision did not perform a new comprehensive legal or source review.
+
 ## Maintenance
 
 Edit the canonical source, update version/research metadata in `web/scripts/generate-protest-guide.mjs` when appropriate, then run from `web/`:
