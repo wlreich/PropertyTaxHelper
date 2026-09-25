@@ -7,7 +7,13 @@ export type AnnualHome = {
   protested: boolean;
 };
 export type AnnualPeriod = { release: ComparisonRelease; homes: AnnualHome[]; caps: Cap[] };
-export type NeighborhoodAnalysisData = Neighborhood & { annual_periods: AnnualPeriod[] };
+export type AgentAssignment = {
+  property_id: string;
+  tax_year: number;
+  agent_name: string | null;
+  status: 'named' | 'ambiguous';
+};
+export type NeighborhoodAnalysisData = Neighborhood & { annual_periods: AnnualPeriod[]; agent_assignments: AgentAssignment[] };
 export const MIN_PATTERN_SAMPLE = 10;
 
 // Percentages are available to consumers, but small cohorts should lead with counts.
@@ -23,6 +29,51 @@ function index(period: AnnualPeriod | undefined) {
   return rows;
 }
 const valid = (h: AnnualHome | undefined): h is AnnualHome & { market: number } => !!h && h.exclusion === null && usable(h.market);
+
+const agentKey = (name: string) => {
+  const normalized = name.normalize('NFKC').trim();
+  return normalized.replace(/[^a-z0-9]+/gi, '').toLocaleUpperCase('en-US') || normalized.toLocaleUpperCase('en-US');
+};
+const agentLabel = (name: string) => name.normalize('NFKC').trim().toLocaleLowerCase('en-US')
+  .replace(/(^|[\s,.-])([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toLocaleUpperCase('en-US')}`)
+  .replace(/\bOconnor\b/g, 'OConnor');
+type ActivityHome = { property_id: string; preliminary: number | null; certified: number | null };
+type AgentGroup = { key: string; label: string; kind: 'named' | 'ambiguous' | 'none'; homes: ActivityHome[] };
+function summarizeAgentGroup(group: AgentGroup, label = group.label, kind: AgentGroup['kind'] | 'other' = group.kind, agentCount = 1) {
+  const reduced = group.homes.filter(h => usable(h.preliminary) && usable(h.certified) && h.certified < h.preliminary);
+  return { kind, label, agentCount, propertyCount: group.homes.length, reducedCount: reduced.length,
+    medianReduction: median(reduced.map(h => h.preliminary! - h.certified!)),
+    medianPercent: median(reduced.map(h => (h.preliminary! - h.certified!) / h.preliminary! * 100)) };
+}
+function agentActivityYear(data: NeighborhoodAnalysisData, preliminary: AnnualPeriod, certified: AnnualPeriod) {
+  const pre = index(preliminary), cert = index(certified), year = certified.release.tax_year;
+  const assignments = new Map(data.agent_assignments.filter(a => a.tax_year === year).map(a => [a.property_id, a]));
+  const groups = new Map<string, AgentGroup>();
+  for (const home of data.homes) {
+    const p = pre.get(home.property_id), c = cert.get(home.property_id);
+    const proposed = valid(p) ? p.market : null, final = valid(c) ? c.market : null;
+    if (!(p?.protested || c?.protested || proposed !== null && final !== null && final < proposed)) continue;
+    const assignment = assignments.get(home.property_id);
+    const kind = assignment?.status === 'ambiguous' ? 'ambiguous' : assignment?.agent_name ? 'named' : 'none';
+    const normalized = kind === 'named' ? agentKey(assignment!.agent_name!) : kind;
+    const key = kind === 'named' && normalized ? `named:${normalized}` : kind;
+    const label = kind === 'named' ? agentLabel(assignment!.agent_name!) : kind === 'ambiguous' ? 'Agent name unclear' : 'No agent identified';
+    const group = groups.get(key) ?? { key, label, kind, homes: [] };
+    group.label = [group.label, label].sort((a, b) => a.localeCompare(b))[0];
+    group.homes.push({ property_id: home.property_id, preliminary: proposed, certified: final });
+    groups.set(key, group);
+  }
+  const named = [...groups.values()].filter(g => g.kind === 'named')
+    .sort((a, b) => b.homes.length - a.homes.length || a.key.localeCompare(b.key));
+  const top = named.slice(0, 5).map(g => summarizeAgentGroup(g));
+  const rest = named.slice(5);
+  if (rest.length) top.push(summarizeAgentGroup({ key: 'other', label: '', kind: 'named', homes: rest.flatMap(g => g.homes) }, `Other agents (${rest.length})`, 'other', rest.length));
+  const ambiguous = groups.get('ambiguous'), unnamed = groups.get('none');
+  if (ambiguous) top.push(summarizeAgentGroup(ambiguous));
+  if (unnamed) top.push(summarizeAgentGroup(unnamed));
+  return { preliminary: preliminary.release, certified: certified.release,
+    activityCount: [...groups.values()].reduce((total, group) => total + group.homes.length, 0), rows: top };
+}
 
 function capProgression(homes: Home[], caps: Cap[]) {
   const byId = new Map(caps.map(cap => [cap.property_id, cap]));
@@ -96,7 +147,7 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
   }
   const current = data.releases.find(r => r.dataset_id === data.source_id)!;
   // Only complete, chronologically valid preliminary/certified pairs are outcomes.
-  const outcomes = periods.filter(p => p.release.roll_stage === 'certified').flatMap(certified => {
+  const completedPairs = periods.filter(p => p.release.roll_stage === 'certified').flatMap(certified => {
     const preliminary = find(certified.release.tax_year, 'preliminary');
     if (!preliminary?.release.export_date || !certified.release.export_date || preliminary.release.export_date >= certified.release.export_date) return [];
     const pre = index(preliminary), cert = index(certified);
@@ -106,13 +157,17 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
       return { ...h, preliminary: proposed, certified: final, certified_area: c?.area ?? null,
         protested: !!p?.protested || !!c?.protested || proposed !== null && final !== null && final < proposed };
     });
+    return [{ preliminary, certified, homes }];
+  });
+  const outcomes = completedPairs.map(({ preliminary, certified, homes }) => {
     const caps = preliminary.caps;
     const protested = homes.filter(h => h.protested);
-    return [{ preliminary: preliminary.release, certified: certified.release, capSource: preliminary.release,
+    return { preliminary: preliminary.release, certified: certified.release, capSource: preliminary.release,
       all: summarizeGroup(homes, caps), protested: summarizeGroup(protested, caps),
       other: summarizeGroup(homes.filter(h => !h.protested), caps), participation: share(protested.length, homes.length),
-      capProgression: capProgression(homes, caps) }];
+      capProgression: capProgression(homes, caps) };
   }).reverse();
+  const agentActivity = completedPairs.map(({ preliminary, certified }) => agentActivityYear(data, preliminary, certified)).reverse().slice(0, 2);
   const coverage = periods.map(p => ({ release: p.release, baseCount: ids.length,
     missingCount: ids.length - p.homes.length,
     eligibleCount: p.homes.filter(valid).length,
@@ -138,7 +193,7 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
       versusPriorCertified: reversedCertifiedChanges.find(x => x.current.dataset_id === currentCertified.release.dataset_id) ?? null,
     } : null,
   };
-  return { current, currentSummary, latestOutcome: outcomes[0] ?? null, outcomes, story,
+  return { current, currentSummary, latestOutcome: outcomes[0] ?? null, outcomes, agentActivity, story,
     certifiedChanges: reversedCertifiedChanges, preliminaryChanges: preliminaryChanges.reverse(),
     carryForward: carryForward.reverse(), coverage, minimumPatternSample: MIN_PATTERN_SAMPLE };
 }
