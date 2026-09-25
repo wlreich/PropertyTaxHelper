@@ -63,6 +63,13 @@ test('three-stage comparisons preserve unavailable zero and small denominators',
  const noStaleOutcome=neighborhoodAnalysis(data([priorPre,priorFinal,currentFinal],2)).story;
  assert.equal(noStaleOutcome.outcome,null);assert.notEqual(noStaleOutcome.final,null);
 });
+test('final proposal comparison rejects a preliminary release that is not earlier than certification',()=>{
+ const proposed=period(2026,'preliminary',[1200,1300]);
+ const final=period(2026,'certified',[1100,1250]);
+ proposed.release.export_date=final.release.export_date;
+ const story=neighborhoodAnalysis(data([proposed,final],2)).story;
+ assert.notEqual(story.final,null);assert.equal(story.outcome,null);assert.equal(story.final.versusProposal,null);
+});
 test('change of certified medians differs from median individual proposed changes',()=>{
  const a=[1000,100000,200000],b=[2000,100000,300000];
  const s=neighborhoodAnalysis(data([period(2025,'preliminary',a),period(2025,'certified',a),period(2026,'preliminary',b),period(2026,'certified',b)]));

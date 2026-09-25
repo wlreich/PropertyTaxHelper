@@ -109,7 +109,7 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
       release: current,
       median: currentSummary.median,
       valueCount: currentSummary.valueCount,
-      versusProposal: compare(currentPreliminary, currentCertified),
+      versusProposal: currentOutcome ? compare(currentPreliminary, currentCertified) : null,
       versusPriorCertified: reversedCertifiedChanges.find(x => x.current.dataset_id === currentCertified.release.dataset_id) ?? null,
     } : null,
   };
