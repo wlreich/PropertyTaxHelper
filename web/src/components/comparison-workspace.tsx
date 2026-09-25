@@ -16,14 +16,14 @@ function Match({subject,property}:{subject:ComparisonProperty;property:Compariso
   const match=comparisonMatch(subject,property);
   return <span className="comparison-tier">{match.state==='ranked'?`Tier ${match.rank}`:match.label}</span>;
 }
-type WorkspaceProps = {data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;evidenceQuery?:string};
+type WorkspaceProps = {data:ComparisonData;initialIds:string[]|null;initialView?:"reported"|"adjusted";initialStep?:"select"|"results";evidence:Record<string,ComparisonEvidence>;focusTarget?:string;releaseNotice?:string|null};
 export function ComparisonWorkspace(props: WorkspaceProps) {
   // The page keys this boundary by subject, release, mode and applied selection.
   // Only the draft editor remounts on step changes, so Cancel keeps the inspection.
   const [inspection,setInspection] = useState<ComparisonInspection | null>(null);
   return <ComparisonWorkspaceContent key={props.initialStep} {...props} inspection={inspection} setInspection={setInspection}/>;
 }
-function ComparisonWorkspaceContent({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,evidenceQuery="",inspection,setInspection}:WorkspaceProps & {inspection:ComparisonInspection|null;setInspection:(value:ComparisonInspection|null)=>void}) {
+function ComparisonWorkspaceContent({data,initialIds,initialView="reported",initialStep="select",evidence,focusTarget,releaseNotice=null,inspection,setInspection}:WorkspaceProps & {inspection:ComparisonInspection|null;setInspection:(value:ComparisonInspection|null)=>void}) {
   const router=useRouter();
   const view=initialView;
   const matchingCaveat = matchingQualification(data.release.tax_year);
@@ -34,7 +34,6 @@ function ComparisonWorkspaceContent({data,initialIds,initialView="reported",init
   useEffect(()=>{if(initialStep==='select')heading.current?.focus();else if(focusTarget==='edit')editButton.current?.focus();},[initialStep,focusTarget]);
   function navigate(step:"select"|"results",ids:string[],nextView=view,focus="") {
     const params=new URLSearchParams({release:data.release.dataset_id,selected:ids.join(','),view:nextView,step});
-    for(const [key,value] of new URLSearchParams(evidenceQuery))params.set(key,value);
     if(focus)params.set('focus',focus);
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
@@ -79,7 +78,6 @@ function ComparisonWorkspaceContent({data,initialIds,initialView="reported",init
   }
   function releaseChange(source:string) {
     const params=new URLSearchParams({release:source,selected:activeIds.join(","),view,step:initialStep});
-    for(const [key,value] of new URLSearchParams(evidenceQuery))params.set(key,value);
     router.push(`/property/${data.subject.property_id}/compare?${params}`);
   }
   function showResults() {setInspection(null);navigate('results',selected.map(p=>p.property_id),view,'edit');}
@@ -98,6 +96,7 @@ function ComparisonWorkspaceContent({data,initialIds,initialView="reported",init
     <div className="comparison-title"><div><h2 ref={heading} tabIndex={-1}>{initialStep==="select"?"Choose homes to compare":"Compare similar homes"}</h2><p>{initialStep==="select"?"Edit your draft set. Apply it when you’re ready; Cancel keeps your active comparison.":`${selected.length} selected ${selected.length===1?"property":"properties"} compared with your home.`}</p></div>
       <label className="comparison-release">Assessment release<select value={data.release.dataset_id} onChange={e=>releaseChange(e.target.value)}>{data.releases.map(r=><option key={r.dataset_id} value={r.dataset_id}>{snapshotLabel(r)} · {r.export_date??"Date not reported"}</option>)}</select></label>
     </div>
+    {releaseNotice&&<p className="comparison-inline-note">{releaseNotice}</p>}
     {initialStep==="results"&&<div className="comparison-view-controls"><div><span className="comparison-view-label">View values as</span><div className="comparison-view-switch" role="group" aria-label="Comparison values"><button aria-pressed={view==="reported"} onClick={()=>changeView("reported")}>Reported values</button><button aria-pressed={view==="adjusted"} onClick={()=>changeView("adjusted")}>Estimated adjusted values</button></div></div><div className="comparison-result-actions"><button ref={editButton} className="comparison-add-link" onClick={editSelection}>Edit selection ({active.length})</button></div></div>}
     {message&&<p role="status" className="comparison-inline-note">{message}</p>}
     {data.release.tax_year!==comparisonMethod.year&&<p className="comparison-inline-note">{matchingCaveat}</p>}

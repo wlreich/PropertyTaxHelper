@@ -1,4 +1,6 @@
 import type { CostRecord } from "./tcad-costs.ts";
+import type { SeasonContext } from "./seasons.ts";
+import { snapshotLabel } from "./property-history.ts";
 // Source: TCAD’s 2026 Sale and Equity Grids methodology.
 // Missing condition/state/eligibility inputs must never become confirmed tier matches.
 export const comparisonMethod = {
@@ -28,6 +30,35 @@ export type ComparisonData = {
   subject: ComparisonProperty; candidates: ComparisonProperty[]; selected: ComparisonProperty[];
   matches: ComparisonProperty[]; candidate_limit_reached: boolean; search_has_more: boolean;
 };
+
+export type ComparisonReleaseChoice = {
+  release: ComparisonRelease | null;
+  notice: string | null;
+};
+
+function newestRelease(releases: ComparisonRelease[]) {
+  return [...releases].sort((a,b)=>
+    b.tax_year-a.tax_year ||
+    (b.export_date??"").localeCompare(a.export_date??"") ||
+    a.dataset_id.localeCompare(b.dataset_id)
+  )[0]??null;
+}
+
+export function defaultComparisonRelease(releases: ComparisonRelease[],season:SeasonContext|null):ComparisonReleaseChoice {
+  if(!releases.length)return {release:null,notice:null};
+  if(!season)return {release:newestRelease(releases),notice:null};
+  const year=season.config.tax_year;
+  const stages=season.phase==='post'?new Set(['certified','supplemental']):new Set(['preliminary']);
+  const preferred=newestRelease(releases.filter(r=>r.tax_year===year&&stages.has(r.roll_stage)));
+  if(preferred)return {release:preferred,notice:null};
+  const sameYear=newestRelease(releases.filter(r=>r.tax_year===year));
+  const release=sameYear??newestRelease(releases);
+  const preferredLabel=`${year} ${season.phase==='post'?'certified':'preliminary'}`;
+  return {
+    release,
+    notice:release?`The preferred ${preferredLabel} release is unavailable for this property. Showing ${snapshotLabel(release)}.`:null,
+  };
+}
 export const validPropertyId = (id: string) => /^[0-9]{1,12}$/.test(id) && Number(id)>0;
 export const validSource = (id: string) => /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id);
 export function selectedIds(value: string | undefined) {

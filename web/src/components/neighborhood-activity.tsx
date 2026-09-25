@@ -57,7 +57,7 @@ export function NeighborhoodActivity({data,propertyId,window,error,matches=null,
    <button className="activity-link" disabled={!selected.size||pending} onClick={()=>{setSelected(new Set());remember(type,sort,new Set());setNotice('Selection cleared.');}}>Clear selection</button>
   </div>
   {selected.size>chosen.length&&<p role="status">Some saved selections are outside this window or unavailable and are excluded from this export.</p>}
-  <Link href={`/property/${propertyId}/compare?${evidenceParams(window)}`}>Compare properties using this evidence window</Link>
+  <Link href={`/property/${propertyId}/compare`}>Compare similar properties</Link>
   {notice&&<p className="neighborhood-note" role="status">{notice}</p>}
   <div className="activity-pagination"><p>Showing {shown.length} of {rows.length} transaction records</p>{rows.length>5&&<button className="activity-link" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'Show first five'+(sort==='closest'?' closest matches':sort==='oldest'?' oldest records':sort==='address'?' by address':' newest records'):'View all '+rows.length+' →'+(sort==='closest'?' · closest matches first':sort==='oldest'?' · oldest first':sort==='address'?' · by address':' · newest first')}</button>}</div>
   {data.datasets.map(d=><p key={d.year} className="activity-source">{d.year} activity sources: Appraisal District export {dateLabel(d.sources.appraisal_export_date)}; supplemental deed and sale export {dateLabel(d.sources.sales_export_date)}.</p>)}

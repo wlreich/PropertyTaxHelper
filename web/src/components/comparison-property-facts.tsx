@@ -14,7 +14,7 @@ export function ComparisonFacts({subject,property}:{subject:ComparisonProperty;p
 }
 export function DeedClue({evidence}:{evidence:ComparisonEvidence|undefined}) {
  if(!evidence?.deedDate)return null;
- return <details className="comparison-deed"><summary>Ownership change · {evidence.deedDate}</summary><p className="comparison-small">Recorded date: {evidence.deedDate}. An ownership change does not necessarily mean the property was sold. Preparing for {evidence.targetYear}. Research window: {evidence.start}–{evidence.end}.{evidence.coverage?` Source coverage: ${evidence.coverage}; research dates are separate from the appraisal release.`:''}</p></details>;
+ return <details className="comparison-deed"><summary>Ownership change · {evidence.deedDate}</summary><p className="comparison-small">Recorded date: {evidence.deedDate}. This ownership record does not confirm that the property was sold. Ownership records checked for the calendar year before the {evidence.targetYear} assessment release: {evidence.start}–{evidence.end}.{evidence.coverage?` Source coverage: ${evidence.coverage}.`:''}</p></details>;
 }
 export const valueDifference=(n:number|null)=>n===null?'Not available':n===0?'Same as median':`${currency(Math.abs(n))} ${n>0?'above':'below'}`;
 export function ComparisonSummary({value,median,difference,percent,adjusted=false}:{value:number|null;median:number|null;difference:number|null;percent:number|null;adjusted?:boolean}) {

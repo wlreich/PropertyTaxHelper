@@ -12,5 +12,5 @@ export function activityViewFixture(id='100',requested=null){
   base('100','j:6','05-27'),
   base('123','j:7','05-25',{property_type:'other',address:'123 VERY LONG SYNTHETIC CYPRESS RIDGE NEIGHBORHOOD STREET'})
  ];
- return {status:'ok',year,years:[2026,2025],neighborhood:'T2450',sources:{appraisal_export_date:'2026-07-18',sales_export_date:'2026-08-27'},rows:id==='9290'?Array.from({length:24},(_,i)=>base(String(9400+i),'j:long'+i,'06-'+String(i+1).padStart(2,'0'),{address:String(9400+i)+' VERY LONG SYNTHETIC CYPRESS RIDGE NEIGHBORHOOD STREET NORTHWEST UNIT '+i})):id==='9204'?[]:year===2025?rows.slice(0,1):rows};
+ return {status:'ok',year,years:[2026,2025],neighborhood:'T2450',sources:{appraisal_export_date:'2026-07-18',sales_export_date:'2026-08-27'},rows:id==='9290'?Array.from({length:24},(_,i)=>base(String(9400+i),'j:long'+i,'06-'+String(i+1).padStart(2,'0'),{address:String(9400+i)+' VERY LONG SYNTHETIC CYPRESS RIDGE NEIGHBORHOOD STREET NORTHWEST UNIT '+i})):id==='9204'?[]:year===2025?rows.slice(0,id==='120'?2:1):rows};
 }

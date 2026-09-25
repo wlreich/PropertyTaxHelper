@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {comparisonSummary,matchProperty,suggestions,selectedIds,candidatePool,candidatePage} from '../src/lib/property-comparisons.ts';
+import {comparisonSummary,matchProperty,suggestions,selectedIds,candidatePool,candidatePage,defaultComparisonRelease} from '../src/lib/property-comparisons.ts';
 import {snapshotLabel} from '../src/lib/property-history.ts';
 import {comparisonEvidence} from '../src/lib/comparison-evidence.ts';
 import {getComparisons,parseComparison} from '../src/lib/supabase/comparisons.ts';
@@ -86,4 +86,31 @@ test('comparison parser preserves baseline/interim metadata for the shared histo
  assert.equal(snapshotLabel({...parsed.release,preliminary_baseline_eligible:true}),'2025 preliminary');
  assert.equal(snapshotLabel({tax_year:2026,roll_stage:'certified'}),'2026 certified');
  assert.equal(parseComparison({...raw,release:{...release,preliminary_baseline_eligible:'false'}},'100'),null);
+});
+
+test('comparison defaults follow the published season and deterministically fall back',()=>{
+ const releases=[
+  {dataset_id:'2025-certified',tax_year:2025,roll_stage:'certified',export_date:'2025-07-20'},
+  {dataset_id:'2026-preliminary-a',tax_year:2026,roll_stage:'preliminary',export_date:'2026-04-02'},
+  {dataset_id:'2026-preliminary-b',tax_year:2026,roll_stage:'preliminary',export_date:'2026-04-29'},
+  {dataset_id:'2026-certified',tax_year:2026,roll_stage:'certified',export_date:'2026-07-20'},
+  {dataset_id:'2026-supplemental-z',tax_year:2026,roll_stage:'supplemental',export_date:'2026-08-29'},
+  {dataset_id:'2026-supplemental-a',tax_year:2026,roll_stage:'supplemental',export_date:'2026-08-29'},
+  {dataset_id:'2027-preliminary',tax_year:2027,roll_stage:'preliminary',export_date:'2027-04-02'},
+ ];
+ const season=(phase,tax_year)=>({phase,config:{tax_year}});
+ assert.equal(defaultComparisonRelease(releases,season('preliminary',2026)).release.dataset_id,'2026-preliminary-b');
+ assert.equal(defaultComparisonRelease(releases,season('protest',2026)).release.dataset_id,'2026-preliminary-b');
+ assert.equal(defaultComparisonRelease(releases,season('post',2026)).release.dataset_id,'2026-supplemental-a');
+ assert.equal(defaultComparisonRelease(releases,season('post',2026)).notice,null);
+ assert.equal(defaultComparisonRelease(releases,null).release.dataset_id,'2027-preliminary');
+ const missing=defaultComparisonRelease(releases.filter(r=>r.tax_year!==2027),season('post',2027));
+ assert.equal(missing.release.dataset_id,'2026-supplemental-a');
+ assert.equal(missing.notice,'The preferred 2027 certified release is unavailable for this property. Showing 2026 supplemental.');
+ const missingPreliminary=defaultComparisonRelease(releases.filter(r=>r.tax_year!==2027),season('preliminary',2027));
+ assert.equal(missingPreliminary.release.dataset_id,'2026-supplemental-a');
+ assert.equal(missingPreliminary.notice,'The preferred 2027 preliminary release is unavailable for this property. Showing 2026 supplemental.');
+ const sameYear=defaultComparisonRelease(releases.filter(r=>r.roll_stage!=='certified'&&r.roll_stage!=='supplemental'),season('post',2026));
+ assert.equal(sameYear.release.dataset_id,'2026-preliminary-b');
+ assert.equal(sameYear.notice,'The preferred 2026 certified release is unavailable for this property. Showing 2026 preliminary.');
 });

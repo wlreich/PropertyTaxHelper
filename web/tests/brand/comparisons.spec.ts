@@ -7,6 +7,10 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page).toHaveURL(/\/property\/100\/compare/);
  await expect(page.getByRole('heading',{name:'Choose homes to compare',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Compare properties');
+ await expect(page.getByLabel('Assessment release')).toHaveValue('11111111-1111-4111-8111-111111111111');
+ for(const label of ['Preparing for','Evidence start','Evidence end'])await expect(page.getByLabel(label,{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Apply dates',exact:true})).toHaveCount(0);
+ await expect(page.getByText('Ownership changes use the selected research dates.',{exact:false})).toHaveCount(0);
  await expect(page.getByRole('group',{name:'Comparison values'})).toHaveCount(0);
  await expect(page.getByRole('complementary',{name:'Your comparison set'}).getByRole('button',{name:'Apply selection',exact:true})).toHaveCSS('color','rgb(255, 255, 255)');
  await expect(page.getByLabel('Similarity tier')).toHaveValue('0');
@@ -104,17 +108,22 @@ test('draft limit, cancellation, empty sets and unavailable saved properties',as
 
 test('ownership disclosures require a recorded change in both value modes',async({page},info)=>{
  test.skip(page.viewportSize()!.width===768,'Mixed ownership evidence at desktop and narrow mobile.');
- await page.goto('/property/100/compare?step=results&selected=120,121,122&targetYear=2027');
+ await page.goto('/property/100/compare?step=results&selected=120,121,122&targetYear=2027&evidenceStart=2026-06-01&evidenceEnd=2026-06-30&activityYear=2026');
  const reported=page.getByRole('region',{name:'Reported comparison values'});
  await expect(reported.locator('.comparison-deed')).toHaveCount(1);
- await expect(reported.locator('.comparison-deed summary')).toHaveText('Ownership change · 2026-06-20');
+ await expect(reported.locator('.comparison-deed summary')).toHaveText('Ownership change · 2025-06-20');
+ await expect(reported).toContainText('$460,000');
  await expect(page.getByText('Ownership-change coverage is unavailable for some selected properties.',{exact:false})).toBeVisible();
  await reported.locator('.comparison-deed summary').focus();await page.keyboard.press('Enter');
- await expect(reported.locator('.comparison-deed')).toContainText('Recorded date: 2026-06-20');
- await expect(reported.locator('.comparison-deed')).toContainText('does not necessarily mean the property was sold');
+ await expect(reported.locator('.comparison-deed')).toContainText('Recorded date: 2025-06-20');
+ await expect(reported.locator('.comparison-deed')).toContainText('does not confirm that the property was sold');
+ await expect(reported.locator('.comparison-deed')).toContainText('calendar year before the 2026 assessment release: 2025-01-01–2025-12-31');
+ await expect(reported.locator('.comparison-deed')).toContainText('Source coverage:');
  await page.screenshot({path:info.outputPath('mixed-ownership-reported.png'),fullPage:true});
  await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
+ await expect(adjusted).toBeVisible();
+ const normalized=new URL(page.url());for(const key of ['targetYear','evidenceStart','evidenceEnd','activityYear'])expect(normalized.searchParams.has(key)).toBe(false);
  await expect(adjusted.locator('.comparison-compact-row .comparison-deed')).toHaveCount(1);
  await expect(adjusted).toContainText('3 of 3 selected properties');
  await expect(adjusted).toContainText('$460,000');
@@ -126,4 +135,8 @@ test('ownership disclosures require a recorded change in both value modes',async
  await page.screenshot({path:info.outputPath('mixed-ownership-adjusted.png'),fullPage:true});
  await expect(page.getByRole('button',{name:'Edit selection (3)',exact:true})).toBeVisible();
  await expect(page.getByText(/No deed clue|Deed evidence unavailable/)).toHaveCount(0);
+ await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
+ await expect(page.locator('.comparison-deed')).toHaveCount(0);
+ await expect(page.getByText('Ownership-change coverage is unavailable for some selected properties.',{exact:false})).toBeVisible();
+ await expect(page.getByText(/No ownership change|No transfer/)).toHaveCount(0);
 });
