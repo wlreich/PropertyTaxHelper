@@ -121,8 +121,9 @@ test('ownership disclosures require a recorded change in both value modes',async
  await expect(reported.locator('.comparison-deed')).toContainText('Source coverage:');
  await page.screenshot({path:info.outputPath('mixed-ownership-reported.png'),fullPage:true});
  await page.getByRole('button',{name:'Estimated adjusted values',exact:true}).click();
- const normalized=new URL(page.url());for(const key of ['targetYear','evidenceStart','evidenceEnd','activityYear'])expect(normalized.searchParams.has(key)).toBe(false);
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
+ await expect(adjusted).toBeVisible();
+ const normalized=new URL(page.url());for(const key of ['targetYear','evidenceStart','evidenceEnd','activityYear'])expect(normalized.searchParams.has(key)).toBe(false);
  await expect(adjusted.locator('.comparison-compact-row .comparison-deed')).toHaveCount(1);
  await expect(adjusted).toContainText('3 of 3 selected properties');
  await expect(adjusted).toContainText('$460,000');
