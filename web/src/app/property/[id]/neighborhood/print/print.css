@@ -71,6 +71,7 @@
  .print-report .nbr-outcome p {font-size:12px;line-height:1.3;margin:4px 0;}
  .print-report .nbr-table,.print-report .activity-print table {font-size:10.5pt;}
  .print-report .nbr-table th,.print-report .nbr-table td,.print-report .activity-print th,.print-report .activity-print td {padding:6pt;}
+ .print-report .activity-print th,.print-report .activity-print td {padding-block:5pt;}
  .print-report a {color:var(--color-text);}
 }
 
