@@ -5,6 +5,9 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await page.goto('/property/100/neighborhood');
  await expect(page.getByRole('heading',{name:'Your neighborhood, in context.',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
+ const groupSummary=page.locator('summary').filter({hasText:'About this group'}),groupDetails=groupSummary.locator('..');
+ await expect(groupDetails).toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','true');await expect(groupDetails).toContainText('Subdivision on record: GRAND MESA SECTION II.');
+ await groupSummary.focus();await page.keyboard.press('Enter');await expect(groupDetails).not.toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','false');await page.keyboard.press('Enter');await expect(groupDetails).toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','true');
  await expect(page.locator('.activity-controls select')).toHaveCount(2);
  await expect(page.getByRole('form',{name:'Evidence research window'})).toBeVisible();
  await expect(page.getByRole('link',{name:'Print / save PDF',exact:true})).toHaveAttribute('href',/targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31/);
