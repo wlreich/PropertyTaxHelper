@@ -138,6 +138,10 @@ try {
   assert.match(profile, /Taxable values by authority/);
   assert.match(profile, /Back to search results/);
   assert.match(profile, /q=Oak&amp;page=1/);
+  assert.match(profile, /Make this a yearly check/);
+  assert.match(profile, /href="\/protest-guide\?property=100#annual-review"[^>]*>Learn how to protest/);
+  assert.match(profile, /href="\/property\/100\/compare"[^>]*>Compare similar properties/);
+  assert.match(profile, /href="\/property\/100\/neighborhood"[^>]*>Explore my neighborhood/);
   const neighborhood = await page("/property/100/neighborhood");
   assert.match(neighborhood, /Subdivision on record/);
   assert.match(neighborhood, /GRAND MESA SECTION II/);
@@ -172,10 +176,19 @@ try {
   assert.match(par51, /Protest recorded/);
   assert.match(par51, /Value<\/span> reduced 20\.3%/);
   assert.match(par51, /from your preliminary appraisal/);
+  assert.match(par51, /Review next year’s preliminary appraisal when it arrives, even if this year’s value was reduced/);
+  const supportedAnnualReview = await page("/property/999283");
+  assert.match(supportedAnnualReview, /href="#market-adjustment-heading"[^>]*>See how the Appraisal District arrived at your preliminary value\.<\/a>/);
+  assert.match(supportedAnnualReview, /The cap limits increases in assessed value\. It does not tell you whether the Appraisal District’s market value is right\./);
+  assert.match(supportedAnnualReview, /href="\/protest-guide\?property=999283#annual-review"[^>]*>Learn how to protest/);
+  const limitedAnnualReview = await page("/property/999282");
+  assert.match(limitedAnnualReview, /When your next appraisal notice arrives, check its deadline, property details and comparable homes/);
+  assert.doesNotMatch(limitedAnnualReview, /See how the Appraisal District arrived at your preliminary value/);
+  assert.doesNotMatch(limitedAnnualReview, /The cap limits increases in assessed value/);
   assert.match(await page("/property/103"), /Let’s try another address/);
   assert.match(await page("/?q=NoSuchStreet"), /No matching properties found/);
   assert.match(await page("/?q=ab"), /at least three letters or digits/);
-  for (const html of [home, one, multi, first, second, last, profile, par51, neighborhood, printable])
+  for (const html of [home, one, multi, first, second, last, profile, par51, supportedAnnualReview, limitedAnnualReview, neighborhood, printable])
     assert.doesNotMatch(
       html,
       /PRIVATE SYNTHETIC OWNER|sb_publishable_fixture|data-nextjs-dialog/,

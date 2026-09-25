@@ -331,3 +331,66 @@ test('PAR-9 approved Figma reference property 736164', async ({page},info) => {
   await page.locator('.overview-context').screenshot({path:info.outputPath('reference-736164-context.png')});
   await page.screenshot({path:info.outputPath('reference-736164-page.png'),fullPage:true});
 });
+
+test('PAR-54 annual review path stays evidence-specific, focused and visually subordinate', async ({page}, info) => {
+  test.skip(info.project.name !== 'width-1440', 'Runs the focused 390/1440 PAR-54 matrix once.');
+  const certifiedCopy='Review next year’s preliminary appraisal when it arrives, even if this year’s value was reduced. Check the details and comparisons again before deciding whether to protest.';
+  const neutralCopy='When your next appraisal notice arrives, check its deadline, property details and comparable homes. Protest if your evidence supports a different value.';
+  const capAccuracy='The cap limits increases in assessed value. It does not tell you whether the Appraisal District’s market value is right.';
+  for (const width of [390,1440]) {
+    await page.setViewportSize({width,height:1100});
+    await page.goto('/property/999283');
+    const hero=page.locator('.current-assessment');
+    const driverLink=hero.getByRole('link',{name:'See how the Appraisal District arrived at your preliminary value.'});
+    await expect(driverLink).toHaveAttribute('href','#market-adjustment-heading');
+    await driverLink.focus();
+    await expect(driverLink).toBeFocused();
+    expect(await driverLink.evaluate(element=>getComputedStyle(element).outlineStyle)).not.toBe('none');
+    await driverLink.press('Enter');
+    await expect(page).toHaveURL(/#market-adjustment-heading$/);
+    await expect(page.locator('#market-adjustment-heading')).toBeFocused();
+
+    const context=page.locator('.overview-context');
+    await expect(context.getByRole('heading',{name:'Make this a yearly check.'})).toBeVisible();
+    await expect(context).toContainText(certifiedCopy);
+    const compare=context.getByRole('link',{name:'Compare similar properties'});
+    const neighborhood=context.getByRole('link',{name:'Explore my neighborhood'});
+    const guide=context.getByRole('link',{name:'Learn how to protest'});
+    await expect(compare).toHaveAttribute('href','/property/999283/compare');
+    await expect(compare).toHaveClass('action-button');
+    await expect(neighborhood).toHaveAttribute('href','/property/999283/neighborhood');
+    await expect(guide).toHaveAttribute('href','/protest-guide?property=999283#annual-review');
+    await expect(guide).not.toHaveClass(/action-button/);
+    await compare.focus();
+    await page.keyboard.press('Tab');
+    await expect(neighborhood).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(guide).toBeFocused();
+    await expect(page.locator('.cap-guidance')).toContainText(capAccuracy);
+    await expect(page.getByText(capAccuracy,{exact:true})).toHaveCount(1);
+    await expect(page.locator('.homeowner-checklist')).toHaveCount(0);
+    await expect(page.getByText('Browse my street',{exact:true})).toHaveCount(0);
+    expect((await new AxeBuilder({page}).include('.current-assessment').include('.overview-context').include('.cap-section').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await hero.screenshot({path:info.outputPath(`par54-supported-hero-${width}.png`)});
+    await context.screenshot({path:info.outputPath(`par54-supported-context-${width}.png`)});
+
+    await page.goto('/property/999282');
+    const limitedHero=page.locator('.current-assessment');
+    const limitedContext=page.locator('.overview-context');
+    await expect(limitedHero.getByRole('link',{name:'See how the Appraisal District arrived at your preliminary value.'})).toHaveCount(0);
+    await expect(limitedContext).toContainText(neutralCopy);
+    await expect(limitedContext.getByRole('link',{name:'Learn how to protest'})).toHaveAttribute('href','/protest-guide?property=999282#annual-review');
+    await expect(page.locator('.cap-guidance')).not.toContainText(capAccuracy);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await limitedContext.screenshot({path:info.outputPath(`par54-limited-context-${width}.png`)});
+  }
+
+  await page.goto('/property/999014');
+  await expect(page.locator('.current-assessment')).toContainText('Protest recorded.');
+  await expect(page.locator('.overview-context')).toContainText(certifiedCopy);
+  await expect(page.locator('.overview-context')).not.toContainText(/guarantee|tax savings|caused/i);
+
+  await page.goto('/property/736164');
+  await expect(page.locator('.current-assessment').getByRole('link',{name:'See how the Appraisal District arrived at your preliminary value.'})).toHaveCount(0);
+});
