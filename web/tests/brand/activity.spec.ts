@@ -57,7 +57,7 @@ test('neighborhood date window stays local while comparison uses its assessment 
  await activity.getByLabel('Preparing for').fill('2025');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(activity).toContainText('Coverage unavailable for 2024');await expect(activity).toContainText('Unavailable years do not mean no properties sold');
  await expect(activity.getByRole('button',{name:'Clear selection'})).toBeEnabled();await activity.getByRole('button',{name:'Clear selection'}).click();await expect(activity).not.toContainText('Some saved selections are outside this window');
  await activity.getByLabel('Preparing for').fill('2027');await activity.getByLabel('Evidence start').fill('2026-06-01');await activity.getByLabel('Evidence end').fill('2026-06-30');await activity.getByRole('button',{name:'Apply dates'}).click();await expect(page).toHaveURL(/targetYear=2027/);await expect(activity.getByRole('button',{name:'Apply dates'})).toBeEnabled();
- await activity.getByRole('checkbox').nth(1).check();
+ await activity.getByRole('checkbox').first().check();
  const compareNav=page.getByRole('navigation',{name:'Property tools'}).getByRole('link',{name:'Compare properties',exact:true});await expect(compareNav).toHaveAttribute('href','/property/100/compare');
  await activity.getByRole('link',{name:'Compare similar properties',exact:true}).click();
  await expect(page).toHaveURL(/\/property\/100\/compare$/);await expect(page.getByLabel('Assessment release')).toHaveValue('11111111-1111-4111-8111-111111111111');
