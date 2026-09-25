@@ -105,13 +105,11 @@ test('PAR-52 supported and unavailable Value drivers reflow at 390 and 1440 px',
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:1000});
   for(const [id,state] of [['999283','supported'],['100','unavailable']] as const){
-   await page.goto(`/property/${id}`);
+   await page.goto(`/property/${id}?par52-view=${width}`);
    const panel=page.locator('#market-adjustment');
    const summary=panel.locator('summary').filter({hasText:"See the multiplier's effect on this home."});
    const disclosure=summary.locator('..');
-   await disclosure.evaluate((element:HTMLDetailsElement)=>{element.open=false;});
-   await expect(disclosure).not.toHaveAttribute('open','');
-   await summary.press('Enter');await expect(disclosure).toHaveAttribute('open','');
+   await summary.click();await expect(disclosure).toHaveAttribute('open','');
    if(state==='supported'){
     await expect(panel.locator('.factor-comparison')).toBeVisible();
     await expect(panel.locator('.factor-comparison')).toHaveAttribute('aria-label',/same 2026 building inputs/i);
@@ -119,7 +117,14 @@ test('PAR-52 supported and unavailable Value drivers reflow at 390 and 1440 px',
    expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    const path=info.outputPath(`par52-${state}-${width}.png`);await panel.screenshot({path});await info.attach(`PAR-52 ${state} ${width}`,{path,contentType:'image/png'});
-   await summary.press('Enter');await expect(disclosure).not.toHaveAttribute('open','');
+   await summary.click();await expect(disclosure).not.toHaveAttribute('open','');
   }
  }
+ await page.setViewportSize({width:390,height:1000});await page.goto('/property/999283?par52-keyboard=1');
+ const keyboardSummary=page.locator('#market-adjustment summary').filter({hasText:"See the multiplier's effect on this home."});
+ const keyboardDisclosure=keyboardSummary.locator('..');
+ await keyboardSummary.click();await expect(keyboardDisclosure).toHaveAttribute('open','');
+ await keyboardSummary.click();await expect(keyboardDisclosure).not.toHaveAttribute('open','');
+ await keyboardSummary.focus();await page.keyboard.press('Enter');await expect(keyboardDisclosure).toHaveAttribute('open','');
+ await keyboardSummary.focus();await page.keyboard.press('Enter');await expect(keyboardDisclosure).not.toHaveAttribute('open','');
 });
