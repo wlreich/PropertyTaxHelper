@@ -16,11 +16,11 @@ test('PAR-10 reference sections: authority arithmetic, dynamic features, accessi
   await expect(calculation).not.toContainText('$203,000');
   await page.getByLabel('Calculation authority').selectOption('69');
   const drivers=page.locator('#market-adjustment');
-  for(const value of ['$384,639','$1,190,674','↑ $210,274 vs. 2025','1.46× → 1.78×','+$214,054']) await expect(drivers).toContainText(value);
+  for(const value of ['What changed in the 2026 preliminary appraisal?','Certified values are not substituted here.','Preliminary comparison unavailable','1.46× → 1.78×','+$214,054']) await expect(drivers).toContainText(value);
   const facts=page.locator('#property-details');
   for(const value of ['3 full + 1 half','1,121 sq ft','2012','R3','T2450','$42,809','$13,261']) await expect(facts).toContainText(value);
   await expect(facts.getByRole('link',{name:'Check the full property record',exact:false})).toHaveAttribute('href','https://travis.prodigycad.com/property-detail/736164/2026');
-  for(const name of ['View exemption details','How the estimate works','View all separately valued features (12)','About construction class and neighborhood']) {
+  for(const name of ['View exemption details',"See the multiplier's effect on this home.",'View all separately valued features (12)','About construction class and neighborhood']) {
     const disclosure=page.locator('summary').filter({hasText:name});
     await disclosure.focus(); await page.keyboard.press('Enter');
     await expect(disclosure.locator('..')).toHaveAttribute('open','');

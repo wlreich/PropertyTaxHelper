@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { capModel, propertyFeatures, valueDriverSummary, annualChange } from '../src/lib/property-sections.ts';
+import { annualChange, capModel, factorEffectContent, factorEligibilityNote, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from '../src/lib/property-sections.ts';
 import { par9Reference } from '../../tools/property-search/par9-reference-fixture.mjs';
+import { reference as par28Reference } from '../../tools/property-search/par28-reference.mjs';
+import { parseHistory } from '../src/lib/property-history.ts';
 const snapshots = par9Reference.overview.history.snapshots;
 const current = snapshots.find(s => s.tax_year === 2026 && s.roll_stage === 'certified');
 const previous = snapshots.find(s => s.tax_year === 2025 && s.roll_stage === 'certified');
@@ -57,6 +59,54 @@ test('drivers use actual annual values, not the multiplier-only estimate', () =>
   assert.equal(par9Reference.adjustment.homes[0].effect, 214054);
   assert.match(annualChange(null, 12, 2025), /unavailable/);
   assert.match(valueDriverSummary({ ...current, land_value:null }, previous), /not available/);
+});
+test('Value drivers uses the first explicitly eligible preliminary pair instead of certified outcomes', () => {
+  const list = parseHistory(par28Reference.overview.history);
+  const result = preliminaryValueDriverComparison(list, 2026);
+  assert.equal(result.status, 'ok');
+  assert.equal(result.previous.export_date, '2025-05-08');
+  assert.equal(result.current.export_date, '2026-04-02');
+  assert.equal(result.previous.improvement_value, 800000);
+  assert.equal(result.current.improvement_value, 1000000);
+  assert.notEqual(result.current.improvement_value, list.find(s => s.tax_year === 2026 && s.roll_stage === 'certified').improvement_value);
+  assert.equal(preliminaryValueDriverSummary(result), 'Land stayed the same. The preliminary value of your home and other features rose by $200,000 from last year.');
+});
+test('Value drivers treats absent eligibility and unusable components as unavailable without changing history fallback', () => {
+  const list = parseHistory(par28Reference.overview.history);
+  const unknown = list.map(s => s.roll_stage === 'preliminary' ? {...s, preliminary_baseline_eligible:undefined} : s);
+  assert.match(preliminaryValueDriverSummary(preliminaryValueDriverComparison(unknown, 2026)), /not confirmed for both 2025 and 2026/);
+  const missing = list.map(s => s.tax_year === 2025 && s.roll_stage === 'preliminary' && s.preliminary_baseline_eligible === true ? {...s, improvement_value:null} : s);
+  assert.match(preliminaryValueDriverSummary(preliminaryValueDriverComparison(missing, 2026)), /values are missing/);
+  const moved = list.map(s => s.tax_year === 2025 && s.roll_stage === 'preliminary' ? {...s, neighborhood:'OTHER'} : s);
+  assert.match(preliminaryValueDriverSummary(preliminaryValueDriverComparison(moved, 2026)), /same market area is not confirmed/);
+});
+test('preliminary summary adapts to rising, falling and unchanged land and home values', () => {
+  const list = parseHistory(par28Reference.overview.history);
+  const original = preliminaryValueDriverComparison(list, 2026);
+  assert.equal(original.status, 'ok');
+  const withCurrent = values => ({status:'ok', previous:original.previous, current:{...original.current,...values}});
+  assert.equal(preliminaryValueDriverSummary(withCurrent({land_value:250000, improvement_value:700000})), 'Land rose by $50,000. The preliminary value of your home and other features fell by $100,000 from last year.');
+  assert.equal(preliminaryValueDriverSummary(withCurrent({land_value:150000, improvement_value:800000})), 'Land fell by $50,000. The preliminary value of your home and other features stayed the same from last year.');
+});
+test('factor effect content preserves signs, zero and proportional factor segments', () => {
+  const positive = factorEffectContent(2026, 1.5, 1.8, 120000);
+  assert.match(positive.intro, /estimated \+\$120,000/);
+  assert.equal(positive.previousDifferenceWidth, 0);
+  assert.ok(Math.abs(positive.sharedWidth - 83.33333333333334) < 0.0001);
+  assert.ok(Math.abs(positive.currentDifferenceWidth - 16.666666666666668) < 0.0001);
+  const negative = factorEffectContent(2026, 1.8, 1.5, -40000);
+  assert.match(negative.intro, /estimated −\$40,000/);
+  assert.ok(negative.previousDifferenceWidth > 0);
+  assert.equal(negative.currentDifferenceWidth, 0);
+  const zero = factorEffectContent(2026, 1.5, 1.5, 0);
+  assert.match(zero.intro, /estimated \$0/);
+  assert.equal(zero.sharedWidth, 100);
+  assert.equal(factorEffectContent(2026, 1.5, 1.8, null), null);
+});
+test('factor eligibility note reports only source dates that exist', () => {
+  assert.equal(factorEligibilityNote(2026, '2026-04-02', '2025-05-08'), 'Eligibility checked against preliminary records dated May 8, 2025 and Apr 2, 2026. The supported factor estimate holds the 2026 building inputs constant.');
+  assert.equal(factorEligibilityNote(2026, '2026-04-02', null), 'Eligibility checked against the current-year preliminary record dated Apr 2, 2026. The supported factor estimate holds the 2026 building inputs constant.');
+  assert.equal(factorEligibilityNote(2026, null, '2025-05-08'), null);
 });
 test('features are dynamic and comparisons remain cautious for absent, new and ambiguous details', () => {
   const list = propertyFeatures(current, previous);
