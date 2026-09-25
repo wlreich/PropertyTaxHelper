@@ -35,6 +35,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await page.goto('/property/999283');
  await expect(panel.getByRole('heading',{name:'Why did your 2026 preliminary appraisal change from last year?'})).toBeVisible();
  await expect(panel).toContainText('2026 preliminary compared with 2025 preliminary.');
+ await expect(panel).toContainText('Records used: May 8, 2025 preliminary and Apr 2, 2026 preliminary.');
  await expect(panel).toContainText('Land stayed the same. The preliminary value of your home and other features rose by $200,000 from last year.');
  await expect(panel).toContainText('$1,000,000');
  await expect(panel).toContainText('↑ $200,000 vs. 2025');
