@@ -17,6 +17,9 @@
 .report-note {margin:var(--space-3) 0;}
 .report-note p {margin:0;}
 .report-callout {background:var(--color-surface-info);padding:var(--space-4);border-left:2px solid var(--color-border-strong);}
+.report-callout-positive {border-left-color:var(--color-success);}
+.report-note-links {display:flex;flex-wrap:wrap;gap:4px 0;font-size:12px;overflow-wrap:anywhere;}
+.report-note-links a {color:var(--color-action);text-decoration:underline;text-underline-offset:2px;}
 .report-table-wrap {margin:var(--space-4) 0;}
 .report-table {border-collapse:collapse;width:100%;table-layout:fixed;font-size:14px;}
 .report-table th,.report-table td {text-align:right;vertical-align:top;border-bottom:1px solid var(--color-border);padding:8px 10px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
@@ -59,7 +62,7 @@
  .report-compact .report-section h2 {font-size:16pt;margin-bottom:6px;}
  .report-compact .report-note {margin:8px 0;}
  .report-compact .report-table-wrap {margin:8px 0;}
- .report-heading,.report-callout,.report-chart,.report-table tr,.report-first-rows,.report-record {break-inside:avoid;}
+ .report-heading,.report-callout,.report-chart,.report-table tr,.report-first-rows,.report-record,.report-note-links {break-inside:avoid;}
  .report-heading,.report-section h2,.report-section h3 {break-after:avoid;}
  .report-section h2 {font-size:22pt;}
  .report-section h3 {font-size:14pt;}

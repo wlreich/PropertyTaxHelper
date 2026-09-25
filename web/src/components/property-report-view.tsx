@@ -5,7 +5,7 @@ import { dateLabel } from '@/lib/property-history';
 import { reportRowParts, type PropertyReport, type ReportBlock } from '@/lib/property-report';
 
 function Block({block,lead}:{block:ReportBlock;lead?:ReactNode}) {
-  if(block.kind==='note')return <div className={`report-note${block.emphasis ? ' report-callout' : ''}`}>{block.title && <h3>{block.title}</h3>}<p>{block.text}</p></div>;
+  if(block.kind==='note')return <div className={`report-note${block.emphasis ? ' report-callout' : ''}${block.positive ? ' report-callout-positive' : ''}`}>{block.title && <h3>{block.title}</h3>}<p>{block.text}</p>{block.links?.length && <p className="report-note-links">{block.links.map((link,i)=><Fragment key={link.href}>{i>0&&<span aria-hidden="true"> · </span>}<a href={link.href}>{link.label}: {link.href}</a></Fragment>)}</p>}</div>;
   if(block.kind==='chart') {
     const maximum=Math.ceil(Math.max(block.subject,block.median,1)/100000)*100000;
     return <figure className="report-chart"><figcaption>Market value compared with the median</figcaption>{[['Your home',block.subject],['Neighborhood median',block.median]].map(([label,value])=><div className="report-bar-row" key={label}><span>{label}</span><span className="report-bar-track"><span style={{width:`${Number(value)/maximum*100}%`}}/></span><strong>{currency(Number(value))}</strong></div>)}<p>Both bars start at $0. Full scale: {currency(maximum)}. Labels remain readable without color.</p></figure>;
