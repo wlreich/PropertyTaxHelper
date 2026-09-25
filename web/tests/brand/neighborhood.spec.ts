@@ -11,7 +11,19 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(page.locator('.activity-controls select')).toHaveCount(2);
  await expect(page.getByRole('form',{name:'Evidence research window'})).toBeVisible();
  await expect(page.getByRole('link',{name:'Print / save PDF',exact:true})).toHaveAttribute('href',/targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31/);
- await expect(page.locator('.neighborhood-story')).toContainText('2026 certified');
+ const story=page.locator('.neighborhood-story'),stages=story.locator('.neighborhood-story-stage');
+ await expect(stages).toHaveCount(3);expect(await stages.locator('h3').allTextContents()).toEqual(['Where the year started','What happened through protest season','Where the year landed']);
+ const stageBoxes=await stages.evaluateAll(nodes=>nodes.map(node=>{const box=node.getBoundingClientRect();return {x:box.x,y:box.y,width:box.width};}));
+ expect(stageBoxes[0].y).toBe(stageBoxes[1].y);expect(stageBoxes[1].y).toBe(stageBoxes[2].y);expect(stageBoxes[0].x+stageBoxes[0].width).toBeLessThanOrEqual(stageBoxes[1].x);expect(stageBoxes[1].x+stageBoxes[1].width).toBeLessThanOrEqual(stageBoxes[2].x);
+ await expect(story).toContainText('2026 certified');
+ await expect(stages.nth(0)).toContainText('2025 certified → 2026 preliminary');
+ await expect(stages.nth(1)).toContainText('2026 · 2 of 5 homes');
+ await expect(stages.nth(1)).toContainText('2026 · 2 of 3 homes with paired values');
+ await expect(stages.nth(1)).toContainText('A lower value alone does not establish that a protest happened or caused the reduction.');
+ await expect(stages.nth(2)).toContainText('Certified median market value');
+ await expect(stages.nth(2)).toContainText('2026 preliminary → 2026 certified');
+ await expect(stages.nth(2)).toContainText('2025 certified → 2026 certified');
+ await expect(story).not.toContainText(/successful protest|protest caused/i);
  await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2026');
  await expect(page.locator('.neighborhood-results')).toContainText('inferred from proposed-to-certified reductions');
  const results=page.locator('.neighborhood-results');
@@ -54,7 +66,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
 
  await page.getByRole('link',{name:'Print / save PDF',exact:true}).click();await expect(page).toHaveURL(/\/neighborhood\/print\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
- await expect(page.locator('.nbr-metrics')).toContainText('$450,000');await expect(page.locator('.nbr-outcome')).toContainText('1 / 2');
+ await expect(page.locator('.nbr-story')).toContainText('$450,000');await expect(page.locator('.nbr-story .neighborhood-story-stage')).toHaveCount(3);await expect(page.locator('.nbr-outcome')).toContainText('1 / 2');
  await page.evaluate(()=>{window.print=()=>{document.body.dataset.printRequested='yes';};});await page.getByRole('button',{name:'Print or save as PDF'}).click();await expect(page.locator('body')).toHaveAttribute('data-print-requested','yes');
  await page.emulateMedia({media:'print'});await expect(page.locator('.print-toolbar')).toBeHidden();
  await page.emulateMedia({media:'screen'});await page.getByRole('link',{name:'Back to neighborhood analysis'}).click();await expect(page).toHaveURL(/\/property\/100\/neighborhood\?targetYear=2027&evidenceStart=2026-01-01&evidenceEnd=2026-12-31$/);
@@ -62,16 +74,18 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
 });
 test('neighborhood period labels, additional history and missing or small samples',async({page},info)=>{
  test.skip(info.project.name!=='width-1440','Compact state checks at one viewport.');
- await page.goto('/property/9201/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('2026 preliminary');await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2025');await expect(page.locator('.neighborhood-history')).toContainText('reduced by at least 10% in 2025');
+ await page.goto('/property/9201/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('2026 preliminary');await expect(page.locator('.neighborhood-story-stage').nth(1)).toContainText('2025 · 12 of 12 homes');await expect(page.locator('.neighborhood-story-stage').nth(2)).toContainText('Pending certification');await expect(page.locator('.neighborhood-results')).toContainText('What changed during 2025');await expect(page.locator('.neighborhood-history')).toContainText('reduced by at least 10% in 2025');
  await page.goto('/property/9202/neighborhood');const more=page.locator('summary').filter({hasText:'More available year pairs'});await more.click();await expect(page.getByRole('heading',{name:'Proposed values: 2024 → 2025'})).toBeVisible();
  await page.goto('/property/9203/neighborhood');await expect(page.locator('.neighborhood-carry .neighborhood-big')).toHaveText('3 of 3 homes back at or above the prior proposal');
  await page.goto('/property/9205/neighborhood');await expect(page.locator('.neighborhood-carry .neighborhood-big')).toHaveText('Not available');await expect(page.locator('.neighborhood-carry')).toContainText('No homes with a qualifying reduction');
- await page.goto('/property/9204/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('Not available');await expect(page.locator('.neighborhood-results')).toContainText('Missing results are not zero reductions');await expect(page.locator('summary').filter({hasText:'About this analysis'}).locator('..')).toContainText('zero denominators are unavailable, not zero percent');await expect(page.locator('.neighborhood-page')).not.toContainText(/NaN|Infinity|96\.5%|at least 5%/);await expect(page.locator('.neighborhood-story .neighborhood-metrics')).not.toContainText('$0');
+ await page.goto('/property/9204/neighborhood');await expect(page.locator('.neighborhood-story')).toContainText('Not available');await expect(page.locator('.neighborhood-results')).toContainText('Missing results are not zero reductions');await expect(page.locator('summary').filter({hasText:'About this analysis'}).locator('..')).toContainText('zero denominators are unavailable, not zero percent');await expect(page.locator('.neighborhood-page')).not.toContainText(/NaN|Infinity|96\.5%|at least 5%/);await expect(page.locator('.neighborhood-story')).not.toContainText('$0');
 });
 test('neighborhood responsive layout and zoom',async({page},info)=>{
  await page.goto('/property/9200/neighborhood');await expect(page.locator('.neighborhood-carry')).toBeVisible();await expect(page.locator('.neighborhood-carry')).toContainText('at least 10%');await page.evaluate(()=>document.fonts.ready);
  const width=info.project.use.viewport!.width;
  if(width===1440||width===375){if(width===375)await page.setViewportSize({width:390,height:1000});const path=info.outputPath(width===1440?'neighborhood-desktop.png':'neighborhood-mobile.png');await page.screenshot({path,fullPage:true});await info.attach('Neighborhood layout',{path,contentType:'image/png'});}
+ const stages=page.locator('.neighborhood-story-stage'),boxes=await stages.evaluateAll(nodes=>nodes.map(node=>{const b=node.getBoundingClientRect();return {x:b.x,y:b.y};}));
+ if(width===1440){expect(boxes[0].y).toBe(boxes[1].y);expect(boxes[1].y).toBe(boxes[2].y);expect(boxes[0].x).toBeLessThan(boxes[1].x);expect(boxes[1].x).toBeLessThan(boxes[2].x);}else{expect(boxes[0].y).toBeLessThan(boxes[1].y);expect(boxes[1].y).toBeLessThan(boxes[2].y);}
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  if(width===375){await page.setViewportSize({width:320,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
  if(width===1440){await page.evaluate(()=>{document.documentElement.style.zoom='2';});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
