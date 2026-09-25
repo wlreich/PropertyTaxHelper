@@ -149,6 +149,9 @@ try {
   assert.match(neighborhood, /Where the year started/);
   assert.match(neighborhood, /Ended below proposal/);
   assert.match(neighborhood, /Median dollar reduction/);
+  assert.match(neighborhood, /Protest activity identified/);
+  assert.match(neighborhood, /What happened with the cap\?/);
+  assert.doesNotMatch(neighborhood, /Cap rows use eligible recorded caps/);
   assert.match(neighborhood, /Print \/ save PDF/);
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);
   const printable = await page("/property/100/neighborhood/print?release=11111111-1111-4111-8111-111111111111");

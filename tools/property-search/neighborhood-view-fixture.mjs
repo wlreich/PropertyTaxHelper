@@ -20,7 +20,13 @@ export function neighborhoodViewFixture(base,id) {
  d.population={candidate_count:d.homes.length,excluded:[],land_code_mismatch:0,multiple_buildings:0};
  d.caps=d.annual_periods.find(p=>p.release.dataset_id===d.preliminary_id).caps;
  d.market_adjustment=empty?null:{...base.market_adjustment,homes:d.homes.map(h=>({...base.market_adjustment.homes[0],property_id:h.property_id}))};
- if(id==='9205')for(const period of d.annual_periods)if(period.release.tax_year===2025&&period.release.roll_stage==='certified')for(const [i,h] of period.homes.entries())h.market=600000+i*10000;
+ if(id==='9205'){
+  for(const period of d.annual_periods){
+   if(period.release.tax_year===2025&&period.release.roll_stage==='certified')for(const [i,h] of period.homes.entries())h.market=600000+i*10000;
+   if(period.release.roll_stage==='preliminary')period.caps=period.homes.map(h=>({property_id:h.property_id,eligible:false,above:null,threshold:null}));
+  }
+  d.caps=d.annual_periods.find(p=>p.release.dataset_id===d.preliminary_id).caps;
+ }
  if(empty){d.subject.living_area=null;d.subject.market_value=null;d.annual_periods=[];}
  return d;
 }
