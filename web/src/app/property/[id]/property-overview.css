@@ -4,21 +4,26 @@
 .annual-history { min-width: 0; }
 .annual-history > .eyebrow { color: var(--color-action); margin-bottom: var(--space-3); }
 .annual-history.property-section h2 { margin-bottom: var(--space-4); }
-.annual-chart { --annual-label-width: 8rem; margin: var(--space-6) 0; font-size: var(--text-small); }
+.annual-chart { --annual-label-width: 8rem; --annual-stage-width: 12rem; margin: var(--space-6) 0; font-size: var(--text-small); }
+.annual-chart-caption { max-width: 70ch; margin-bottom: var(--space-4); color: var(--color-text-muted); line-height: var(--line-body); }
 .annual-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); margin-bottom: var(--space-6); }
 .annual-legend > span { display: flex; align-items: center; gap: var(--space-2); }
 .annual-legend i { display: inline-block; width: var(--space-2); height: var(--space-2); flex-shrink: 0; border-radius: var(--radius-pill); }
+.annual-proposed-key, .annual-series-proposed .annual-bar { background: var(--color-chart-primary); }
 .annual-market-key, .annual-series-market .annual-bar { background: var(--color-action); }
 .annual-assessed-key, .annual-series-assessed .annual-bar { background: var(--color-success); }
 .annual-chart-rows { display: grid; gap: var(--space-6); }
 .annual-chart-year { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr); align-items: start; gap: var(--space-4); }
-.annual-chart-label { color: var(--color-text-muted); padding-top: var(--space-1); }
-.annual-chart-pair { display: grid; gap: var(--space-2); min-width: 0; }
-.annual-chart-series { position: relative; min-height: max(var(--space-6), calc(var(--text-small) * var(--line-small))); margin-right: calc(var(--annual-label-width) + var(--space-3)); }
+.annual-chart-label { color: var(--color-text); padding-top: var(--space-1); font-weight: var(--weight-semibold); }
+.annual-chart-pair { display: grid; gap: var(--space-3); min-width: 0; }
+.annual-chart-series { display: grid; grid-template-columns: minmax(0, var(--annual-stage-width)) minmax(0, 1fr); align-items: start; gap: var(--space-3); min-width: 0; }
+.annual-stage-label { line-height: var(--line-small); font-weight: var(--weight-semibold); }
+.annual-bar-area { position: relative; min-width: 0; min-height: max(var(--space-6), calc(var(--text-small) * var(--line-small))); margin-right: calc(var(--annual-label-width) + var(--space-3)); }
 .annual-bar-track { border-left: var(--border-width) solid var(--color-chart-grid); background: repeating-linear-gradient(to right, transparent 0, transparent calc(25% - var(--border-width)), var(--color-chart-grid) calc(25% - var(--border-width)), var(--color-chart-grid) 25%); }
 .annual-bar { display: block; height: var(--space-6); border-radius: var(--radius-none) var(--radius-input) var(--radius-input) var(--radius-none); }
 .annual-bar-value { position: absolute; top: 0; width: var(--annual-label-width); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.annual-chart-axis { position: relative; min-height: max(var(--space-6), calc(var(--text-label) * var(--line-body))); margin-top: var(--space-3); margin-left: calc(var(--space-16) + var(--space-4)); margin-right: calc(var(--annual-label-width) + var(--space-3)); color: var(--color-text-muted); font-size: var(--text-label); }
+.annual-chart-unavailable { display: flex; align-items: center; min-height: var(--space-6); color: var(--color-text-muted); }
+.annual-chart-axis { position: relative; min-height: max(var(--space-6), calc(var(--text-label) * var(--line-body))); margin-top: var(--space-3); margin-left: calc(var(--space-16) + var(--space-4) + var(--annual-stage-width) + var(--space-3)); margin-right: calc(var(--annual-label-width) + var(--space-3)); color: var(--color-text-muted); font-size: var(--text-label); }
 .annual-chart-axis span { position: absolute; width: max-content; white-space: nowrap; transform: translateX(-50%); }
 .annual-chart-axis span:first-child { transform: none; }
 .annual-chart-axis span:last-child { transform: translateX(-100%); }
@@ -60,7 +65,8 @@
 }
 @media (max-width: 700px) {
   .annual-chart-year { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
-  .annual-chart-series { margin-right: 0; }
+  .annual-chart-series { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .annual-bar-area { margin-right: 0; }
   .annual-chart-axis { margin-inline: 0; }
   .annual-bar-value { position: static; display: block; width: auto; text-align: right; margin-top: var(--space-1); font-size: var(--text-label); }
   .annual-authorities, .annual-source-values { grid-template-columns: minmax(0, 1fr); }

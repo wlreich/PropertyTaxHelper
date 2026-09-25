@@ -5,15 +5,17 @@ import { parseHistory, protestEvidence } from '../src/lib/property-history.ts';
 import { par11Reference, par11Fixture } from '../../tools/property-search/par11-fixture.mjs';
 const snapshots = parseHistory(par11Reference.overview.history);
 
-test('annual reference uses May 8 eligible baseline, not July; annual and within-year changes stay separate',()=>{
+test('annual trend uses only explicitly eligible proposals; ledger comparisons stay separate',()=>{
   const rows=annualHistory([...snapshots].reverse());
   assert.deepEqual(rows.map(r=>r.year),[2026,2025]);
-  assert.equal(rows[0].preliminary,1575313); assert.equal(rows[0].market,1575313); assert.equal(rows[0].assessed,1377354);
+  assert.equal(rows[0].preliminary,1575313); assert.equal(rows[0].trendProposed,null); assert.equal(rows[0].market,1575313); assert.equal(rows[0].assessed,1377354);
   assert.equal(rows[1].preliminary,1365039); assert.equal(rows[1].market,1365039); assert.equal(rows[1].assessed,1252140);
   assert.equal(changeLabel(rows[0].annual),'+$210,274 / 15.4%');
   assert.equal(changeLabel(rows[1].annual),'Not available');
   assert.equal(changeLabel(rows[0].within),'Unchanged'); assert.equal(changeLabel(rows[1].within),'Unchanged');
   assert.match(capGapSummary(rows),/widened from \$112,899 in 2025 to \$197,959 in 2026/);
+  const prepared=snapshots.map(s=>s.tax_year===2026&&s.roll_stage==='preliminary'?{...s,preliminary_baseline_eligible:true}:s);
+  assert.equal(annualHistory(prepared)[0].trendProposed,1575313);
   const changed=snapshots.map(s=>s.dataset_id==='4cb28ab3-6d6b-4046-8b29-f25258195de1'?{...s,market_value:1400000}:s);
   assert.equal(annualHistory(changed)[1].preliminary,1400000);
   assert.equal(annualHistory(changed)[1].within.dollars,-34961);
@@ -41,7 +43,7 @@ test('preliminary-only current year has available preliminary values but no cert
   assert.equal(row.preliminary,685000); assert.equal(row.afterCap,590000);
   assert.equal(row.market,null); assert.equal(row.assessed,null); assert.equal(row.annual,null); assert.equal(row.within,null);
 });
-test('unknown amounts/dates and zero bases remain explicit; axes include zero and bound every bar',()=>{
+test('unknown amounts/dates and zero bases remain explicit; axes include zero and bound every stage',()=>{
   const base=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
   const prior={...base,dataset_id:'prior',tax_year:2025,export_date:'2025-07-18',market_value:0,assessed_value:0};
   const rows=annualHistory([prior,{...base,market_value:20}]);
@@ -49,8 +51,8 @@ test('unknown amounts/dates and zero bases remain explicit; axes include zero an
   assert.equal(annualHistory([{...prior,market_value:null},base])[0].annual,null);
   assert.equal(annualHistory([{...prior,export_date:null},base])[0].annual,null);
   assert.equal(capGapSummary([{...rows[0],market:1,assessed:2},rows[1]]),null);
-  for(const amounts of [[0,0],[1,2],[1575313,1377354],[123456789,100000000],[null,null]]) {
-    const scale=chartScale([{...rows[0],market:amounts[0],assessed:amounts[1]}]);
+  for(const amounts of [[0,0,0],[1,2,3],[2000000,1575313,1377354],[123456789,100000000,90000000],[null,null,null]]) {
+    const scale=chartScale([{...rows[0],trendProposed:amounts[0],market:amounts[1],assessed:amounts[2]}]);
     assert.equal(scale.ticks[0],0); assert.equal(scale.ticks.at(-1),scale.maximum);
     assert.ok(scale.maximum>0); assert.ok(amounts.every(n=>n===null||n<=scale.maximum));
   }
@@ -76,4 +78,39 @@ test('year detail values share the eligible baseline and preserve protest-only y
  assert.equal(old.protests[0].recorded,true);
  const excluded=annualHistory(parseHistory(par11Fixture('999119').overview.history))[1];
  assert.equal(excluded.preliminaryAssessed,null);assert.equal(excluded.outcome,null);
+});
+
+test('valuation stages keep eligible proposals, matching certified values and cap evidence together',()=>{
+ const proposal=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='preliminary');
+ const certified=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
+ const eligible={...proposal,dataset_id:'eligible-proposal',preliminary_baseline_eligible:true,market_value:1800000,assessed_value:1400000};
+ const olderFinal={...certified,dataset_id:'older-final',export_date:'2026-07-01',market_value:1500000,assessed_value:1300000};
+ const matchingFinal={...certified,dataset_id:'matching-final',export_date:'2026-08-01',market_value:1600000,assessed_value:1350000};
+ const row=annualHistory([eligible,matchingFinal,olderFinal])[0];
+ assert.equal(row.trendProposed,1800000);
+ assert.equal(row.market,1600000);
+ assert.equal(row.assessed,1350000);
+ assert.equal(row.within.dollars,-200000);
+ assert.equal(row.assessedAfterCap,true);
+ assert.equal(chartScale([row]).maximum,2000000);
+
+ const below=annualHistory([{...eligible,market_value:1500000},{...matchingFinal,market_value:1600000}])[0];
+ assert.equal(below.within.dollars,100000);
+
+ const noCapProposal={...eligible,exemptions:[],entities:[],market_value:600000,assessed_value:600000};
+ const noCapFinal={...matchingFinal,exemptions:[],entities:[],market_value:550000,assessed_value:550000};
+ assert.equal(annualHistory([noCapProposal,noCapFinal])[0].assessedAfterCap,false);
+});
+
+test('preliminary-only, certified-only, excluded and unknown proposal stages stay distinct',()=>{
+ const proposal=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='preliminary');
+ const certified=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
+ const preliminaryOnly=annualHistory([{...proposal,preliminary_baseline_eligible:true}])[0];
+ assert.equal(preliminaryOnly.trendProposed,1575313);assert.equal(preliminaryOnly.market,null);assert.equal(preliminaryOnly.assessed,null);
+ const certifiedOnly=annualHistory([certified])[0];
+ assert.equal(certifiedOnly.trendProposed,null);assert.equal(certifiedOnly.market,1575313);assert.equal(certifiedOnly.assessed,1377354);
+ for(const preliminary_baseline_eligible of [false,undefined]) {
+   const row=annualHistory([{...proposal,preliminary_baseline_eligible},certified])[0];
+   assert.equal(row.trendProposed,null);assert.equal(row.assessedAfterCap,false);
+ }
 });
