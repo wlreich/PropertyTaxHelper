@@ -108,7 +108,7 @@ test('PAR-52 supported and unavailable Value drivers reflow at 390 and 1440 px',
    await page.goto(`/property/${id}`);
    const panel=page.locator('#market-adjustment');
    const summary=panel.locator('summary').filter({hasText:"See the multiplier's effect on this home."});
-   await summary.focus();await page.keyboard.press('Enter');await expect(summary.locator('..')).toHaveAttribute('open','');
+   await summary.press('Enter');await expect(summary.locator('..')).toHaveAttribute('open','');
    if(state==='supported'){
     await expect(panel.locator('.factor-comparison')).toBeVisible();
     await expect(panel.locator('.factor-comparison')).toHaveAttribute('aria-label',/same 2026 building inputs/i);
@@ -116,7 +116,7 @@ test('PAR-52 supported and unavailable Value drivers reflow at 390 and 1440 px',
    expect((await new AxeBuilder({page}).include('#market-adjustment').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
    const path=info.outputPath(`par52-${state}-${width}.png`);await panel.screenshot({path});await info.attach(`PAR-52 ${state} ${width}`,{path,contentType:'image/png'});
-   await page.keyboard.press('Enter');await expect(summary.locator('..')).not.toHaveAttribute('open','');
+   await summary.press('Enter');await expect(summary.locator('..')).not.toHaveAttribute('open','');
   }
  }
 });
