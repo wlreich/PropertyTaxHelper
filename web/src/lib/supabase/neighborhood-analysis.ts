@@ -3,7 +3,7 @@ import { rpc } from './properties.ts';
 import { parseNeighborhood } from './neighborhood.ts';
 import { validPropertyId } from '../property-comparisons.ts';
 import { validDate, type SeasonContext } from '../seasons.ts';
-import { neighborhoodAnalysis, type AnnualPeriod, type AnnualHome, type NeighborhoodAnalysisData } from '../neighborhood-analysis.ts';
+import { neighborhoodAnalysis, type AgentAssignment, type AnnualPeriod, type AnnualHome, type NeighborhoodAnalysisData } from '../neighborhood-analysis.ts';
 import type { Cap } from '../neighborhood.ts';
 
 const object = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -13,7 +13,7 @@ const nullableBool = (v: unknown) => v === null || typeof v === 'boolean';
 
 export function parseNeighborhoodAnalysis(value: unknown, id: string): NeighborhoodAnalysisData | null {
   const base = parseNeighborhood(value, id);
-  if (!base || !object(value) || !Array.isArray(value.annual_periods) || value.annual_periods.length > 100) return null;
+  if (!base || !object(value) || !Array.isArray(value.annual_periods) || value.annual_periods.length > 100 || !Array.isArray(value.agent_assignments)) return null;
   const ids = new Set(base.homes.map(h => h.property_id));
   const current = base.releases.find(r => r.dataset_id === base.source_id)!;
   if (!validDate(current.export_date)) return null;
@@ -50,7 +50,21 @@ export function parseNeighborhoodAnalysis(value: unknown, id: string): Neighborh
     if (release.roll_stage !== 'preliminary' && caps.length) return null;
     periods.push({ release, homes, caps });
   }
-  return { ...base, annual_periods: periods };
+  if (value.agent_assignments.length > ids.size * 100) return null;
+  const assignmentKeys = new Set<string>(), agentAssignments: AgentAssignment[] = [];
+  for (const raw of value.agent_assignments) {
+    if (!object(raw) || typeof raw.property_id !== 'string' || !ids.has(raw.property_id) ||
+      typeof raw.tax_year !== 'number' || !Number.isInteger(raw.tax_year) || raw.tax_year < 1900 || raw.tax_year > current.tax_year ||
+      !['named', 'ambiguous'].includes(String(raw.status))) return null;
+    const status = raw.status as AgentAssignment['status'];
+    if (status === 'named' && (typeof raw.agent_name !== 'string' || raw.agent_name.trim() !== raw.agent_name || raw.agent_name.length < 1 || raw.agent_name.length > 200 || /[\u0000-\u001f\u007f]/.test(raw.agent_name)) ||
+      status === 'ambiguous' && raw.agent_name !== null) return null;
+    const key = `${raw.tax_year}:${raw.property_id}`;
+    if (assignmentKeys.has(key)) return null;
+    assignmentKeys.add(key);
+    agentAssignments.push({ property_id: raw.property_id, tax_year: raw.tax_year, agent_name: raw.agent_name as string | null, status });
+  }
+  return { ...base, annual_periods: periods, agent_assignments: agentAssignments };
 }
 
 // Both the redesigned page and print route consume this exact contract. Pass the

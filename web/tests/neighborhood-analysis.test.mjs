@@ -8,7 +8,7 @@ const period=(year,stage,values)=>({release:release(year,stage),caps:[],homes:va
 function data(periods,count=periods[0].homes.length){
  const current=periods.at(-1);
  return {source_id:current.release.dataset_id,releases:periods.map(p=>p.release),subject:{property_id:'1',market_value:100000,living_area:1000},
-  homes:Array.from({length:count},(_,i)=>({property_id:String(i+1),market:100000,area:1000,preliminary:null,certified:null,certified_area:null,prior:null,protested:false,entities:[]})),caps:[],annual_periods:periods};
+  homes:Array.from({length:count},(_,i)=>({property_id:String(i+1),market:100000,area:1000,preliminary:null,certified:null,certified_area:null,prior:null,protested:false,entities:[]})),caps:[],annual_periods:periods,agent_assignments:[]};
 }
 test('10% boundary and return buckets use exact values, not rounded percentages',()=>{
  const p=period(2025,'preliminary',Array(6).fill(100000));
@@ -130,4 +130,49 @@ test('additional years append pairs, gaps do not become one-year comparisons, an
  const s=neighborhoodAnalysis(d);assert.equal(s.preliminaryChanges.length,2);assert.equal(s.carryForward[0].full.smallSample,false);
  assert.equal(s.preliminaryChanges[0].current.tax_year,2027);
  d.homes.push(d.homes[0]);assert.throws(()=>neighborhoodAnalysis(d),/Duplicate/);
+});
+test('agent activity uses two dynamic completed years, deterministic top five, other, ambiguous and unnamed groups',()=>{
+ const p25=period(2025,'preliminary',Array(12).fill(100000)),c25=period(2025,'certified',Array(12).fill(90000));
+ const p26=period(2026,'preliminary',Array(12).fill(200000)),c26=period(2026,'certified',Array(12).fill(180000));
+ const d=data([p25,c25,p26,c26],12);
+ const names=['ALPHA TAX','BETA TAX','CHARLIE TAX','DELTA TAX','ECHO TAX','FOXTROT TAX','GOLF TAX','HOTEL TAX'];
+ d.agent_assignments=[
+  ...names.map((agent_name,i)=>({property_id:String(i+1),tax_year:2026,agent_name,status:'named'})),
+  {property_id:'9',tax_year:2026,agent_name:'Alpha-Tax',status:'named'},
+  {property_id:'10',tax_year:2026,agent_name:'ALPHA TAX',status:'named'},
+  {property_id:'11',tax_year:2026,agent_name:null,status:'ambiguous'},
+  ...Array.from({length:6},(_,i)=>({property_id:String(i+1),tax_year:2025,agent_name:`${String.fromCharCode(90-i)} TAX`,status:'named'})),
+ ];
+ const panels=neighborhoodAnalysis(d).agentActivity;
+ assert.deepEqual(panels.map(x=>x.certified.tax_year),[2026,2025]);
+ assert.equal(panels[0].activityCount,12);
+ assert.deepEqual(panels[0].rows.slice(0,5).map(x=>x.label),['Alpha Tax','Beta Tax','Charlie Tax','Delta Tax','Echo Tax']);
+ assert.deepEqual(panels[0].rows.map(x=>[x.kind,x.propertyCount,x.reducedCount]),[
+  ['named',3,3],['named',1,1],['named',1,1],['named',1,1],['named',1,1],['other',3,3],['ambiguous',1,1],['none',1,1],
+ ]);
+ assert.equal(panels[0].rows.find(x=>x.kind==='other').label,'Other agents (3)');
+ assert.equal(panels[0].rows[0].medianReduction,20000);assert.equal(panels[0].rows[0].medianPercent,10);
+ assert.deepEqual(panels[1].rows.slice(0,5).map(x=>x.label),['U Tax','V Tax','W Tax','X Tax','Y Tax']);
+});
+test('agent medians use only positive paired reductions while recorded and inferred activity still count once',()=>{
+ const p=period(2026,'preliminary',[200000,200000,200000,200000,200000]);
+ const c=period(2026,'certified',[150000,200000,210000,null,190000]);
+ p.homes[1].protested=true;p.homes[2].protested=true;p.homes[3].protested=true;
+ const d=data([p,c],5);d.agent_assignments=[1,2,3,4].map(i=>({property_id:String(i),tax_year:2026,agent_name:'SAMPLE AGENT',status:'named'}));
+ const panel=neighborhoodAnalysis(d).agentActivity[0],named=panel.rows[0],unnamed=panel.rows[1];
+ assert.equal(panel.activityCount,5);assert.deepEqual([named.propertyCount,named.reducedCount],[4,1]);
+ assert.equal(named.medianReduction,50000);assert.equal(named.medianPercent,25);
+ assert.deepEqual([unnamed.kind,unnamed.propertyCount,unnamed.reducedCount],['none',1,1]);
+});
+test('agent activity requires completed pairs and keeps unavailable reduction medians explicit',()=>{
+ const p25=period(2025,'preliminary',[100000,100000]),c25=period(2025,'certified',[100000,110000]);
+ p25.homes[0].protested=true;c25.homes[1].protested=true;
+ const p26=period(2026,'preliminary',[120000,120000]);
+ const d=data([p25,c25,p26],2);d.agent_assignments=[{property_id:'1',tax_year:2025,agent_name:'SAMPLE AGENT',status:'named'}];
+ const panel=neighborhoodAnalysis(d).agentActivity;
+ assert.equal(panel.length,1);assert.equal(panel[0].certified.tax_year,2025);
+ assert.deepEqual(panel[0].rows.map(row=>[row.kind,row.reducedCount,row.medianReduction,row.medianPercent]),[
+  ['named',0,null,null],['none',0,null,null],
+ ]);
+ assert.deepEqual(neighborhoodAnalysis(data([p26],2)).agentActivity,[]);
 });
