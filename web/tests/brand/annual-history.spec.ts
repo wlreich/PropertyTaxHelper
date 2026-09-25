@@ -56,6 +56,7 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await expect(stages2025.nth(0)).toHaveAccessibleName('2025 Proposed market value: $1,365,039');
   await expect(stages2025.nth(1)).toHaveAccessibleName('2025 Final market value: $1,365,039');
   await expect(stages2025.nth(2)).toHaveAccessibleName('2025 Assessed value after cap: $1,252,140');
+  for(const [stage,color] of [[0,'rgb(11, 45, 77)'],[1,'rgb(23, 105, 170)'],[2,'rgb(25, 122, 101)']] as const) await expect(stages2025.nth(stage).locator('.annual-bar')).toHaveCSS('background-color',color);
   const stages2026=history.locator('[data-chart-year="2026"] [data-chart-stage]');
   await expect(stages2026.nth(0)).toHaveAccessibleName('2026 Proposed market value: Not available');
   await expect(stages2026.nth(1)).toHaveAccessibleName('2026 Final market value: $1,575,313');

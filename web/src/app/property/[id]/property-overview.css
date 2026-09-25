@@ -10,7 +10,7 @@
 .annual-legend > span { display: flex; align-items: center; gap: var(--space-2); }
 .annual-legend i { display: inline-block; width: var(--space-2); height: var(--space-2); flex-shrink: 0; border-radius: var(--radius-pill); }
 .annual-proposed-key, .annual-series-proposed .annual-bar { background: var(--color-chart-primary); }
-.annual-market-key, .annual-series-market .annual-bar { background: var(--color-action); }
+.annual-market-key, .annual-series-final .annual-bar { background: var(--color-action); }
 .annual-assessed-key, .annual-series-assessed .annual-bar { background: var(--color-success); }
 .annual-chart-rows { display: grid; gap: var(--space-6); }
 .annual-chart-year { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr); align-items: start; gap: var(--space-4); }
