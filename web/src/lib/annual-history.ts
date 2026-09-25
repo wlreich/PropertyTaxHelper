@@ -1,4 +1,5 @@
 import { comparison, dateLabel, entityDisplayName, exemptionName, isFinalAssessment, isPreliminaryBaseline, preliminaryBaseline, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { releaseKey } from './current-assessment.ts';
 import { assessmentOutcome } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 import { validDate } from './seasons.ts';
@@ -13,7 +14,7 @@ export function changeLabel(change: ReturnType<typeof comparison>) {
 // property-specific baseline exclusions; no dataset/year overrides belong here.
 export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservation[] = []) {
   const ordered = [...snapshots].sort((a, b) => a.tax_year - b.tax_year ||
-    (a.export_date ?? '').localeCompare(b.export_date ?? '') || a.dataset_id.localeCompare(b.dataset_id));
+    releaseKey(a).localeCompare(releaseKey(b)) || a.dataset_id.localeCompare(b.dataset_id));
   const years = [...new Set([...ordered.map(s => s.tax_year), ...evidence.map(s => s.tax_year)])].sort((a, b) => b - a);
   const completed = new Map(years.map(year => [year, ordered.filter(s => s.tax_year === year && isFinalAssessment(s)).at(-1)]));
   return years.map(year => {

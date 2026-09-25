@@ -79,6 +79,15 @@ test('later supplemental assessment is the final annual value and retains its so
   assert.match(rows[0].sources.at(-1).label,/supplemental/);
   assert.equal(annualHistory(snapshots)[0].status,'Certified');
 });
+test('same-day supplemental export time wins regardless of dataset ID order',()=>{
+  const base=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
+  const earlier={...base,dataset_id:'z-certified',export_date:'2026-08-26',export_time_raw:'08/26/2026 09:00',market_value:1400000};
+  const later={...base,dataset_id:'a-supplemental',roll_stage:'supplemental',export_date:'2026-08-26',export_time_raw:'08/26/2026 18:00',market_value:1285275};
+  const row=annualHistory([...snapshots,earlier,later])[0];
+  assert.equal(row.status,'Supplemental');
+  assert.equal(row.market,1285275);
+  assert.equal(row.sources.at(-1).id,'a-supplemental');
+});
 
 test('year detail values share the eligible baseline and preserve protest-only years',()=>{
  const rows=annualHistory(snapshots);

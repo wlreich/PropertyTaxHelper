@@ -12,7 +12,7 @@ export function exportDate(raw: string | null): string | null {
   const date = iso ?? (us ? `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}` : null);
   return validDate(date) ? date : null;
 }
-function releaseKey(s: Snapshot) {
+export function releaseKey(s: Snapshot) {
   const date = validDate(s.export_date) ? s.export_date : exportDate(s.export_time_raw);
   const time = s.export_time_raw?.match(/[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
   return `${date ?? ''} ${time ? `${time[1].padStart(2, '0')}:${time[2]}:${time[3] ?? '00'}` : ''}`;
