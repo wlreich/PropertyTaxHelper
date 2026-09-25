@@ -43,6 +43,8 @@
  .neighborhood-print-preview,.print-report {max-width:none;margin:0;padding:0;}
  .print-report {font-size:10.5pt;}
  .print-report h1 {letter-spacing:normal;}
+ .print-report>h1 {margin:8px 0 6px;}
+ .print-report>h1+p,.print-report>h1+p+p {margin:3px 0;}
  .print-report h2 {margin:12px 0 6px;}
  .print-report p {margin:6px 0;}
  .print-header,.nbr-story,.nbr-chart,.nbr-callout,.nbr-multiplier,.nbr-outcome,.print-report-footer {break-inside:avoid;}
@@ -50,21 +52,21 @@
  .print-report p {orphans:3;widows:3;}
  .nbr-table tr,.activity-print tr {break-inside:avoid;}
  .nbr-table thead,.activity-print thead {display:table-header-group;}
- .nbr-story {margin:6px 0;padding:8px;}
+ .nbr-story {margin:4px 0;padding:6px;}
  .print-report .nbr-story h2 {font-size:16px;line-height:1.25;}
  .print-report .nbr-story h3 {font-size:14px;line-height:1.25;}
  .print-report .nbr-story p {margin:0;}
  .nbr-story .neighborhood-story-heading {gap:4px;}
  .nbr-story .neighborhood-story-heading p {font-size:11px;line-height:1.3;}
- .nbr-story .neighborhood-story-heading p:last-child {display:none;}
- .nbr-story .neighborhood-story-stages {grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:4px;padding-top:7px;}
- .nbr-story .neighborhood-story-stage {gap:5px;padding-block:0;padding-inline:8px;}
+ .nbr-story .neighborhood-story-heading p {display:none;}
+ .nbr-story .neighborhood-story-stages {grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:3px;padding-top:5px;}
+ .nbr-story .neighborhood-story-stage {gap:3px;padding-block:0;padding-inline:8px;}
  .nbr-story .neighborhood-story-stage+.neighborhood-story-stage {border-top:0;border-left:1px solid var(--color-border-strong);}
- .print-report .nbr-story .neighborhood-story-stage dl {gap:5px;}
- .print-report .nbr-story .neighborhood-story-stage dl>div {gap:2px;padding-top:5px;}
- .print-report .nbr-story .neighborhood-story-stage dt,.print-report .nbr-story .neighborhood-note {font-size:11px;line-height:1.3;}
- .print-report .nbr-story .neighborhood-story-stage dd:not(.neighborhood-note) {font-size:18px;line-height:1.15;}
- .print-report .nbr-story .neighborhood-story-stage .neighborhood-story-primary dd:not(.neighborhood-note) {font-size:21px;line-height:1.15;}
+ .print-report .nbr-story .neighborhood-story-stage dl {gap:4px;}
+ .print-report .nbr-story .neighborhood-story-stage dl>div {gap:1px;padding-top:3px;}
+ .print-report .nbr-story .neighborhood-story-stage dt,.print-report .nbr-story .neighborhood-note {font-size:10.5px;line-height:1.25;}
+ .print-report .nbr-story .neighborhood-story-stage dd:not(.neighborhood-note) {font-size:16px;line-height:1.15;}
+ .print-report .nbr-story .neighborhood-story-stage .neighborhood-story-primary dd:not(.neighborhood-note) {font-size:19px;line-height:1.15;}
  .print-report .nbr-table,.print-report .activity-print table {font-size:10.5pt;}
  .print-report .nbr-table th,.print-report .nbr-table td,.print-report .activity-print th,.print-report .activity-print td {padding:6pt;}
  .print-report a {color:var(--color-text);}
