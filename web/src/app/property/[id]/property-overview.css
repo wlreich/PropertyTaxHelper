@@ -944,7 +944,7 @@
 .current-assessment .definition-trigger:focus-visible { outline-color: var(--color-focus-on-dark); }
 .current-assessment .current-assessment-evidence { color: var(--color-surface-info); font-size: var(--text-small); margin-top: var(--space-2); }
 .current-assessment-season { border-top: var(--border-width) solid var(--color-border-strong); padding-top: var(--space-4); margin-top: var(--space-4); }
-.current-assessment-driver-link { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--color-surface); text-decoration: underline; font-size: var(--text-small); }
+.profile-shell.combined-profile .current-assessment a.current-assessment-driver-link { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--color-surface); text-decoration: underline; font-size: var(--text-small); }
 .current-assessment-driver-link:focus-visible { outline-color: var(--color-focus-on-dark); }
 .overview-context { overflow-wrap: anywhere; margin-top: var(--space-6); padding: var(--space-8); border-radius: var(--radius-card); background: var(--color-surface); }
 .overview-context h2 { font-size: var(--text-h2); }
