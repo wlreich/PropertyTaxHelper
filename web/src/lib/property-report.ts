@@ -113,7 +113,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
   sections.push({id:'inventory',title:'The home in the records',blocks:inventory});
 
   if (!compact || current.land_value!==null || current.improvement_value!==null) {
-    const valuation: ReportBlock[] = [table('Recorded valuation components',['Component',story.previous ? `${story.previous.tax_year} certified` : 'Prior year',`${current.tax_year} ${current.roll_stage}`,'Annual change'],[
+    const valuation: ReportBlock[] = [table('Recorded valuation components',['Component',story.previous ? `${story.previous.tax_year} ${story.previous.roll_stage}` : 'Prior year',`${current.tax_year} ${current.roll_stage}`,'Annual change'],[
       row('value-land','Land',money(story.previous?.land_value),money(current.land_value),story.previous?.land_value != null && current.land_value !== null ? signed(current.land_value-story.previous.land_value) : 'Unavailable'),
       row('value-improvements','Home & other features',money(story.previous?.improvement_value),money(current.improvement_value),story.previous?.improvement_value != null && current.improvement_value !== null ? signed(current.improvement_value-story.previous.improvement_value) : 'Unavailable'),
       row('value-total','Total market value',money(story.previous?.market_value),money(current.market_value),story.previous?.market_value != null && current.market_value !== null ? signed(current.market_value-story.previous.market_value) : 'Unavailable'),
@@ -153,9 +153,9 @@ export function buildPropertyReport(input: PropertyReportInput) {
 
   if(!compact && history.length) {
     sections.push({id:'history',title:'Your assessment over time',blocks:[
-      note('All available years through this assessment year. Annual changes compare consecutive certified years; within-year changes compare usable proposed and certified releases. Missing years and excluded baselines are not zero.'),
-      table('Assessment and protest history',['Year / stage','Proposed market','Certified market','Assessed before exemptions','Within-year change'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.preliminary),money(h.market),money(h.afterCap),changeLabel(h.within)],note:[
-        `Annual certified market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
+      note('All available years through this assessment year. Annual changes compare consecutive completed years; within-year changes compare usable proposed and final releases. Missing years and excluded baselines are not zero.'),
+      table('Assessment and protest history',['Year / stage','Proposed market','Final market','Assessed before exemptions','Within-year change'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.preliminary),money(h.market),money(h.afterCap),changeLabel(h.within)],note:[
+        `Annual final market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
         h.outcome?.explanation ?? '',
         h.protests.length ? h.protests.map(p=>`${p.basis} (${p.date})${p.agent ? `; agent: ${p.agent}` : ''}${p.codes.length ? `; recorded status: ${p.codes.join(', ')}` : ''}`).join('. ') : input.protestsUnavailable ? 'Protest records temporarily unavailable.' : 'No protest found in available records; this does not establish that none was filed.',
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,

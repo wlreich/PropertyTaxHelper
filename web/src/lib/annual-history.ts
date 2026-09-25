@@ -1,4 +1,4 @@
-import { comparison, dateLabel, entityDisplayName, exemptionName, isPreliminaryBaseline, preliminaryBaseline, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { comparison, dateLabel, entityDisplayName, exemptionName, isFinalAssessment, isPreliminaryBaseline, preliminaryBaseline, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { assessmentOutcome } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 import { validDate } from './seasons.ts';
@@ -15,11 +15,11 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
   const ordered = [...snapshots].sort((a, b) => a.tax_year - b.tax_year ||
     (a.export_date ?? '').localeCompare(b.export_date ?? '') || a.dataset_id.localeCompare(b.dataset_id));
   const years = [...new Set([...ordered.map(s => s.tax_year), ...evidence.map(s => s.tax_year)])].sort((a, b) => b - a);
-  const certified = new Map(years.map(year => [year, ordered.filter(s => s.tax_year === year && s.roll_stage === 'certified').at(-1)]));
+  const completed = new Map(years.map(year => [year, ordered.filter(s => s.tax_year === year && isFinalAssessment(s)).at(-1)]));
   return years.map(year => {
     const sources = ordered.filter(s => s.tax_year === year);
-    const final = certified.get(year);
-    const prior = certified.get(year - 1);
+    const final = completed.get(year);
+    const prior = completed.get(year - 1);
     const dated = sources.filter(s => validDate(s.export_date));
     const preliminary = final && validDate(final.export_date) ? preliminaryBaseline(dated, final) : dated.find(isPreliminaryBaseline);
     // The trend adds PAR-52's stricter eligibility rule without changing the
@@ -45,7 +45,7 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
       annualAssessed: final && prior && validDate(final.export_date) && validDate(prior.export_date) ? comparison(prior.assessed_value, final.assessed_value) : null,
       market: final?.market_value ?? null, assessed: final?.assessed_value ?? null,
       afterCap: latest?.assessed_value ?? null,
-      status: final ? 'Certified' : latest?.roll_stage === 'preliminary' ? 'Preliminary only' : latest ? 'Supplemental only' : 'Protest records only',
+      status: final?.roll_stage === 'supplemental' ? 'Supplemental' : final ? 'Certified' : latest?.roll_stage === 'preliminary' ? 'Preliminary only' : 'Protest records only',
       afterCapStatus: final ? null : latest ? snapshotLabel(latest).replace(`${year} `, '') : null,
       annual, within,
       sources: sources.map(s => ({

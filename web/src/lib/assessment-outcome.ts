@@ -1,4 +1,4 @@
-import type { Snapshot } from './property-history.ts';
+import { isFinalAssessment, type Snapshot } from './property-history.ts';
 import { currency } from './property-search.ts';
 
 const homestead = (s: Snapshot) => s.exemptions.includes('HS') || s.entities.some(e => Object.hasOwn(e.exemptions, 'HS'));
@@ -10,7 +10,7 @@ const usable = (s: Snapshot) => s.market_value !== null && s.assessed_value !== 
 // Do not attribute every assessed change to market movement: a changed cap or
 // eligibility can also change assessment. Decompose only a reconciled pair.
 export function assessmentOutcome(current: Snapshot, initial?: Snapshot) {
-  if (!initial || current.roll_stage !== 'certified' || initial.roll_stage !== 'preliminary' ||
+  if (!initial || !isFinalAssessment(current) || initial.roll_stage !== 'preliminary' ||
     initial.tax_year !== current.tax_year || !usable(initial) || !usable(current)) return null;
   const marketReduction = initial.market_value! - current.market_value!;
   const assessedReduction = initial.assessed_value! - current.assessed_value!;
@@ -33,7 +33,7 @@ export function assessmentOutcome(current: Snapshot, initial?: Snapshot) {
 }
 
 export function nextYearCap(current: Snapshot, initial?: Snapshot, available = true, presentation: 'overview' | 'report' = 'overview') {
-  if (!available || current.roll_stage !== 'certified' || !homestead(current) || !usable(current) || current.assessed_value === 0) return null;
+  if (!available || !isFinalAssessment(current) || !homestead(current) || !usable(current) || current.assessed_value === 0) return null;
   const outcome = assessmentOutcome(current, initial);
   const reduced = outcome !== null && outcome.assessedReduction > 0;
   const reconciledCapReduction = reduced && outcome.reconciles && outcome.capExcluded !== null && outcome.capExcluded > 0;

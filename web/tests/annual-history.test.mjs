@@ -67,6 +67,18 @@ test('latest certified source wins once per year, with dated supplemental protes
   assert.equal(rows[1].protests[0].agent,'SYNTHETIC AGENT'); assert.equal(rows[1].protests[0].date,'Export date not reported');
   assert.equal(rows[1].sources[0].date,'May 8, 2025');
 });
+test('later supplemental assessment is the final annual value and retains its source stage',()=>{
+  const base=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
+  const supplement={...base,dataset_id:'supplemental-valuation',roll_stage:'supplemental',export_date:'2026-08-26',market_value:1285275,assessed_value:1285275};
+  const rows=annualHistory([...snapshots,supplement]);
+  assert.equal(rows[0].status,'Supplemental');
+  assert.equal(rows[0].market,1285275);
+  assert.equal(rows[0].afterCap,1285275);
+  assert.equal(rows[0].annual.dollars,1285275-rows[1].market);
+  assert.equal(rows[0].within.dollars,1285275-rows[0].preliminary);
+  assert.match(rows[0].sources.at(-1).label,/supplemental/);
+  assert.equal(annualHistory(snapshots)[0].status,'Certified');
+});
 
 test('year detail values share the eligible baseline and preserve protest-only years',()=>{
  const rows=annualHistory(snapshots);

@@ -1,6 +1,6 @@
 import { currency } from '@/lib/property-search';
 import { currentAssessmentStory } from '@/lib/current-assessment';
-import { snapshotLabel, type Snapshot, type ProtestObservation } from '@/lib/property-history';
+import { isFinalAssessment, snapshotLabel, type Snapshot, type ProtestObservation } from '@/lib/property-history';
 import type { SeasonContext } from '@/lib/seasons';
 import { CurrentYearRecord } from './annual-assessment-history';
 import { PropertySectionLink } from './property-section-link';
@@ -22,7 +22,7 @@ export function CurrentAssessment({current,snapshots,evidence,season,unavailable
     <dl className="current-assessment-metrics">
       <div><dt><TermDefinition term="Appraisal District market value">The Appraisal District’s recorded estimate of market value. It is not a tax bill or an independent sale-price estimate.</TermDefinition></dt><dd className="current-assessment-number">{currency(current.market_value)}</dd><dd><AnnualChange change={story.annual} year={story.previous?.tax_year}/></dd></div>
       <div><dt>{story.capped ? 'Assessed value after cap' : 'Assessed value before exemptions'}</dt><dd className="current-assessment-number">{currency(current.assessed_value)}</dd><dd><AnnualChange change={story.assessed} year={story.previous?.tax_year}/></dd></div>
-      <div><dt>{story.proposed && story.proposed.dollars > 0 ? 'Increase from proposed' : 'Reduction from proposed'}</dt><dd className="current-assessment-number">{story.proposed ? currency(Math.abs(story.proposed.dollars)) : current.roll_stage === 'certified' ? 'Not available' : 'Pending'}</dd><dd>{story.proposed ? story.proposed.dollars === 0 ? 'Proposed and certified values match' : `${story.proposed.percent !== null ? `${Math.abs(story.proposed.percent).toFixed(1)}% ${story.proposed.dollars < 0 ? 'lower' : 'higher'}. ` : ''}Value change, not tax savings.` : current.roll_stage === 'certified' ? 'Comparable preliminary value unavailable' : 'Certified result unavailable'}</dd></div>
+      <div><dt>{story.proposed && story.proposed.dollars > 0 ? 'Increase from proposed' : 'Reduction from proposed'}</dt><dd className="current-assessment-number">{story.proposed ? currency(Math.abs(story.proposed.dollars)) : isFinalAssessment(current) ? 'Not available' : 'Pending'}</dd><dd>{story.proposed ? story.proposed.dollars === 0 ? `Proposed and ${current.roll_stage === 'supplemental' ? 'final' : 'certified'} values match` : `${story.proposed.percent !== null ? `${Math.abs(story.proposed.percent).toFixed(1)}% ${story.proposed.dollars < 0 ? 'lower' : 'higher'}. ` : ''}Value change, not tax savings.` : isFinalAssessment(current) ? 'Comparable preliminary value unavailable' : 'Certified result unavailable'}</dd></div>
     </dl>
     {preliminaryExplanationAvailable && <PropertySectionLink target="market-adjustment-heading" className="current-assessment-driver-link">See how the Appraisal District arrived at your preliminary value.</PropertySectionLink>}
     {story.outcome?.overviewExplanation && <p className="current-assessment-impact">{story.outcome.overviewExplanation}</p>}
