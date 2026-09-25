@@ -22,7 +22,7 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await expect(propertyMethod.locator('..')).toHaveAttribute('open','');
  await expect(panel).toContainText('Using the same 2026 building inputs');
  await expect(panel).toContainText('The difference is an estimated +$214,054. Land is separate.');
- await expect(panel).toContainText('not the total change in your appraisal or tax savings');
+ await expect(panel).toContainText('not the total change in your appraisal. Building inputs and the final protest result can change the overall value too.');
  await expect(panel.locator('.factor-comparison')).toHaveAttribute('aria-label',/estimated factor effect is \+\$214,054/);
  await expect(panel).toContainText('first eligible preliminary record for 2026');
  await expect(panel).toContainText('reproduce the Appraisal District\'s recorded preliminary value of the home and other features within $1');
