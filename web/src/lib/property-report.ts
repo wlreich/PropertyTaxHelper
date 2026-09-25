@@ -206,7 +206,6 @@ export function buildPropertyReport(input: PropertyReportInput) {
         h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? 'Final market value and assessed value are pending.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
         h.assessedAfterCap ? 'The assessed value is shown after the supported cap.' : '',
         `Annual final market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
-        h.outcome?.explanation ?? '',
         h.protests.length ? h.protests.map(p=>`${p.basis} (${p.date})${p.agent ? `; agent: ${p.agent}` : ''}${p.codes.length ? `; recorded status: ${p.codes.join(', ')}` : ''}`).join('. ') : input.protestsUnavailable ? 'Protest records temporarily unavailable.' : 'No protest found in available records; this does not establish that none was filed.',
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,
         ...snapshots.filter(s=>s.tax_year===h.year && s.valuation_note).map(s=>s.valuation_note!),
