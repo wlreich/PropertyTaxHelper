@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { currency } from '@/lib/property-search';
-import { annualChange, factorEffectContent, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures } from '@/lib/property-sections';
+import { annualChange, factorEffectContent, factorEligibilityNote, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures } from '@/lib/property-sections';
 import { constructionClasses, dateLabel, propertyFacts, type Snapshot } from '@/lib/property-history';
 import { adjustmentReasons, adjustmentSummary, type MarketAdjustment } from '@/lib/market-adjustments';
 
@@ -13,9 +13,11 @@ export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { c
   const factor = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 4 })}×`;
   const effect = home?.status === 'ok' ? home.effect : null;
   const factorEffect = factorEffectContent(current.tax_year, summary?.previous?.factor, summary?.current?.factor, effect);
+  const factorEligibility = factorEligibilityNote(current.tax_year, home?.preliminary_date ?? null, home?.prior_preliminary_date ?? null);
   return <section className="overview-section property-section" id="market-adjustment" aria-labelledby="market-adjustment-heading">
     <h2 id="market-adjustment-heading" tabIndex={-1}>{pair ? `Why did your ${current.tax_year} preliminary appraisal change from last year?` : `What changed in the ${current.tax_year} preliminary appraisal?`}</h2>
     {pair && <p className="value-driver-baseline">{current.tax_year} preliminary compared with {current.tax_year - 1} preliminary.</p>}
+    {pair && <p className="overview-note">Records used: {dateLabel(pair.previous.export_date)} preliminary and {dateLabel(pair.current.export_date)} preliminary.</p>}
     <p>{preliminaryValueDriverSummary(comparison)}</p>
     <p>Most homes don&apos;t sell each year. The Appraisal District compares its estimates with recent sales in your market area, then uses a multiplier to adjust the estimated value of homes and other features across that area. Land is valued separately.</p>
     <p className="overview-note">This describes the market-modified cost method. The Appraisal District also uses an automated sales-comparison model for some residential properties.</p>
@@ -47,7 +49,7 @@ export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { c
       </> : <p>A property-specific factor estimate is unavailable: {home && home.status !== 'ok' ? adjustmentReasons[home.status].toLowerCase() : 'a supported cost estimate and both annual factors are needed'}.</p>}
       <p>ParcelSavvy uses the first eligible preliminary record for {data?.year ?? current.tax_year}. It holds the supported current-year rebuilding-cost inputs constant and changes only the multiplier. A home qualifies only when a residential building is verified and those inputs reproduce the Appraisal District&apos;s recorded preliminary value of the home and other features within $1. Incomplete or unreconciled inputs are excluded rather than treated as zero.</p>
       {summary?.previous && summary.current && <p>Multiplier comparison: {summary.previous.year} {factor(summary.previous.factor)} to {summary.current.year} {factor(summary.current.factor)}, market area {data?.neighborhood}.</p>}
-      {home?.preliminary_date && <p>Eligibility checked against preliminary records dated {dateLabel(home.prior_preliminary_date)} and {dateLabel(home.preliminary_date)}. The supported factor estimate holds the {current.tax_year} building inputs constant.</p>}
+      {factorEligibility && <p>{factorEligibility}</p>}
       {home && home.status !== 'ok' && <p>Estimate unavailable: {adjustmentReasons[home.status]}.</p>}
       <p>Rebuilding costs, depreciation, property details, land and overrides can also change the recorded value. Those changes can offset or add to the multiplier effect. Missing years are not treated as unchanged multipliers.</p>
       {data && <ul>{data.history.map(h => <li key={h.year}><a href={`/data/tcad/${h.filename}#page=${h.page}`}>{h.year} Appraisal District multiplier schedule, p. {h.page}</a></li>)}</ul>}
