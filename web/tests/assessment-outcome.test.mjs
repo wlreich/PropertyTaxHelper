@@ -7,18 +7,23 @@ const final = {...initial, roll_stage:'certified', market_value:1285275, assesse
 test('Paw Print cap arithmetic and next-year ceiling use assessed base',()=>{
  const r=assessmentOutcome(final,initial);
  assert.equal(r.marketReduction,326528);assert.equal(r.capExcluded,258153);assert.equal(r.assessedReduction,68375);assert.equal(r.reconciles,true);
- assert.equal(nextYearCap(final,initial).base,1285275);assert.equal(nextYearCap(final,initial).ceiling,1413803);assert.equal(nextYearCap(final,initial).year,2027);
+ const outlook=nextYearCap(final,initial);
+ assert.equal(outlook.base,1285275);assert.equal(outlook.ceiling,1413803);assert.equal(outlook.year,2027);
+ assert.equal(outlook.explanation,'Your final assessed value is $68,375 below the capped amount on your preliminary appraisal. That final value becomes the starting point for next year’s homestead cap.');
+ assert.match(nextYearCap(final,initial,true,'report').explanation,/finished \$68,375 below the proposal/);
 });
 test('reduction above cap does not lower assessment or future base',()=>{
  const capped={...final,market_value:1450000,assessed_value:1353650};
  assert.equal(assessmentOutcome(capped,initial).assessedReduction,0);
- assert.match(nextYearCap(capped,initial).explanation,/did not lower/);
+ assert.equal(nextYearCap(capped,initial).explanation,'Your market value fell, but your assessed value did not change. This reduction does not lower next year’s starting point.');
  assert.equal(nextYearCap(capped,initial).base,1353650);
 });
 test('changed threshold is not attributed wholly to market reduction',()=>{
  const changed={...final,market_value:1450000,assessed_value:1300000};
  assert.equal(assessmentOutcome(changed,initial).reconciles,false);
  assert.match(assessmentOutcome(changed,initial).explanation,/other assessment updates/);
+ assert.equal(assessmentOutcome(changed,initial).overviewExplanation,'Your recorded assessed value also fell $53,650 from the preliminary assessed value. The available records do not isolate how much came from the value change versus other assessment updates.');
+ assert.equal(nextYearCap(changed,initial).explanation,'Your final assessed value is $53,650 lower than on your preliminary appraisal. That final value becomes next year’s starting point.');
 });
 test('missing, invalid, preliminary, zero-base and non-homestead values are not projected',()=>{
  for(const s of [{...final,market_value:null},{...final,assessed_value:NaN},{...final,assessed_value:2000000},{...final,assessed_value:0},initial,{...final,exemptions:[],entities:[]}]) assert.equal(nextYearCap(s,initial),null);
@@ -27,6 +32,7 @@ test('missing, invalid, preliminary, zero-base and non-homestead values are not 
  assert.equal(assessmentOutcome(final,{...initial,assessed_value:null}),null);
  assert.equal(nextYearCap(final).base,1285275);
  assert.doesNotMatch(nextYearCap(final).explanation,/finished.*below/);
+ assert.equal(nextYearCap(final).explanation,'Your 2026 assessed value is the starting point for next year’s homestead cap. The cap limits assessment growth; it does not establish whether market value is accurate.');
 });
 
 test('equal market and assessed values do not imply the cap reduced assessment',()=>{

@@ -126,7 +126,6 @@ try {
   assert.match(profile, /Assessment &amp; protest history/);
   assert.match(profile, /Protest recorded/);
   assert.match(profile, /FIXTURE TAX PARTNERS/);
-  assert.match(profile, /Protest recorded. Value reduced/);
   assert.match(profile, /Current assessment/);
   assert.match(profile, /Agent: /);
   assert.match(profile, /What is the cap doing for you/);
@@ -169,10 +168,14 @@ try {
     assert.match(information, /Systems &amp; Sense LLC/);
   }
   assert.match(await page("/property/106"), /Some values need further review/);
+  const par51 = await page("/property/999014");
+  assert.match(par51, /Protest recorded/);
+  assert.match(par51, /Value<\/span> reduced 20\.3%/);
+  assert.match(par51, /from your preliminary appraisal/);
   assert.match(await page("/property/103"), /Let’s try another address/);
   assert.match(await page("/?q=NoSuchStreet"), /No matching properties found/);
   assert.match(await page("/?q=ab"), /at least three letters or digits/);
-  for (const html of [home, one, multi, first, second, last, profile, neighborhood, printable])
+  for (const html of [home, one, multi, first, second, last, profile, par51, neighborhood, printable])
     assert.doesNotMatch(
       html,
       /PRIVATE SYNTHETIC OWNER|sb_publishable_fixture|data-nextjs-dialog/,

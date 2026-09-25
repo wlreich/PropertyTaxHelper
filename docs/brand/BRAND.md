@@ -41,6 +41,7 @@ Never stretch, rotate, recolor individual shapes, add shadows/outlines, place on
 | --color-border | #D7E1E8 | Structural separators |
 | --color-border-strong | #52697A | Functional control boundaries/clear result dividers |
 | --color-success | #197A65 | Positive state, paired with label |
+| --color-success-on-dark | #78F5C2 | Positive hero text on Parcel Navy, paired with words or an icon |
 | --color-warning | #A86100 | Caution, paired with explanation |
 | --color-error | #B83B3B | Error, paired with recovery action |
 | --color-information | #1769AA | Informational state |

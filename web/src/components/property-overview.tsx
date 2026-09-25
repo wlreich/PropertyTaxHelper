@@ -82,7 +82,7 @@ export function PropertyOverview({
         ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
       <PropertyNavigation propertyId={p.property_id} />
-      <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={historyUnavailable || protestsUnavailable} />
+      <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={protestsUnavailable} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
         <PropertySectionLink target="exemptions-heading">Cap &amp; exemptions</PropertySectionLink>
