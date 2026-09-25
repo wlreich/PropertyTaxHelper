@@ -117,6 +117,7 @@
  .print-report .nbr-cap-progression li {padding:0 8px;}
  .print-report .nbr-cap-progression li span,.print-report .nbr-cap-progression p {font-size:10.5px;line-height:1.25;}
  .print-report .neighborhood-agent-activity {gap:8px;}
+ .print-report .neighborhood-agent-activity>header {break-after:avoid;}
  .print-report .neighborhood-agent-panel,.print-report .neighborhood-agent-row,.print-report .neighborhood-agent-panel>header {break-inside:avoid;}
  .print-report .neighborhood-agent-panel>header {break-after:avoid;}
  .print-report .neighborhood-agent-table {font-size:10.5px;}
