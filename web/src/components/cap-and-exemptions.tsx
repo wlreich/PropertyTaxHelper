@@ -34,6 +34,7 @@ export function CapAndExemptions({ model, annualReviewHref }: { model: CapModel;
           </dl>
           <p className="overview-note">Assumes continued eligibility and no qualifying new improvements. A ceiling, not a prediction or tax bill; assessed value can be lower if market value is lower.</p>
         </> : model.paragraphs.map(p => <p key={p}>{p}</p>)}
+        {model.accuracyGuidance && <p className="cap-accuracy-guidance">{model.accuracyGuidance}</p>}
         <Link className="action-button" href={annualReviewHref}>Why review every year?</Link>
       </aside>
     </div>

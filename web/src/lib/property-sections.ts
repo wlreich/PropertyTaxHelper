@@ -13,7 +13,7 @@ export function capModel(current: Snapshot, previous?: Snapshot, available = tru
   const state = !available || difference === null ? 'unavailable' : !homestead ? 'no-homestead' : !priorHomestead ? 'eligibility-unconfirmed' : difference > 0 ? 'binding' : 'nonbinding';
   const title = state === 'binding' ? 'Your cap helps. Keep reviewing.' : state === 'unavailable' ? 'More cap information needed.' : state === 'eligibility-unconfirmed' ? 'Check when your cap takes effect.' : 'Keep reviewing your market value.';
   const paragraphs = state === 'binding' ? [
-    'Your cap limits growth in assessed value; it does not confirm that your market value is accurate.', review,
+    'Your assessed value is below your market value because the cap is limiting this assessment.', review,
     "A reduction below your capped assessed value can also lower the starting point for next year's cap.",
   ] : state === 'nonbinding' ? [
     'Your recorded assessed value equals your market value, so the cap is not reducing this assessment.', review,
@@ -37,7 +37,10 @@ export function capModel(current: Snapshot, previous?: Snapshot, available = tru
   const capExplanation = available && homestead && priorHomestead
     ? 'If your home qualified for a homestead exemption last year and this year, the cap generally limits increases in its appraised value to 10%, plus new improvements. Its market value can still rise more.'
     : null;
-  return { market, assessed, difference, homestead, state, title, paragraphs, capExplanation, authorities, outlook: nextYearCap(current, initial, available && (state === 'binding' || state === 'nonbinding'), presentation),
+  const accuracyGuidance = available && homestead && priorHomestead && difference !== null && current.roll_stage !== 'preliminary'
+    ? 'The cap limits increases in assessed value. It does not tell you whether the Appraisal District’s market value is right.'
+    : null;
+  return { market, assessed, difference, homestead, state, title, paragraphs, capExplanation, accuracyGuidance, authorities, outlook: nextYearCap(current, initial, available && (state === 'binding' || state === 'nonbinding'), presentation),
     defaultAuthority: authorities.find(e => /\bISD\b|SCHOOL/i.test(e.name))?.code ?? authorities[0]?.code ?? '',
     exemptionNames: [...new Set([...current.exemptions, ...current.entities.flatMap(e => Object.keys(e.exemptions))])].map(c => exemptionName(c).replace('TCAD', 'Appraisal District')),
     priorAssessed: priorHomestead ? previous?.assessed_value ?? null : null,
@@ -80,6 +83,11 @@ export function preliminaryValueDriverComparison(snapshots: Snapshot[], currentY
     reason: 'Land or home-and-features values are missing from a comparable preliminary record. Missing values are not treated as zero.',
   };
   return { status: 'ok', current, previous };
+}
+
+export function hasPreliminaryValueDriverExplanation(current: Snapshot, comparison: PreliminaryValueDriverComparison) {
+  return comparison.status === 'ok'
+    && (current.roll_stage !== 'preliminary' || current.dataset_id === comparison.current.dataset_id);
 }
 
 const preliminaryDirection = (before: number, after: number) => {

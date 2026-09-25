@@ -4,7 +4,8 @@ import { selectCurrentAssessment } from "@/lib/current-assessment";
 import { CapAndExemptions } from './cap-and-exemptions';
 import { annualReviewGuideHref } from '@/content/guide-navigation';
 import { ValueDrivers, RecordedPropertyDetails } from './property-value-details';
-import { capModel } from '@/lib/property-sections';
+import { capModel, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison } from '@/lib/property-sections';
+import { annualReviewPrompt } from '@/lib/property-overview-guidance';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
 import { InterimChange } from "./homeowner-story";
@@ -55,6 +56,9 @@ export function PropertyOverview({
   const facts = propertyFacts(current);
   const evidence = protestEvidence(snapshots, protests);
   const historyRows = annualHistory(snapshots, evidence);
+  const preliminaryComparison = preliminaryValueDriverComparison(snapshots, current.tax_year);
+  const preliminaryExplanationAvailable = !p.values_under_review && !historyUnavailable && hasPreliminaryValueDriverExplanation(current, preliminaryComparison);
+  const yearlyReview = annualReviewPrompt(current, season, p.values_under_review || historyUnavailable);
   return (
     <AnnualHistoryProvider key={p.property_id} rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>
       <div className="profile-heading overview-heading">
@@ -82,7 +86,7 @@ export function PropertyOverview({
         ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
       <PropertyNavigation propertyId={p.property_id} />
-      <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={protestsUnavailable} />
+      <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={protestsUnavailable} preliminaryExplanationAvailable={preliminaryExplanationAvailable} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
         <PropertySectionLink target="exemptions-heading">Cap &amp; exemptions</PropertySectionLink>
@@ -117,6 +121,11 @@ export function PropertyOverview({
             <div className="overview-context-actions">
               <Link className="action-button" href={`/property/${p.property_id}/compare`}>Compare similar properties</Link>
               <Link className="overview-secondary-action" href={`/property/${p.property_id}/neighborhood`}>Explore my neighborhood</Link>
+            </div>
+            <div className="overview-annual-review">
+              <h3>Make this a yearly check.</h3>
+              <p>{yearlyReview.copy}</p>
+              <Link className="homeowner-text-link" href={annualReviewGuideHref(p.property_id)}>Learn how to protest</Link>
             </div>
             <div className="overview-donation">
               <h3>A clearer picture, for every homeowner.</h3>
