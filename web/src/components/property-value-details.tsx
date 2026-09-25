@@ -51,7 +51,7 @@ export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { c
       {home && home.status !== 'ok' && <p>Estimate unavailable: {adjustmentReasons[home.status]}.</p>}
       <p>Rebuilding costs, depreciation, property details, land and overrides can also change the recorded value. Those changes can offset or add to the multiplier effect. Missing years are not treated as unchanged multipliers.</p>
       {data && <ul>{data.history.map(h => <li key={h.year}><a href={`/data/tcad/${h.filename}#page=${h.page}`}>{h.year} Appraisal District multiplier schedule, p. {h.page}</a></li>)}</ul>}
-      <p>See the <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf#page=13">2026 Mass Appraisal Report, page 13</a> for the residential valuation method.</p>
+      <p>See the <a className="section-disclosure-link" href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf#page=13">2026 Mass Appraisal Report, page 13</a> for the residential valuation method.</p>
       <p><Link className="section-disclosure-link" href="/methodology#market-adjustments">Read Data &amp; methodology</Link> for source, eligibility and limitation details.</p>
     </details>
   </section>;
