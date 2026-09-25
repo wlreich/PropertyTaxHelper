@@ -1,7 +1,7 @@
 import { annualHistory, changeLabel } from './annual-history.ts';
 import { currentAssessmentStory, selectCurrentAssessment } from './current-assessment.ts';
-import { capModel, propertyFeatures, valueDriverSummary } from './property-sections.ts';
-import { componentKey, componentName, constructionClasses, dateLabel, propertyFacts, protestEvidence, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { capModel, factorEffectContent, factorEligibilityNote, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from './property-sections.ts';
+import { comparison, componentKey, componentName, constructionClasses, dateLabel, propertyFacts, protestEvidence, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { adjustmentReasons, adjustmentSummary, type MarketAdjustment } from './market-adjustments.ts';
 import { neighborhoodAnalysis, type NeighborhoodAnalysisData } from './neighborhood-analysis.ts';
 import { median, perFoot } from './neighborhood.ts';
@@ -10,7 +10,7 @@ import type { Property } from './supabase/properties.ts';
 
 export type ReportRow = { id: string; cells: string[]; note?: string };
 export type ReportBlock =
-  | { kind: 'note'; title?: string; text: string; emphasis?: boolean }
+  | { kind: 'note'; title?: string; text: string; emphasis?: boolean; positive?: boolean; links?: {label:string;href:string}[] }
   | { kind: 'table'; title: string; columns: string[]; rows: ReportRow[] }
   | { kind: 'chart'; subject: number; median: number };
 export type ReportSection = { id: string; title: string; blocks: ReportBlock[] };
@@ -42,13 +42,29 @@ const money = (v: number | null | undefined) => v == null ? 'Unavailable' : curr
 const signed = (v: number) => `${v < 0 ? '−' : v > 0 ? '+' : ''}${currency(Math.abs(v))}`;
 const pct = (v: number | null) => v === null ? 'Unavailable' : `${v.toFixed(1)}%`;
 const share = (v: {count:number;total:number;percent:number|null}) => v.total ? `${v.count} / ${v.total} (${pct(v.percent)})` : 'Unavailable — no eligible records';
-const note = (text: string, title?: string, emphasis = false): ReportBlock => ({kind:'note',text,title,emphasis});
+const note = (text: string, title?: string, emphasis = false, options: {positive?:boolean;links?:{label:string;href:string}[]} = {}): ReportBlock => ({kind:'note',text,title,emphasis,...options});
 const table = (title: string, columns: string[], rows: ReportRow[]): ReportBlock => ({kind:'table',title,columns,rows});
 const row = (id: string, ...cells: string[]): ReportRow => ({id,cells});
 const difference = (subject: number | null, group: number | null) => subject === null || group === null || group <= 0 ? 'Unavailable' : `${signed(subject-group)} (${pct((subject/group-1)*100)})`;
 const factorEffectSentence = (effect: number, year: number) => effect === 0
   ? `Using ${year} costs, keeping the previous year's factor would give the same modeled market value.`
   : `Using ${year} costs, this is approximately ${money(Math.abs(effect))} ${effect > 0 ? 'higher' : 'lower'} than keeping the previous year's factor.`;
+const annualOutcomeSentence = (current: Snapshot, story: ReturnType<typeof currentAssessmentStory>) => {
+  if (!story.annual || !story.previous) return 'A comparable prior-year certified market value is not available.';
+  if (story.annual.dollars === 0) return `Your ${snapshotLabel(current)} market value is unchanged from ${story.previous.tax_year}.`;
+  const percent = story.annual.percent === null ? '' : ` ${Math.abs(story.annual.percent).toFixed(1)}%`;
+  return `Your ${snapshotLabel(current)} market value is${percent} ${story.annual.dollars < 0 ? 'lower' : 'higher'} than in ${story.previous.tax_year}.`;
+};
+const protestSummary = (story: ReturnType<typeof currentAssessmentStory>) => {
+  if (story.recorded && !story.agents.length) {
+    if (story.evidenceUnavailable) return 'Protest recorded - Agent not identified. Agent information is temporarily unavailable.';
+    if (story.agentAssignmentRecorded) return 'Protest recorded - Agent not identified. An agent assignment is recorded, but the name is unavailable.';
+    return 'Protest recorded - Agent not identified. This may indicate that the homeowner protested without an agent.';
+  }
+  if (story.recorded) return `Protest recorded. Identified agent assignment: ${story.agents.map(a=>a.name).join('; ')}. The records do not establish who handled the case or what caused a reduction.`;
+  if (story.proposed && story.proposed.dollars < 0) return `${story.protest}. The records do not establish what caused the reduction.`;
+  return `${story.protest}.`;
+};
 
 export function buildPropertyReport(input: PropertyReportInput) {
   const {property:p, reportDate} = input;
@@ -62,25 +78,35 @@ export function buildPropertyReport(input: PropertyReportInput) {
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);
-  const cap = capModel(current,story.previous,available,story.initial,'report');
+  const cap = capModel(current,story.previous,available,story.initial,'overview');
   const facts = propertyFacts(current);
   const history = annualHistory(snapshots,evidence).filter(r=>r.year<=current.tax_year);
   const n = input.neighborhood;
   const neighborhood = !p.values_under_review && n?.propertyId===p.property_id && n.release.dataset_id===current.dataset_id ? n : null;
   const compact = current.roll_stage === 'preliminary' && !current.exemptions.length && !current.entities.length && !story.previous && current.components.length <= 3 && !neighborhood && history.length <= 1;
   const sections: ReportSection[] = [];
-  const summary: ReportBlock[] = [note(`${story.narrative}${story.outcome?.explanation ? ` ${story.outcome.explanation}` : ''}`,current.preliminary_baseline_eligible===false ? `Your ${snapshotLabel(current)}` : story.headline,true),
+  const favorableOutcome = story.overviewReductionPercent !== null;
+  const summaryTitle = favorableOutcome
+    ? `Protest recorded. Value reduced ${story.overviewReductionPercent}% from your preliminary appraisal.`
+    : current.preliminary_baseline_eligible===false ? `Your ${snapshotLabel(current)}` : story.headline;
+  const summaryText = favorableOutcome
+    ? annualOutcomeSentence(current,story)
+    : `${story.narrative}${story.outcome?.overviewExplanation ? ` ${story.outcome.overviewExplanation}` : ''}`;
+  const summary: ReportBlock[] = [note(summaryText,summaryTitle,true,{positive:favorableOutcome}),
     table(`${snapshotLabel(current)} assessment`,['Measure','Value','Annual change'],[
       row('current-market',`${current.roll_stage === 'certified' ? 'Certified' : current.roll_stage === 'preliminary' ? current.preliminary_baseline_eligible===false ? 'Interim' : 'Proposed' : 'Supplemental'} market value`,money(current.market_value),changeLabel(story.annual)),
       row('current-assessed','Assessed before exemptions',money(current.assessed_value),changeLabel(story.assessed)),
-    ]), note(`${story.protest}.${story.agents.length ? ` Identified agent assignment: ${story.agents.map(a=>a.name).join('; ')}. Assignment does not establish who handled a protest.` : ' No agent identified in available records.'} A recorded protest and a reduction do not establish causation. These are valuation changes, not tax savings.`)];
+    ]), note(`${protestSummary(story)} These are valuation changes, not tax savings.`)];
   if (story.outcome && story.initial) summary.push(table('From proposal to final assessment',['Measure','Amount'],[
-    row('proposed-market','Proposed market value',money(story.initial.market_value)),
-    row('cap-excluded','Value already excluded by the proposed cap',money(story.outcome.capExcluded)),
-    row('proposed-assessed','Proposed assessed value',money(story.initial.assessed_value)),
-    row('assessed-change','Assessed change from proposal',signed(-story.outcome.assessedReduction)),
-    row('final-assessed','Final assessed before exemptions',money(current.assessed_value)),
+    row('proposed-market','Preliminary market value',money(story.initial.market_value)),
+    row('market-change','Preliminary-to-final market value change',signed(-story.outcome.marketReduction)),
+    row('final-market','Final market value',money(current.market_value)),
+    row('cap-excluded','Preliminary cap exclusion',money(story.outcome.capExcluded)),
+    row('proposed-assessed','Preliminary capped assessed value',money(story.initial.assessed_value)),
+    row('assessed-change','Change in assessed value versus that capped amount',signed(-story.outcome.assessedReduction)),
+    row('final-assessed','Final assessed value',money(current.assessed_value)),
   ]));
+  if (cap.capExplanation) summary.push(note(cap.capExplanation,'How the homestead cap works'));
   if (cap.outlook) summary.push(note(`${cap.outlook.explanation} Starting assessed value: ${money(cap.outlook.base)}. Conditional 10% ceiling for ${cap.outlook.year}: ${money(cap.outlook.ceiling)}. Assumes continued eligibility and no qualifying new improvements. This is a ceiling, not a forecast or tax bill.`,cap.outlook.title,true));
   else summary.push(note(`${cap.paragraphs[0]} No next-year cap ceiling is estimated from unconfirmed eligibility or an unfinished assessment.`));
   if (p.values_under_review) summary.unshift(note('Shared ownership or differing source values prevent reliable comparisons. Unreconciled amounts are withheld.','Values need further review',true));
@@ -113,21 +139,43 @@ export function buildPropertyReport(input: PropertyReportInput) {
   sections.push({id:'inventory',title:'The home in the records',blocks:inventory});
 
   if (!compact || current.land_value!==null || current.improvement_value!==null) {
-    const valuation: ReportBlock[] = [table('Recorded valuation components',['Component',story.previous ? `${story.previous.tax_year} ${story.previous.roll_stage}` : 'Prior year',`${current.tax_year} ${current.roll_stage}`,'Annual change'],[
+    const preliminaryComparison=preliminaryValueDriverComparison(snapshots,current.tax_year);
+    const supportedPreliminaryComparison=hasPreliminaryValueDriverExplanation(current,preliminaryComparison) && preliminaryComparison.status==='ok' ? preliminaryComparison : null;
+    const valuation: ReportBlock[] = [];
+    if(supportedPreliminaryComparison)valuation.push(
+      note(`${current.tax_year} preliminary compared with ${current.tax_year-1} preliminary. Records used: ${dateLabel(supportedPreliminaryComparison.previous.export_date)} and ${dateLabel(supportedPreliminaryComparison.current.export_date)}.`),
+      table(`${current.tax_year} preliminary compared with ${current.tax_year-1} preliminary`,['Component',`${current.tax_year-1} preliminary`,`${current.tax_year} preliminary`,'Change'],[
+        row('preliminary-land','Land',money(supportedPreliminaryComparison.previous.land_value),money(supportedPreliminaryComparison.current.land_value),signed(supportedPreliminaryComparison.current.land_value!-supportedPreliminaryComparison.previous.land_value!)),
+        row('preliminary-improvements','Home & other features',money(supportedPreliminaryComparison.previous.improvement_value),money(supportedPreliminaryComparison.current.improvement_value),signed(supportedPreliminaryComparison.current.improvement_value!-supportedPreliminaryComparison.previous.improvement_value!)),
+        row('preliminary-total','Total preliminary market value',money(supportedPreliminaryComparison.previous.market_value),money(supportedPreliminaryComparison.current.market_value),supportedPreliminaryComparison.previous.market_value!==null&&supportedPreliminaryComparison.current.market_value!==null?signed(supportedPreliminaryComparison.current.market_value-supportedPreliminaryComparison.previous.market_value):'Unavailable'),
+      ]),
+      note(preliminaryValueDriverSummary(supportedPreliminaryComparison)),
+    );
+    else valuation.push(note(preliminaryComparison.status==='unavailable' ? preliminaryComparison.reason : `The selected ${snapshotLabel(current)} is not the first eligible preliminary record. Certified values are not substituted here.`,'Preliminary comparison unavailable'));
+    valuation.push(note('Most homes do not sell each year. The Appraisal District compares its estimates with recent sales in the market area, then uses a multiplier to adjust the estimated value of homes and other features. Land is valued separately. This is one input to the preliminary appraisal, not a claim that the multiplier caused the entire annual change.'));
+    valuation.push(table(story.previous ? `Final annual outcome: ${snapshotLabel(current)} compared with ${snapshotLabel(story.previous)}` : 'Final annual outcome',['Component',story.previous ? snapshotLabel(story.previous) : 'Prior final',snapshotLabel(current),'Final annual change'],[
       row('value-land','Land',money(story.previous?.land_value),money(current.land_value),story.previous?.land_value != null && current.land_value !== null ? signed(current.land_value-story.previous.land_value) : 'Unavailable'),
       row('value-improvements','Home & other features',money(story.previous?.improvement_value),money(current.improvement_value),story.previous?.improvement_value != null && current.improvement_value !== null ? signed(current.improvement_value-story.previous.improvement_value) : 'Unavailable'),
       row('value-total','Total market value',money(story.previous?.market_value),money(current.market_value),story.previous?.market_value != null && current.market_value !== null ? signed(current.market_value-story.previous.market_value) : 'Unavailable'),
-    ]),note(`“Home & other features” is the district’s non-land value after applicable factors, not rebuilding cost. ${valueDriverSummary(current,story.previous)}`)];
+    ]),note(`This table describes the final annual outcome, not the preliminary model. “Home & other features” is the district’s non-land value after applicable factors, not rebuilding cost. ${valueDriverSummary(current,story.previous)}`));
     const adjustment=input.adjustment;
     if(adjustment && adjustment.year===current.tax_year && adjustment.neighborhood===current.neighborhood && !p.values_under_review) {
       const a=adjustmentSummary(adjustment),own=adjustment.homes.find(h=>h.property_id===p.property_id);
-      valuation.push(table('Market-area multiplier',['Year','Published multiplier'],adjustment.history.map(h=>row(`factor-${h.year}`,`${h.year}`,`${h.factor.toFixed(2)}×`))));
-      valuation.push(note('The district estimates rebuilding costs for the home, garages and pools, reduces them for age and condition, then applies the neighborhood factor. Land is separate.'));
-      if(own?.effect!==null && own?.effect!==undefined)valuation.push(note(`Estimated factor effect: ${signed(own.effect)}. ${factorEffectSentence(own.effect,adjustment.year)} Land and other inputs held fixed; not the total annual change or tax savings. Preliminary sources: ${dateLabel(own.prior_preliminary_date)} and ${dateLabel(own.preliminary_date)}.`, 'One input to the proposed valuation',true));
+      const factor=(value:number)=>`${value.toLocaleString('en-US',{maximumFractionDigits:4})}×`;
+      valuation.push(table('Published market-area multipliers',['Year','Multiplier','Appraisal District source'],adjustment.history.map(h=>row(`factor-${h.year}`,`${h.year}`,factor(h.factor),`${h.filename}, page ${h.page}`))));
+      const factorEffect=factorEffectContent(current.tax_year,a.previous?.factor,a.current?.factor,own?.status==='ok'?own.effect:null);
+      if(factorEffect&&a.previous&&a.current)valuation.push(
+        table(`Market-area multiplier: same ${current.tax_year} building inputs`,['Scenario','Factor','Estimated comparison'],[
+          row('factor-previous',`With ${a.previous.year} factor`,factor(a.previous.factor),`Same ${current.tax_year} building inputs`),
+          row('factor-current',`With ${a.current.year} factor`,factor(a.current.factor),`Same ${current.tax_year} building inputs`),
+          row('factor-effect','Estimated effect of the factor change',`${factor(a.previous.factor)} → ${factor(a.current.factor)}`,factorEffect.signedEffect),
+        ]),
+        note(`${factorEffect.intro} ${factorEffectSentence(own!.effect!,adjustment.year)} ${factorEffect.boundary} ${factorEligibilityNote(current.tax_year,own!.preliminary_date,own!.prior_preliminary_date) ?? ''}`,'One input to the preliminary valuation',true),
+      );
       else valuation.push(note(`Isolated multiplier effect unavailable: ${own ? adjustmentReasons[own.status] : 'property estimate not supplied'}.`));
       if(a.percent!==null)valuation.push(note(`Multiplier change: ${pct(a.percent)}. This percentage describes the factor, not rebuilding costs, home prices or the entire appraisal. Published source: ${a.current?.filename ?? 'Unavailable'}, page ${a.current?.page ?? 'unavailable'}.`));
     } else valuation.push(note('A same-year, same-neighborhood multiplier estimate is unavailable for this report.'));
-    sections.push({id:'valuation',title:'What makes up your value',blocks:valuation});
+    sections.push({id:'valuation',title:supportedPreliminaryComparison ? `Why did your ${current.tax_year} preliminary appraisal change from last year?` : `What changed in the ${current.tax_year} preliminary appraisal?`,blocks:valuation});
   }
 
   if(neighborhood) {
@@ -153,10 +201,11 @@ export function buildPropertyReport(input: PropertyReportInput) {
 
   if(!compact && history.length) {
     sections.push({id:'history',title:'Your assessment over time',blocks:[
-      note('All available years through this assessment year. Annual changes compare consecutive completed years; within-year changes compare usable proposed and final releases. Missing years and excluded baselines are not zero.'),
-      table('Assessment and protest history',['Year / stage','Proposed market','Final market','Assessed before exemptions','Within-year change'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.preliminary),money(h.market),money(h.afterCap),changeLabel(h.within)],note:[
+      note('Each year follows the same stage order: proposed market value, final market value, then assessed value. Proposed values use only explicitly eligible preliminary records. Missing, excluded and pending stages are unavailable, not zero.'),
+      table('Proposed market value → Final market value → Assessed value',['Year / result','Proposed market value','Final market value','Assessed value'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.trendProposed),money(h.market),money(h.assessed)],note:[
+        h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? 'Final market value and assessed value are pending.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
+        h.assessedAfterCap ? 'The assessed value is shown after the supported cap.' : '',
         `Annual final market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
-        h.outcome?.explanation ?? '',
         h.protests.length ? h.protests.map(p=>`${p.basis} (${p.date})${p.agent ? `; agent: ${p.agent}` : ''}${p.codes.length ? `; recorded status: ${p.codes.join(', ')}` : ''}`).join('. ') : input.protestsUnavailable ? 'Protest records temporarily unavailable.' : 'No protest found in available records; this does not establish that none was filed.',
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,
         ...snapshots.filter(s=>s.tax_year===h.year && s.valuation_note).map(s=>s.valuation_note!),
@@ -167,7 +216,8 @@ export function buildPropertyReport(input: PropertyReportInput) {
   const closing: ReportBlock[] = [note(`${cap.exemptionNames.length ? `Recorded exemptions: ${cap.exemptionNames.join(', ')}.` : 'Residence homestead and other exemptions are not confirmed in available records.'} ${cap.paragraphs[0]}`)];
   if(cap.authorities.length)closing.push(table('Authority-specific taxable values',['Taxing authority','Assessed','Deduction','Taxable'],cap.authorities.map(a=>({id:`authority-${a.code}`,cells:[a.name,money(current.assessed_value),a.reconciles ? money(a.exemptions) : 'Not reconciled',money(a.taxable)],note:a.entries.length ? `${a.entries.map(e=>`${e.label}: ${money(e.value)}`).join('; ')}.${a.reconciles ? '' : ' Recorded exemptions do not reconcile to the taxable value shown; verify the official record.'}` : a.reconciles ? undefined : 'Exemption breakdown unavailable.'}))),note('Deductions reconcile the listed exemptions to assessed and taxable values. These amounts are not taxes. Exemption rules, tax rates and any tax ceilings differ by authority.'));
   else closing.push(note('Authority-specific taxable values and reconciled deductions are unavailable.'));
-  closing.push(note(`Confirm ${facts.livingArea!==null ? `${number(facts.livingArea)} living sq ft, ` : ''}${current.land_acres!==null ? `${number(current.land_acres)} acres, ` : ''}structures and recorded features against your home. Keep supporting measurements, photos or documents. Compare genuinely similar homes; a group median alone does not establish an accurate assessment. Review the next proposal and verify eligibility with the Appraisal District.`,'Useful things to check'));
+  const reviewLinks=[{label:'ParcelSavvy Protest Guide',href:'https://parcelsavvy.org/protest-guide'},{label:'TCAD current protest instructions',href:'https://traviscad.org/protests'}];
+  closing.push(note(`Each year, check the deadline on your appraisal notice, confirm your property details, and compare similar homes. Protest by the deadline if your evidence supports a different value. You can do it yourself or work with an agent. For this home, confirm ${facts.livingArea!==null ? `${number(facts.livingArea)} living sq ft, ` : ''}${current.land_acres!==null ? `${number(current.land_acres)} acres, ` : ''}structures and recorded features. Keep supporting measurements, photos or documents; a group median alone does not establish an accurate assessment.`,'Useful things to check',false,{links:reviewLinks}));
   const sources=snapshots.filter(s=>s.tax_year<=current.tax_year);
   closing.push(note(`Assessment and feature coverage: ${sources.length ? sources.map(s=>`${snapshotLabel(s)} — ${s.export_date ? dateLabel(s.export_date) : s.export_time_raw ?? 'date unavailable'}`).join('; ') : `${snapshotLabel(current)} — ${current.export_date ? dateLabel(current.export_date) : 'date unavailable'}`}.${input.historyUnavailable ? ' Detailed history is temporarily unavailable.' : ''} Protest observations: ${evidence.length ? [...new Set(evidence.map(e=>`${e.tax_year}: ${dateLabel(e.export_date)}`))].join('; ') : 'not supplied'}. Report prepared ${dateLabel(reportDate)}. Later corrections may exist. ParcelSavvy is independent of the Appraisal District; official records and notices remain the reference.`,'Source coverage and limits'));
   sections.push({id:'review',title:'Exemptions & items to review',blocks:closing});
@@ -176,7 +226,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
     inventory.splice(0,inventory.length,note(`Living area: ${number(facts.livingArea,' sq ft')}. Year built: ${facts.yearBuilt ?? 'unavailable'}. Neighborhood group: ${current.neighborhood ?? 'unavailable'}.`),...inventory.filter(b=>b.kind==='table'&&b.title!=='Recorded property details'));
     const compactSummary=summary.find(b=>b.kind==='table');if(compactSummary?.kind==='table'){compactSummary.columns=compactSummary.columns.slice(0,2);compactSummary.rows.forEach(r=>{r.cells=r.cells.slice(0,2);});}
     sections.splice(sections.findIndex(s=>s.id==='neighborhood'),1);
-    closing.splice(0,closing.length,note('A reliable same-period neighborhood comparison is unavailable. Missing values are not zero.'),note('Verify the physical record, exemptions and deadlines against your official notice. Keep supporting measurements, photos or documents.','Items to review'),note(`${snapshotLabel(current)} · ${dateLabel(current.export_date)}. Prepared ${dateLabel(reportDate)}. Detailed features and history are limited to available records. ParcelSavvy is independent of the Appraisal District; official records remain the reference.`, 'Source coverage and limits'));
+    closing.splice(0,closing.length,note('A reliable same-period neighborhood comparison is unavailable. Missing values are not zero.'),note('Each year, check the deadline on your appraisal notice, confirm your property details, and compare similar homes. Protest by the deadline if your evidence supports a different value. You can do it yourself or work with an agent. Keep supporting measurements, photos or documents.','Items to review',false,{links:reviewLinks}),note(`${snapshotLabel(current)} · ${dateLabel(current.export_date)}. Prepared ${dateLabel(reportDate)}. Detailed features and history are limited to available records. ParcelSavvy is independent of the Appraisal District; official records remain the reference.`, 'Source coverage and limits'));
   }
   return {propertyId:p.property_id,address:p.address,location:[p.city,p.postal_code].filter(Boolean).join(', '),releaseId:current.dataset_id,year:current.tax_year,stage:current.roll_stage,releaseLabel:snapshotLabel(current),reportDate,compact,sections};
 }
