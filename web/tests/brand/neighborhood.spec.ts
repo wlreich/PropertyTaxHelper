@@ -35,11 +35,11 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(results.getByText('Reduced below the recorded cap').locator('..').locator('dd')).toHaveAttribute('aria-describedby','cap-denominator-note');
  const agents=page.locator('.neighborhood-agent-activity');
  await expect(agents.getByRole('heading',{name:'Protest agent activity in this market area',exact:true})).toBeVisible();
- await expect(agents).toContainText('Two most recent certified years');
+ await expect(agents).toContainText('Most recent certified year');
  await expect(agents.getByText('Agent names come from TCAD records. Median reductions include only properties whose recorded market value fell; they are not a rating of an agent’s effectiveness. “No agent identified” does not establish who handled the protest.',{exact:true})).toBeVisible();
  await expect(agents.getByText('Activity includes recorded protests and reductions that may indicate a protest. Names use the latest available export for each year.',{exact:true})).toBeVisible();
  await expect(agents).not.toContainText('Draft based on the active July 2026 release');
- await expect(agents.getByRole('table')).toHaveCount(2);await expect(agents.getByRole('img')).not.toHaveCount(0);
+ await expect(agents.getByRole('table')).toHaveCount(1);await expect(agents.getByRole('img')).not.toHaveCount(0);
  await expect(agents).toContainText(/\d+ reduced|No reduced homes/);
  await expect(page.getByText('Nearby properties are not automatically comparable.',{exact:true})).toHaveCount(1);
  await expect(page.getByText(/A deed change can be a sale or another kind of transfer/)).toHaveCount(1);

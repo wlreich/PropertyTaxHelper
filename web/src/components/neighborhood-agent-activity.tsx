@@ -21,7 +21,7 @@ export function NeighborhoodAgentActivity({data,analysis}:{data:NeighborhoodAnal
      <div role="rowgroup">
       {panel.rows.map(row=><div className={`neighborhood-agent-row neighborhood-agent-row-${row.kind}`} role="row" key={`${row.kind}:${row.label}`}>
        <strong role="rowheader">{row.label}</strong>
-       <div className="neighborhood-agent-count" role="cell"><span className="neighborhood-agent-mobile-label">Properties</span><span className="neighborhood-agent-bar" role="img" aria-label={`${count(row.propertyCount)} properties on a shared scale with a maximum of ${count(scale)} properties`}><span style={{width:`${scale?row.propertyCount/scale*100:0}%`}}/></span><strong>{count(row.propertyCount)}</strong></div>
+       <div className="neighborhood-agent-count" role="cell"><span className="neighborhood-agent-mobile-label">Homes</span><span className="neighborhood-agent-bar" role="img" aria-label={`${count(row.propertyCount)} properties on a shared scale with a maximum of ${count(scale)} properties`}><span style={{width:`${scale?row.propertyCount/scale*100:0}%`}}/></span><strong>{count(row.propertyCount)}</strong></div>
        <div className="neighborhood-agent-result" role="cell"><span className="neighborhood-agent-mobile-label">Median drop</span><strong>{money(row.medianReduction)}</strong></div>
        <div className="neighborhood-agent-result" role="cell"><span className="neighborhood-agent-mobile-label">Median %</span><strong>{percent(row.medianPercent)}</strong><small>{row.reducedCount?`${count(row.reducedCount)} reduced`:'No reduced homes'}</small></div>
       </div>)}
