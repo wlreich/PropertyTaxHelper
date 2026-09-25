@@ -146,7 +146,8 @@ try {
   assert.match(neighborhood, /Subdivision on record/);
   assert.match(neighborhood, /GRAND MESA SECTION II/);
   assert.match(neighborhood, /Your neighborhood, in context/);
-  assert.match(neighborhood, /Proposed values reduced/);
+  assert.match(neighborhood, /Where the year started/);
+  assert.match(neighborhood, /Ended below proposal/);
   assert.match(neighborhood, /Median dollar reduction/);
   assert.match(neighborhood, /Print \/ save PDF/);
   assert.doesNotMatch(neighborhood, /Which properties are included\?/);

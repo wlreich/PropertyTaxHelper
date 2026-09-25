@@ -29,22 +29,30 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
   if (new Set(ids).size !== ids.length) throw new Error('Duplicate neighborhood property');
   const periods = [...data.annual_periods].sort((a, b) => a.release.tax_year - b.release.tax_year);
   const find = (year: number, stage: string) => periods.find(p => p.release.tax_year === year && p.release.roll_stage === stage);
+  const compare = (prior: AnnualPeriod | undefined, current: AnnualPeriod | undefined) => {
+    if (!prior || !current) return null;
+    const before = index(prior), after = index(current);
+    const matched = ids.filter(id => valid(before.get(id)) && valid(after.get(id)));
+    const priorMedian = median(matched.map(id => before.get(id)!.market!));
+    const currentMedian = median(matched.map(id => after.get(id)!.market!));
+    return { prior: prior.release, current: current.release, baseCount: ids.length, matchedCount: matched.length,
+      excludedCount: ids.length - matched.length, smallSample: matched.length > 0 && matched.length < MIN_PATTERN_SAMPLE,
+      priorMedian, currentMedian,
+      percent: priorMedian !== null && currentMedian !== null ? (currentMedian / priorMedian - 1) * 100 : null };
+  };
   const preliminaryChanges = [], carryForward = [], certifiedChanges = [];
   for (const next of periods) {
     const year = next.release.tax_year, stage = next.release.roll_stage;
     const prior = find(year - 1, stage);
     if (!prior) continue;
-    const before = index(prior), after = index(next);
-    const matched = ids.filter(id => valid(before.get(id)) && valid(after.get(id)));
-    const coverage = { baseCount: ids.length, matchedCount: matched.length, excludedCount: ids.length - matched.length };
     if (stage === 'certified') {
-      const priorMedian = median(matched.map(id => before.get(id)!.market!));
-      const currentMedian = median(matched.map(id => after.get(id)!.market!));
-      certifiedChanges.push({ prior: prior.release, current: next.release, ...coverage, priorMedian, currentMedian,
-        percent: priorMedian && currentMedian !== null ? (currentMedian / priorMedian - 1) * 100 : null });
+      certifiedChanges.push(compare(prior, next)!);
       continue;
     }
     if (stage !== 'preliminary') continue;
+    const before = index(prior), after = index(next);
+    const matched = ids.filter(id => valid(before.get(id)) && valid(after.get(id)));
+    const coverage = { baseCount: ids.length, matchedCount: matched.length, excludedCount: ids.length - matched.length };
     preliminaryChanges.push({ prior: prior.release, current: next.release, ...coverage,
       medianIndividualPercent: median(matched.map(id => (after.get(id)!.market! / before.get(id)!.market! - 1) * 100)),
       higher: share(matched.filter(id => after.get(id)!.market! > before.get(id)!.market!).length, matched.length) });
@@ -86,7 +94,26 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
     exclusions: { baseline_ineligible: p.homes.filter(h => h.exclusion === 'baseline_ineligible').length,
       different_neighborhood: p.homes.filter(h => h.exclusion === 'different_neighborhood').length,
       unusable_value: p.homes.filter(h => h.exclusion === 'unusable_value').length } }));
-  return { current, currentSummary: neighborhoodSummary(data), latestOutcome: outcomes[0] ?? null, outcomes,
-    certifiedChanges: certifiedChanges.reverse(), preliminaryChanges: preliminaryChanges.reverse(),
+  const currentSummary = neighborhoodSummary(data);
+  const currentPreliminary = find(current.tax_year, 'preliminary');
+  const currentCertified = find(current.tax_year, 'certified');
+  const previousCertified = find(current.tax_year - 1, 'certified');
+  const reversedCertifiedChanges = certifiedChanges.reverse();
+  const completedCurrentYear = current.roll_stage !== 'preliminary' && currentCertified;
+  const currentOutcome = outcomes.find(o => o.certified.tax_year === current.tax_year) ?? null;
+  const story = {
+    year: current.tax_year,
+    start: compare(previousCertified, currentPreliminary),
+    outcome: current.roll_stage === 'preliminary' ? outcomes[0] ?? null : currentOutcome,
+    final: completedCurrentYear ? {
+      release: current,
+      median: currentSummary.median,
+      valueCount: currentSummary.valueCount,
+      versusProposal: currentOutcome ? compare(currentPreliminary, currentCertified) : null,
+      versusPriorCertified: reversedCertifiedChanges.find(x => x.current.dataset_id === currentCertified.release.dataset_id) ?? null,
+    } : null,
+  };
+  return { current, currentSummary, latestOutcome: outcomes[0] ?? null, outcomes, story,
+    certifiedChanges: reversedCertifiedChanges, preliminaryChanges: preliminaryChanges.reverse(),
     carryForward: carryForward.reverse(), coverage, minimumPatternSample: MIN_PATTERN_SAMPLE };
 }
