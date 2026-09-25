@@ -191,12 +191,15 @@ export function annualBaseline(snapshots: Snapshot[], current: Snapshot) {
     .filter(
       (s) =>
         s.tax_year === current.tax_year - 1 &&
-        s.roll_stage === "certified" &&
+        isFinalAssessment(s) &&
         s.export_date,
     )
     .at(-1);
 }
 export const isPreliminaryBaseline = (s: Snapshot) => s.roll_stage === "preliminary" && s.preliminary_baseline_eligible !== false;
+// A supplemental valuation follows certification and may update the final
+// recorded value. Keep its source label while treating it as a completed result.
+export const isFinalAssessment = (s: Pick<Snapshot, 'roll_stage'>) => s.roll_stage === 'certified' || s.roll_stage === 'supplemental';
 export function preliminaryBaseline(snapshots: Snapshot[], current: Snapshot) {
   return snapshots.find(
     (s) =>

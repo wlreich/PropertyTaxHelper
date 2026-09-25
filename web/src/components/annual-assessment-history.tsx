@@ -5,7 +5,7 @@ import { capGapSummary, chartScale, changeLabel, type AnnualYear } from '@/lib/a
 import { currency } from '@/lib/property-search';
 
 const amount = (value: number | null) => value === null ? 'Not available' : currency(value);
-const columns = ['Proposed market', 'Certified market', 'Change from proposal', 'After cap', 'Protest record'];
+const columns = ['Proposed market', 'Final market', 'Change from proposal', 'After cap', 'Protest record'];
 const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.some(p => p.recorded) ? 'Recorded' : unavailable ? 'Unavailable' : row.within && row.within.dollars < 0 ? 'Reduction only' : 'Not found';
 const assessedStageLabel = (row: AnnualYear) => row.assessedAfterCap
   ? 'Assessed value after cap'
@@ -23,14 +23,14 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
     <h2 id="annual-dialog-heading">{row.year} assessment &amp; protest record</h2>
     <p className="annual-detail-summary">Market change from proposal: <strong>{changeLabel(row.within)}</strong>. Value change, not tax savings.</p>
     {row.outcome?.explanation && <p className="current-assessment-impact">{row.outcome.explanation}</p>}
-    <table className="annual-detail-comparison"><caption className="visually-hidden">{row.year} proposed and certified values</caption>
-      <thead><tr><th scope="col">Value</th><th scope="col">Proposed</th><th scope="col">Certified</th></tr></thead>
+    <table className="annual-detail-comparison"><caption className="visually-hidden">{row.year} proposed and final values</caption>
+      <thead><tr><th scope="col">Value</th><th scope="col">Proposed</th><th scope="col">Final</th></tr></thead>
       <tbody>{([
         ['Market', row.preliminary, row.market], ['After cap', row.preliminaryAssessed, row.assessed],
         ['Land', row.preliminaryLand, row.certifiedLand], ['Home & other features', row.preliminaryImprovements, row.certifiedImprovements],
       ] as const).map(([label, before, after]) => <tr key={label}><th scope="row">{label}</th><td>{amount(before)}</td><td>{amount(after)}</td></tr>)}</tbody>
     </table>
-    <p className="overview-note">Certified change from {row.year - 1}: market {changeLabel(row.annual)}; assessed {changeLabel(row.annualAssessed)}.</p>
+    <p className="overview-note">Final change from {row.year - 1}: market {changeLabel(row.annual)}; assessed {changeLabel(row.annualAssessed)}.</p>
     <p><strong>Protest record: {protestStatus(row, protestsUnavailable)}</strong>{row.within && row.within.dollars < 0 && !row.protests.some(p => p.recorded) && ' · A reduction does not establish that a protest was filed.'}</p>
     <p className="overview-note">The records do not establish what caused a reduction or who handled the case.</p>
     <details className="annual-record-disclosure"><summary>Assessment records &amp; exemptions</summary>
@@ -127,7 +127,7 @@ export function AnnualAssessmentHistory() {
           </tr>;
         })}</tbody>
       </table>
-      <p className="overview-note">Change compares proposed with certified market value, not tax savings. A missing protest entry does not rule out a protest.</p>
+      <p className="overview-note">Change compares proposed with final market value, not tax savings. A missing protest entry does not rule out a protest.</p>
       {visible.some(row => protestStatus(row, protestsUnavailable) === 'Reduction only') && <p className="overview-note">“Reduction only” means the value fell without a protest found in available records; it does not establish the cause.</p>}
       <p className="annual-mobile-protest-help">Protest status appears under each year. Open a year for proposed values, assessed values and the full record.</p>
       <div className="annual-pagination">

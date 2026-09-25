@@ -62,3 +62,19 @@ test('overview prior-year decrease copy is distinct from the preliminary-to-cert
   const unavailable=currentAssessmentStory(final,[final],[],null);
   assert.match(unavailable.overviewNarrative,/prior-year certified market value is not available/);
 });
+test('latest supplemental remains a completed result with the eligible proposal and prior final',()=>{
+  const prior={...old,tax_year:2025,roll_stage:'certified',market_value:1290000,assessed_value:1290000,export_date:'2025-07-18'};
+  const proposed={...preliminary,tax_year:2026,market_value:1611803,assessed_value:1353650,export_date:'2026-04-02',preliminary_baseline_eligible:true};
+  const certified={...final,tax_year:2026,market_value:1285275,assessed_value:1285275,export_date:'2026-07-18'};
+  const supplemental={...certified,dataset_id:'supplemental',roll_stage:'supplemental',export_date:'2026-08-26'};
+  const selected=selectCurrentAssessment({...profile,roll_stage:'supplemental',export_time_raw:'08/26/2026 12:00'},[prior,proposed,certified,supplemental]);
+  assert.equal(selected.dataset_id,'supplemental');
+  const story=currentAssessmentStory(selected,[prior,proposed,certified,supplemental],[],{phase:'post',config:{tax_year:2026}});
+  assert.equal(story.proposed.dollars,-326528);
+  assert.equal(story.annual.dollars,-4725);
+  assert.equal(story.outcome.assessedReduction,68375);
+  assert.equal(story.seasonNote,null);
+  assert.match(story.overviewNarrative,/2026 supplemental market value is 0.4% lower than in 2025/);
+  assert.match(story.narrative,/final market value is lower than the proposed value/);
+  assert.doesNotMatch(story.narrative,/certified result is not available/);
+});

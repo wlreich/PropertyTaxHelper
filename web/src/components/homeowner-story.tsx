@@ -1,7 +1,7 @@
 import { PropertySectionLink } from "./property-section-link";
 import { currency } from "@/lib/property-search";
 import { assessmentSummary, agentsForYear, seasonOutcome, historySequence, featureHighlights } from "@/lib/homeowner-insights";
-import { comparison, dateLabel, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
+import { comparison, dateLabel, isFinalAssessment, type Snapshot, type Entity, type ProtestObservation } from "@/lib/property-history";
 
 type Context = {current?:Snapshot;previous?:Snapshot;initial?:Snapshot;entity?:Entity;evidence:ProtestObservation[];historical?:boolean};
 function SummaryChange({change}:{change:NonNullable<ReturnType<typeof assessmentSummary>>["annual"]}) {
@@ -14,12 +14,12 @@ export function AssessmentSummary({current,initial,previous}:Omit<Context,"entit
   if (!summary || !current) return null;
   return <section className="homeowner-summary" aria-labelledby="assessment-summary-heading">
     <p className="eyebrow">Your assessment at a glance</p>
-    <h2 id="assessment-summary-heading">Your {current.roll_stage === "certified" ? "certified" : current.roll_stage === "preliminary" ? "preliminary" : "recorded"} market value</h2>
+    <h2 id="assessment-summary-heading">Your {current.roll_stage} market value</h2>
     <p className="homeowner-summary-value">{currency(summary.value)}</p>
     <p className="overview-note">{current.tax_year} {current.roll_stage} record · {dateLabel(current.export_date)}</p>
     <dl className="homeowner-summary-comparisons">
-      {current.roll_stage === "certified" && <div><dt>Since the {current.tax_year} preliminary market value</dt><dd><SummaryChange change={summary.proposed} /></dd></div>}
-      <div><dt>Compared with {current.tax_year - 1} certified market value</dt><dd><SummaryChange change={summary.annual} /></dd></div>
+      {isFinalAssessment(current) && <div><dt>Since the {current.tax_year} preliminary market value</dt><dd><SummaryChange change={summary.proposed} /></dd></div>}
+      <div><dt>Compared with {current.tax_year - 1} {previous?.roll_stage ?? 'final'} market value</dt><dd><SummaryChange change={summary.annual} /></dd></div>
     </dl>
   </section>;
 }
@@ -28,7 +28,7 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
   const agents=current ? agentsForYear(evidence,current.tax_year) : [];
   return <>
     {season && <section className={`overview-insight${season.possibleProtestResult ? " homeowner-positive" : ""}`} aria-labelledby={historical ? "historical-result-heading" : "change-heading"}>
-      <p className="eyebrow">{historical ? "Earlier season’s result · " : ""}{current!.tax_year} · Proposed to certified</p>
+      <p className="eyebrow">{historical ? "Earlier season’s result · " : ""}{current!.tax_year} · Proposed to {current!.roll_stage}</p>
       <h2 id={historical ? "historical-result-heading" : "change-heading"}>{season.headline}</h2>
       <p className="homeowner-result">{currency(Math.abs(season.change.dollars))} lower{season.change.percent !== null && <span> · {Math.abs(season.change.percent).toFixed(1)}% decrease</span>}</p>
       <p>{season.label} fell from {season.period}.{season.observedProtest ? ` A protest was also recorded for ${current!.tax_year}.` : ""}</p>
@@ -44,7 +44,7 @@ export function ProtestResult({current,initial,entity,evidence,historical=false}
   </>;
 }
 export function InterimChange({ current, initial }: Pick<Context, "current" | "initial">) {
-  if (!current || !initial || current.roll_stage === "certified" || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
+  if (!current || !initial || isFinalAssessment(current) || current.tax_year !== initial.tax_year || !current.export_date || !initial.export_date || initial.export_date >= current.export_date) return null;
   const change = comparison(initial.market_value, current.market_value);
   if (!change?.dollars) return null;
   return <section className="overview-insight" aria-labelledby="interim-change-heading">

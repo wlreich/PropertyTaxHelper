@@ -12,6 +12,13 @@ test('Paw Print cap arithmetic and next-year ceiling use assessed base',()=>{
  assert.equal(outlook.explanation,'Your final assessed value is $68,375 below the capped amount on your preliminary appraisal. That final value becomes the starting point for next year’s homestead cap.');
  assert.match(nextYearCap(final,initial,true,'report').explanation,/finished \$68,375 below the proposal/);
 });
+test('supplemental values use completed assessment math without manufacturing a missing proposal',()=>{
+  const supplemental={...final,roll_stage:'supplemental'};
+  assert.equal(assessmentOutcome(supplemental,initial).marketReduction,326528);
+  assert.equal(nextYearCap(supplemental,initial).base,1285275);
+  assert.equal(assessmentOutcome(supplemental),null);
+  assert.equal(assessmentOutcome(supplemental,{...initial,tax_year:2025}),null);
+});
 test('reduction above cap does not lower assessment or future base',()=>{
  const capped={...final,market_value:1450000,assessed_value:1353650};
  assert.equal(assessmentOutcome(capped,initial).assessedReduction,0);

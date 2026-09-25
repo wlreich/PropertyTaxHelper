@@ -29,7 +29,7 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   const dialog=page.getByRole('dialog',{name:'2025 assessment & protest record'});
   await expect(dialog).toBeVisible();await expect(page.getByRole('dialog')).toHaveCount(1);
   await page.screenshot({path:info.outputPath('par25-year-summary.png')});
-  await expect(dialog).toContainText('Certified change from 2024: market Not available');
+  await expect(dialog).toContainText('Final change from 2024: market Not available');
   await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
   for(const value of ['May 8, 2025','2025 interim snapshot','Jul 3, 2025','Jul 19, 2025','Residence homestead','Home & other features'])await expect(dialog).toContainText(value);
   await expect(dialog).toContainText('Date and time as supplied:');
@@ -106,7 +106,7 @@ test('PAR-25 one, five and six years stay bounded through navigation and dialogs
 test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline histories',async({page})=>{
   await page.goto('/property/999110');await expect(page.locator('.annual-history')).toContainText('No annual assessment records');await expect(page.locator('.annual-table')).toHaveCount(0);
   await page.goto('/property/999117');await page.getByRole('button',{name:'View 2026 details'}).click();
-  await expect(page.getByRole('dialog')).toContainText('Certified change from 2025: market Not available');await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toContainText('Final change from 2025: market Not available');await page.keyboard.press('Escape');
   await page.goto('/property/999118');const future=page.locator('[data-year="2027"]');
   await expect(future).toContainText('Preliminary only');await expect(future.locator('td').nth(0)).toContainText('$685,000');
   for(const i of [1,2])await expect(future.locator('td').nth(i)).toContainText('Not available');
