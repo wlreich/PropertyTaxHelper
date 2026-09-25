@@ -43,8 +43,9 @@ no invented percentage change.
 `AnnualAssessmentHistory` keeps the current assessment untouched while expanding
 yearly details. Explicitly eligible proposed, final market and matching certified
 assessed values share a zero-based dynamic scale. Preliminary-only years retain
-their proposed stage while final stages are pending; certified years with no
-supported proposal mark that stage unavailable. Up to five loaded years appear
+their proposed stage; final stages are pending only during the matching active
+season and otherwise unavailable. Certified years with no supported proposal mark
+that stage unavailable. Up to five loaded years appear
 initially, with earlier chart/table entries expandable on the same page. Mobile
 rows retain table semantics and explicit field labels.
 Source timestamps, authority exemptions, and dated protest/agent evidence remain

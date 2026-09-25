@@ -10,8 +10,8 @@ const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.so
 const assessedStageLabel = (row: AnnualYear) => row.assessedAfterCap
   ? 'Assessed value after cap'
   : 'Assessed value';
-const unavailableStage = (row: AnnualYear, kind: 'proposed' | 'final' | 'assessed', latestYear: number | undefined) =>
-  kind !== 'proposed' && row.status === 'Preliminary only' && row.year === latestYear ? 'Pending' : 'Not available';
+const unavailableStage = (row: AnnualYear, kind: 'proposed' | 'final' | 'assessed', pendingYear: number | null) =>
+  kind !== 'proposed' && row.status === 'Preliminary only' && row.year === pendingYear ? 'Pending' : 'Not available';
 const chartStages = (row: AnnualYear) => ([
   {kind: 'proposed', label: 'Proposed market value', value: row.trendProposed},
   {kind: 'final', label: 'Final market value', value: row.market},
@@ -62,7 +62,7 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
 }
 
 
-type HistoryState = {rows: AnnualYear[]; unavailable: boolean; protestsUnavailable: boolean; openYear: (year: number, trigger: HTMLElement) => void};
+type HistoryState = {rows: AnnualYear[]; unavailable: boolean; protestsUnavailable: boolean; pendingYear: number | null; openYear: (year: number, trigger: HTMLElement) => void};
 const HistoryContext = createContext<HistoryState | null>(null);
 function useHistory() {
   const value = useContext(HistoryContext);
@@ -70,7 +70,7 @@ function useHistory() {
   return value;
 }
 
-export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, children}: Omit<HistoryState, 'openYear'> & {children: ReactNode}) {
+export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, pendingYear, children}: Omit<HistoryState, 'openYear'> & {children: ReactNode}) {
   const [year, setYear] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
@@ -84,7 +84,7 @@ export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, c
   }, [row]);
   const openYear = (selected: number, source: HTMLElement) => { trigger.current = source; setYear(selected); };
   const closed = () => { setYear(null); trigger.current?.focus({preventScroll: true}); };
-  return <HistoryContext.Provider value={{rows, unavailable, protestsUnavailable, openYear}}>
+  return <HistoryContext.Provider value={{rows, unavailable, protestsUnavailable, pendingYear, openYear}}>
     {children}
     {row && <dialog ref={dialog} className="annual-dialog" aria-labelledby="annual-dialog-heading" onClose={closed}>
       <div className="annual-dialog-toolbar"><button type="button" className="annual-year-toggle" onClick={() => dialog.current?.close()}>Close record <span aria-hidden="true">×</span></button></div>
@@ -100,7 +100,7 @@ export function CurrentYearRecord({year}: {year: number}) {
 }
 
 export function AnnualAssessmentHistory() {
-  const {rows, unavailable, protestsUnavailable, openYear} = useHistory();
+  const {rows, unavailable, protestsUnavailable, pendingYear, openYear} = useHistory();
   const [page, setPage] = useState(0);
   const lastPage = Math.max(0, Math.ceil(rows.length / 5) - 1);
   const activePage = Math.min(page, lastPage);
@@ -143,7 +143,7 @@ export function AnnualAssessmentHistory() {
             <span className="annual-chart-label">{row.year}</span>
             <div className="annual-chart-pair">
               {chartStages(row).map(stage => {
-                const state = stage.value === null ? unavailableStage(row, stage.kind, rows[0]?.year) : amount(stage.value);
+                const state = stage.value === null ? unavailableStage(row, stage.kind, pendingYear) : amount(stage.value);
                 const width = stage.value === null ? null : stage.value / scale.maximum * 100;
                 return <div className={`annual-chart-series annual-series-${stage.kind}`} key={stage.kind} data-chart-stage={stage.kind} role="img" aria-label={`${row.year} ${stage.label}: ${state}`}>
                   <span className="annual-stage-label" aria-hidden="true">{stage.label}</span>

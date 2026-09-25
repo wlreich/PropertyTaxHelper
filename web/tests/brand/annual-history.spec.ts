@@ -113,8 +113,8 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
   const futureHistory=page.locator('.annual-history');await futureHistory.locator('.annual-trend summary').click();
   const futureStages=futureHistory.locator('[data-chart-year="2027"] [data-chart-stage]');
   await expect(futureStages.nth(0)).toHaveAccessibleName('2027 Proposed market value: $685,000');
-  await expect(futureStages.nth(1)).toHaveAccessibleName('2027 Final market value: Pending');
-  await expect(futureStages.nth(2)).toHaveAccessibleName('2027 Assessed value: Pending');
+  await expect(futureStages.nth(1)).toHaveAccessibleName('2027 Final market value: Not available');
+  await expect(futureStages.nth(2)).toHaveAccessibleName('2027 Assessed value: Not available');
   await page.getByRole('button',{name:'View 2027 details'}).click();await expect(page.getByRole('dialog').locator('.annual-detail-comparison')).toContainText('$590,000');await page.keyboard.press('Escape');
   await page.goto('/property/999119');const row=page.locator('[data-year="2025"]');
   for(const i of [0,2])await expect(row.locator('td').nth(i)).toContainText('Not available');
