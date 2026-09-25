@@ -107,6 +107,9 @@ test('comparison defaults follow the published season and deterministically fall
  const missing=defaultComparisonRelease(releases.filter(r=>r.tax_year!==2027),season('post',2027));
  assert.equal(missing.release.dataset_id,'2026-supplemental-a');
  assert.equal(missing.notice,'The preferred 2027 certified release is unavailable for this property. Showing 2026 supplemental.');
+ const missingPreliminary=defaultComparisonRelease(releases.filter(r=>r.tax_year!==2027),season('preliminary',2027));
+ assert.equal(missingPreliminary.release.dataset_id,'2026-supplemental-a');
+ assert.equal(missingPreliminary.notice,'The preferred 2027 preliminary release is unavailable for this property. Showing 2026 supplemental.');
  const sameYear=defaultComparisonRelease(releases.filter(r=>r.roll_stage!=='certified'&&r.roll_stage!=='supplemental'),season('post',2026));
  assert.equal(sameYear.release.dataset_id,'2026-preliminary-b');
  assert.equal(sameYear.notice,'The preferred 2026 certified release is unavailable for this property. Showing 2026 preliminary.');

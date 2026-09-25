@@ -52,8 +52,7 @@ export function defaultComparisonRelease(releases: ComparisonRelease[],season:Se
   const preferred=newestRelease(releases.filter(r=>r.tax_year===year&&stages.has(r.roll_stage)));
   if(preferred)return {release:preferred,notice:null};
   const sameYear=newestRelease(releases.filter(r=>r.tax_year===year));
-  const sameStage=newestRelease(releases.filter(r=>stages.has(r.roll_stage)));
-  const release=sameYear??sameStage??newestRelease(releases);
+  const release=sameYear??newestRelease(releases);
   const preferredLabel=`${year} ${season.phase==='post'?'certified':'preliminary'}`;
   return {
     release,
