@@ -6,7 +6,8 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  const adjusted=page.getByRole('region',{name:'ParcelSavvy estimated adjusted values'});
  await expect(page.getByRole('heading',{name:'Compare similar homes',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toHaveAttribute('aria-pressed','true');
- await expect(adjusted.getByText('Adjusted values estimate how selected properties might compare after accounting for recorded differences. They are ParcelSavvy estimates, not official appraisals or tax savings.',{exact:true})).toBeVisible();
+ await expect(page.locator('#comparison-view-description')).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
+ await expect(page.locator('#comparison-view-description')).toHaveCount(1);
  await expect(adjusted).toContainText('3 of 3 selected properties have estimated adjusted values');
  await expect(adjusted).toContainText('PS-ADJ-2026.3');
  await expect(adjusted).toContainText('$460,000');
