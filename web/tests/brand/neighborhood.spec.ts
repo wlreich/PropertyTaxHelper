@@ -6,7 +6,7 @@ test('neighborhood annual story, controls, canonical links and print parity',asy
  await expect(page.getByRole('heading',{name:'Your neighborhood, in context.',exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Neighborhood');
  const groupSummary=page.locator('summary').filter({hasText:'About this group'}),groupDetails=groupSummary.locator('..');
- await expect(groupDetails).toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','true');await expect(groupDetails).toContainText('Subdivision on record: GRAND MESA SECTION II.');
+ await expect(groupDetails).toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','true');await expect(groupDetails.getByText(/Subdivision on record: GRAND MESA SECTION II\./)).toBeVisible();
  await groupSummary.focus();await page.keyboard.press('Enter');await expect(groupDetails).not.toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','false');await page.keyboard.press('Enter');await expect(groupDetails).toHaveAttribute('open','');await expect(groupSummary).toHaveAttribute('aria-expanded','true');
  await expect(page.locator('.activity-controls select')).toHaveCount(2);
  await expect(page.getByRole('form',{name:'Evidence research window'})).toBeVisible();
