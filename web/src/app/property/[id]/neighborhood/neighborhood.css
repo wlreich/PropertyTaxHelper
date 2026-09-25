@@ -25,7 +25,7 @@
 .neighborhood-story-stage dl>div:first-child {padding-top:0;border:0;}
 .neighborhood-story-stage dt {font-size:var(--text-small);font-weight:var(--weight-semibold);}
 .neighborhood-story-stage dd {margin:0;}
-.neighborhood-story-stage dd:not(.neighborhood-note) {font-family:var(--font-heading);font-size:var(--text-h3);font-weight:var(--weight-bold);line-height:var(--line-h3);color:var(--color-brand-primary);}
+.neighborhood-story-stage dd:not(.neighborhood-note) {font-family:var(--font-heading);font-size:var(--text-h3);font-weight:var(--weight-bold);line-height:var(--line-h3);font-variant-numeric:tabular-nums;color:var(--color-brand-primary);}
 .neighborhood-story-stage .neighborhood-story-primary dd:not(.neighborhood-note) {font-size:var(--text-h2);line-height:var(--line-h2);}
 .neighborhood-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-6);margin:var(--space-2) 0 0;}
 .neighborhood-metrics>div {display:flex;flex-direction:column;gap:var(--space-1);}
