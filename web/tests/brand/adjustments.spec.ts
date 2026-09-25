@@ -9,6 +9,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await expect(page.locator('#comparison-view-description')).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
  await expect(page.locator('#comparison-view-description')).toHaveCount(1);
  await expect(adjusted).toContainText('3 of 3 selected properties have estimated adjusted values');
+ await expect(adjusted).toContainText('ParcelSavvy estimates are not official appraisals or tax savings.');
  await expect(adjusted).toContainText('PS-ADJ-2026.3');
  await expect(adjusted).toContainText('$460,000');
  await expect(adjusted).toContainText('Reported median before adjustments: $460,000');

@@ -19,7 +19,7 @@ test('desktop inspection switches in place and keeps selection, navigation and f
   await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
   const adjustedMethod = page.getByText('How adjusted values work', {exact: true});
   await adjustedMethod.focus(); await page.keyboard.press('Enter');
-  await expect(adjustedMethod.locator('..')).toHaveAttribute('open', '');
+  await expect(adjustedMethod.locator('..')).toHaveJSProperty('open', true);
   await expect(pane(page)).toHaveCount(0);
   await trigger(page, '120').click();
   await expect(page.locator('#adjustment-breakdown-heading')).toBeFocused();
@@ -93,7 +93,7 @@ test('mobile inline placement, resize continuity, complete scroll range and visu
   await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
   const adjustedMethod = page.getByText('How adjusted values work', {exact: true});
   await adjustedMethod.focus(); await page.keyboard.press('Enter');
-  await expect(adjustedMethod.locator('..')).toHaveAttribute('open', '');
+  await expect(adjustedMethod.locator('..')).toHaveJSProperty('open', true);
   await trigger(page, '120').click();
   expect(await pane(page).evaluate(node => node.previousElementSibling?.querySelector('button')?.id)).toBe('inspect-property-120');
   await expect(page.locator('.comparison-detail-scroll')).toHaveCSS('overflow-y', 'visible');

@@ -95,6 +95,6 @@ export function AdjustedComparisons({ subject, selected, release, evidence, insp
       {rows}
     </div>}
     {selected.length>0&&adjusted.count===0&&<p className="comparison-inline-note">No complete estimates are available for this set. Open a breakdown to review missing inputs, or use Reported values.</p>}
-    <p className="comparison-adjusted-note">Source: Appraisal District {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version} · {ADJUSTMENT_METHOD_VERSION}.</p>
+    <p className="comparison-adjusted-note">Source: Appraisal District {snapshotLabel(release)} records · Exported {release.export_date ?? "date not reported"}. Estimate method: {tcadMethod.version} · {ADJUSTMENT_METHOD_VERSION}. ParcelSavvy estimates are not official appraisals or tax savings.</p>
   </section>;
 }
