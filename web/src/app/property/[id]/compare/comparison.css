@@ -97,10 +97,12 @@
 .comparison-checkbox input[type=checkbox] { margin: 0; }
 
 .comparison-view-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); }
+.comparison-view-options { flex: 1 1 48rem; min-width: 0; }
 .comparison-view-label { display: block; margin-bottom: var(--space-1); font-size: var(--text-small); font-weight: var(--weight-semibold); }
 .comparison-view-switch { display: flex; gap: var(--space-1); padding: var(--space-1); border: var(--border-width) solid var(--color-action); border-radius: var(--radius-input); background: var(--color-surface-info); max-width: 100%; }
 .comparison-view-switch button { min-height: var(--target-min); padding: var(--space-2) var(--space-4); border-radius: var(--radius-input); color: var(--color-brand-primary); font-size: var(--text-small); font-weight: var(--weight-semibold); cursor: pointer; flex: 1; }
 .comparison-view-switch button[aria-pressed=true] { background: var(--color-action); color: var(--color-surface); }
+.comparison-view-description { max-width: 76ch; margin-top: var(--space-2); color: var(--color-text-muted); font-size: var(--text-small); }
 .comparison-adjusted { margin-top: var(--space-6); }
 .comparison-adjusted-summary { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .comparison-adjusted-note { display: block; font-size: var(--text-small); color: var(--color-text-muted); margin-top: var(--space-2); }
@@ -129,7 +131,7 @@
 }
 @media(max-width: 700px) {
   .comparison-view-controls { align-items: stretch; flex-direction: column; }
-  .comparison-view-switch, .comparison-view-controls .comparison-add-link { width: 100%; }
+  .comparison-view-options, .comparison-view-switch, .comparison-view-controls .comparison-add-link { width: 100%; }
 }
 
 /* Results and selection share compact rows and aligned mobile values. */

@@ -15,11 +15,11 @@ test.beforeEach(async ({}, info) => {
 
 test('desktop inspection switches in place and keeps selection, navigation and focus contracts', async ({page}) => {
   await page.goto('/property/100/compare?view=adjusted');
-  const adjustedGuidance = page.getByText('Adjusted values estimate how selected properties might compare after accounting for recorded differences. They are ParcelSavvy estimates, not official appraisals or tax savings.', {exact: true});
-  await expect(adjustedGuidance).toBeVisible();
+  const viewExplanation = page.locator('#comparison-view-description');
+  await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
   const adjustedMethod = page.getByText('How adjusted values work', {exact: true});
-  await adjustedMethod.focus(); await page.keyboard.press('Enter');
-  await expect(adjustedMethod.locator('..')).toHaveAttribute('open', '');
+  await adjustedMethod.click();
+  await expect(adjustedMethod.locator('..')).toHaveJSProperty('open', true);
   await expect(pane(page)).toHaveCount(0);
   await trigger(page, '120').click();
   await expect(page.locator('#adjustment-breakdown-heading')).toBeFocused();
@@ -70,10 +70,10 @@ test('desktop inspection switches in place and keeps selection, navigation and f
   await trigger(page, '120').click();
   await page.getByRole('button', {name: 'Reported values', exact: true}).click();
   await expect(pane(page)).toHaveCount(0);
-  await expect(adjustedGuidance).toHaveCount(0);
+  await expect(viewExplanation).toBeVisible();
   await page.getByRole('button', {name: 'Estimated adjusted values', exact: true}).click();
   await expect(pane(page)).toHaveCount(0);
-  await expect(adjustedGuidance).toBeVisible();
+  await expect(viewExplanation).toBeVisible();
   await trigger(page, '120').click();
   await page.getByLabel('Assessment release').selectOption(prior);
   await expect(pane(page)).toHaveCount(0);
@@ -89,11 +89,11 @@ test('desktop inspection switches in place and keeps selection, navigation and f
 test('mobile inline placement, resize continuity, complete scroll range and visual layouts', async ({page}, info) => {
   await page.setViewportSize({width: 390, height: 844});
   await page.goto('/property/100/compare?view=adjusted');
-  const adjustedGuidance = page.getByText('Adjusted values estimate how selected properties might compare after accounting for recorded differences. They are ParcelSavvy estimates, not official appraisals or tax savings.', {exact: true});
-  await expect(adjustedGuidance).toBeVisible();
+  const viewExplanation = page.locator('#comparison-view-description');
+  await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
   const adjustedMethod = page.getByText('How adjusted values work', {exact: true});
-  await adjustedMethod.focus(); await page.keyboard.press('Enter');
-  await expect(adjustedMethod.locator('..')).toHaveAttribute('open', '');
+  await adjustedMethod.click();
+  await expect(adjustedMethod.locator('..')).toHaveJSProperty('open', true);
   await trigger(page, '120').click();
   expect(await pane(page).evaluate(node => node.previousElementSibling?.querySelector('button')?.id)).toBe('inspect-property-120');
   await expect(page.locator('.comparison-detail-scroll')).toHaveCSS('overflow-y', 'visible');
@@ -102,9 +102,9 @@ test('mobile inline placement, resize continuity, complete scroll range and visu
   await pane(page).getByRole('button', {name: 'Close breakdown ×'}).click();
   await expect(trigger(page, '122')).toBeFocused();
   await page.getByRole('button', {name: 'Reported values', exact: true}).click();
-  await expect(adjustedGuidance).toHaveCount(0);
+  await expect(viewExplanation).toBeVisible();
   await page.getByRole('button', {name: 'Estimated adjusted values', exact: true}).click();
-  await expect(adjustedGuidance).toBeVisible();
+  await expect(viewExplanation).toBeVisible();
   await trigger(page, '120').click();
   const method = pane(page).getByText('How this is calculated · Land', {exact: true});
   await method.click(); await method.focus();

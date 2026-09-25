@@ -51,10 +51,14 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page.getByRole('heading',{name:'Compare similar homes',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Reported values',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.getByRole('button',{name:'Estimated adjusted values',exact:true})).toBeVisible();
+ const viewExplanation=page.locator('#comparison-view-description');
+ await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
+ await expect(viewExplanation).toHaveCount(1);
+ await expect(page.getByRole('group',{name:'Comparison values'})).toHaveAttribute('aria-describedby','comparison-view-description');
  await expect(page.getByText(tierGuidance,{exact:true})).toBeVisible();
  await expect(results).toContainText('$50,000 above');
  await expect(results).toContainText('12.5% above');
- await page.reload();await expect(page.getByRole('button',{name:'Edit selection (1)',exact:true})).toBeVisible();
+ await page.reload();await expect(page.getByRole('button',{name:'Edit selection (1)',exact:true})).toBeVisible();await expect(viewExplanation).toBeVisible();
  await expect(results).toContainText('Tier 0');
  await page.getByRole('button',{name:'Edit selection (1)',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Choose homes to compare',exact:true})).toBeFocused();
@@ -75,6 +79,7 @@ test('comparison selection, median, manual search, release switching and respons
  await page.evaluate(()=>{document.documentElement.style.fontSize='';window.scrollTo(0,0);});
  const capture=info.outputPath('comparison-page.png');await page.screenshot({path:capture,fullPage:true});await info.attach('Comparison page',{path:capture,contentType:'image/png'});
  await page.getByLabel('Assessment release').selectOption('22222222-2222-4222-8222-222222222222');
+ await expect(viewExplanation).toBeVisible();
  await expect(results).toContainText('$30,000 above');
  await expect(results).toContainText('2025 certified');
  await expect(page.getByText('2025 matching tolerances have not been verified',{exact:false})).toBeVisible();
