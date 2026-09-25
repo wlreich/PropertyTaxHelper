@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { annualChange, capModel, factorEffectContent, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from '../src/lib/property-sections.ts';
+import { annualChange, capModel, factorEffectContent, factorEligibilityNote, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from '../src/lib/property-sections.ts';
 import { par9Reference } from '../../tools/property-search/par9-reference-fixture.mjs';
 import { reference as par28Reference } from '../../tools/property-search/par28-reference.mjs';
 import { parseHistory } from '../src/lib/property-history.ts';
@@ -102,6 +102,11 @@ test('factor effect content preserves signs, zero and proportional factor segmen
   assert.match(zero.intro, /estimated \$0/);
   assert.equal(zero.sharedWidth, 100);
   assert.equal(factorEffectContent(2026, 1.5, 1.8, null), null);
+});
+test('factor eligibility note reports only source dates that exist', () => {
+  assert.equal(factorEligibilityNote(2026, '2026-04-02', '2025-05-08'), 'Eligibility checked against preliminary records dated May 8, 2025 and Apr 2, 2026. The supported factor estimate holds the 2026 building inputs constant.');
+  assert.equal(factorEligibilityNote(2026, '2026-04-02', null), 'Eligibility checked against the current-year preliminary record dated Apr 2, 2026. The supported factor estimate holds the 2026 building inputs constant.');
+  assert.equal(factorEligibilityNote(2026, null, '2025-05-08'), null);
 });
 test('features are dynamic and comparisons remain cautious for absent, new and ambiguous details', () => {
   const list = propertyFeatures(current, previous);
