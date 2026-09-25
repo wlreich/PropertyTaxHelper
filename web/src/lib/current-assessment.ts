@@ -51,6 +51,7 @@ export function currentAssessmentStory(current: Snapshot, snapshots: Snapshot[],
   const recorded = evidence.some(e => e.tax_year === current.tax_year && (e.protest_flag || e.arb_case_listed));
   const protest = recorded ? 'Protest recorded' : proposed && proposed.dollars < 0 ? `Reduction evidence suggests a possible protest; ${unavailable ? 'protest records temporarily unavailable' : 'no protest record found'}` : unavailable ? 'Protest records temporarily unavailable' : 'No protest found in available records';
   const agents = agentsForYear(evidence, current.tax_year);
+  const agentAssignmentRecorded = evidence.some(e => e.tax_year === current.tax_year && e.arb_agent_listed);
   const seasonNote = season && season.config.tax_year > current.tax_year ? `${season.config.tax_year} values are not available for this property yet. Showing the latest available ${current.tax_year} assessment.` : current.roll_stage !== 'certified' ? season?.phase === 'protest' && season.config.tax_year === current.tax_year ? 'Protest season is underway. The available records do not establish a final outcome for this property.' : 'Review the proposed value and property details. Pending results are not a zero-dollar reduction.' : null;
   const resultHeadline = recorded && proposed && proposed.dollars < 0 ? `Protest recorded. Value reduced ${proposed.percent !== null ? `${Math.abs(proposed.percent).toFixed(1)}%` : ''} from the proposal.` : headline;
   const overviewReductionPercent = recorded && proposed && proposed.dollars < 0 && proposed.percent !== null
@@ -60,7 +61,7 @@ export function currentAssessmentStory(current: Snapshot, snapshots: Snapshot[],
     ? `Your ${current.tax_year} certified market value is ${Math.abs(annual.percent).toFixed(1)}% lower than in ${previous!.tax_year}.`
     : `${trend}${cap} ${outcome}`;
   return {
-    previous, initial, annual, assessed, proposed, capped, recorded,
+    previous, initial, annual, assessed, proposed, capped, recorded, agentAssignmentRecorded, evidenceUnavailable: unavailable,
     headline: resultHeadline, overviewReductionPercent,
     outcome: assessmentOutcome(current, initial),
     narrative: `${trend}${cap} ${outcome}`, overviewNarrative,

@@ -26,7 +26,11 @@ export function CurrentAssessment({current,snapshots,evidence,season,unavailable
     {story.outcome?.overviewExplanation && <p className="current-assessment-impact">{story.outcome.overviewExplanation}</p>}
     {story.recorded && story.agents.length === 0 ? <>
       <p className="current-assessment-evidence">Protest recorded - Agent not identified.</p>
-      <p className="current-assessment-evidence">This may indicate that the homeowner protested without an agent.</p>
+      <p className="current-assessment-evidence">{story.evidenceUnavailable
+        ? 'Agent information is temporarily unavailable.'
+        : story.agentAssignmentRecorded
+          ? 'An agent assignment is recorded, but the name is unavailable.'
+          : 'This may indicate that the homeowner protested without an agent.'}</p>
     </> : <>
       <p className="current-assessment-evidence">{story.protest} · {story.agents.length ? `Agent${story.agents.length > 1 ? 's' : ''}: ${story.agents.map(a=>a.name).join(' · ')}` : 'Agent not identified'}</p>
       {(story.agents.length > 0 || story.proposed && story.proposed.dollars < 0) && <p className="current-assessment-evidence">The records do not establish what caused a reduction or who handled the case.</p>}

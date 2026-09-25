@@ -38,6 +38,7 @@ test('hero separates recorded and inferred protest, agent attribution, rising/fa
   assert.equal(recorded.proposed.dollars,-100000);assert.equal(recorded.protest,'Protest recorded');
   assert.equal(recorded.recorded,true);assert.equal(recorded.overviewReductionPercent,'18.2');
   assert.equal(recorded.agents[0].name,'FIXTURE TAX PARTNERS');
+  assert.equal(recorded.agentAssignmentRecorded,true);assert.equal(recorded.evidenceUnavailable,false);
   const inferred=currentAssessmentStory(final,fixtureHistory.snapshots,[],null);
   assert.match(inferred.protest,/suggests a possible protest/);assert.equal(inferred.recorded,false);assert.equal(inferred.overviewReductionPercent,null);
   const unchanged=currentAssessmentStory({...final,market_value:preliminary.market_value},fixtureHistory.snapshots,[],null);
@@ -49,6 +50,8 @@ test('hero separates recorded and inferred protest, agent attribution, rising/fa
   const unavailable=currentAssessmentStory(final,[old],[],null,true);
   assert.equal(unavailable.protest,'Protest records temporarily unavailable');
   assert.match(currentAssessmentStory(final,fixtureHistory.snapshots,[],null,true).protest,/protest records temporarily unavailable/);
+  const unnamed=currentAssessmentStory(final,fixtureHistory.snapshots,[{...evidence[0],arb_agent_name:null}],null);
+  assert.equal(unnamed.agentAssignmentRecorded,true);assert.equal(unnamed.agents.length,0);
 });
 test('overview prior-year decrease copy is distinct from the preliminary-to-certified result',()=>{
   const prior={...old,market_value:452000};
