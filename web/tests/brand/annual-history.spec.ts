@@ -91,6 +91,10 @@ test('PAR-25 one, five and six years stay bounded through navigation and dialogs
       const dialog=page.getByRole('dialog');await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
       await expect(dialog).toContainText('Apr 2, 2021');await dialog.getByRole('button',{name:'Close record'}).click();
       await expect(trigger).toBeFocused();await expect(history.locator('.annual-value-row')).toHaveCount(1);
+      await history.locator('.annual-trend summary').click();
+      const olderStages=history.locator('[data-chart-year="2021"] [data-chart-stage]');
+      await expect(olderStages.nth(1)).toHaveAccessibleName('2021 Final market value: Not available');
+      await expect(olderStages.nth(2)).toHaveAccessibleName('2021 Assessed value: Not available');
       await history.screenshot({path:info.outputPath('par25-older-page.png')});
       await history.getByRole('button',{name:'Newer years'}).click();await expect(history.locator('.annual-value-row')).toHaveCount(5);
       expect(await page.locator('.current-assessment').textContent()).toBe(hero);

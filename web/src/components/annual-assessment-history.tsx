@@ -10,8 +10,8 @@ const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.so
 const assessedStageLabel = (row: AnnualYear) => row.assessedAfterCap
   ? 'Assessed value after cap'
   : 'Assessed value';
-const unavailableStage = (row: AnnualYear, kind: 'proposed' | 'final' | 'assessed') =>
-  kind !== 'proposed' && row.status === 'Preliminary only' ? 'Pending' : 'Not available';
+const unavailableStage = (row: AnnualYear, kind: 'proposed' | 'final' | 'assessed', latestYear: number | undefined) =>
+  kind !== 'proposed' && row.status === 'Preliminary only' && row.year === latestYear ? 'Pending' : 'Not available';
 const chartStages = (row: AnnualYear) => ([
   {kind: 'proposed', label: 'Proposed market value', value: row.trendProposed},
   {kind: 'final', label: 'Final market value', value: row.market},
@@ -143,7 +143,7 @@ export function AnnualAssessmentHistory() {
             <span className="annual-chart-label">{row.year}</span>
             <div className="annual-chart-pair">
               {chartStages(row).map(stage => {
-                const state = stage.value === null ? unavailableStage(row, stage.kind) : amount(stage.value);
+                const state = stage.value === null ? unavailableStage(row, stage.kind, rows[0]?.year) : amount(stage.value);
                 const width = stage.value === null ? null : stage.value / scale.maximum * 100;
                 return <div className={`annual-chart-series annual-series-${stage.kind}`} key={stage.kind} data-chart-stage={stage.kind} role="img" aria-label={`${row.year} ${stage.label}: ${state}`}>
                   <span className="annual-stage-label" aria-hidden="true">{stage.label}</span>

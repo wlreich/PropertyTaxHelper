@@ -34,6 +34,7 @@ test('zero, one, five, six and nonconsecutive years have unique ordered rows wit
     if(count) assert.equal(rows[0].year,2026);
   }
   assert.equal(annualHistory(parseHistory(par11Fixture('999117').overview.history))[0].annual,null);
+  assert.equal(annualHistory(parseHistory(par11Fixture('999116').overview.history)).at(-1).status,'Preliminary only');
   const rows=annualHistory(parseHistory(par11Fixture('999115').overview.history));
   assert.equal(rows[0].annual.dollars,25000);
 });
