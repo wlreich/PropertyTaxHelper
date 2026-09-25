@@ -53,5 +53,17 @@ export function currentAssessmentStory(current: Snapshot, snapshots: Snapshot[],
   const agents = agentsForYear(evidence, current.tax_year);
   const seasonNote = season && season.config.tax_year > current.tax_year ? `${season.config.tax_year} values are not available for this property yet. Showing the latest available ${current.tax_year} assessment.` : current.roll_stage !== 'certified' ? season?.phase === 'protest' && season.config.tax_year === current.tax_year ? 'Protest season is underway. The available records do not establish a final outcome for this property.' : 'Review the proposed value and property details. Pending results are not a zero-dollar reduction.' : null;
   const resultHeadline = recorded && proposed && proposed.dollars < 0 ? `Protest recorded. Value reduced ${proposed.percent !== null ? `${Math.abs(proposed.percent).toFixed(1)}%` : ''} from the proposal.` : headline;
-  return { previous, initial, annual, assessed, proposed, capped, headline: resultHeadline, outcome: assessmentOutcome(current, initial), narrative: `${trend}${cap} ${outcome}`, protest, agents, seasonNote };
+  const overviewReductionPercent = recorded && proposed && proposed.dollars < 0 && proposed.percent !== null
+    ? Math.abs(proposed.percent).toFixed(1)
+    : null;
+  const overviewNarrative = current.roll_stage === 'certified' && annual && annual.dollars < 0 && annual.percent !== null
+    ? `Your ${current.tax_year} certified market value is ${Math.abs(annual.percent).toFixed(1)}% lower than in ${previous!.tax_year}.`
+    : `${trend}${cap} ${outcome}`;
+  return {
+    previous, initial, annual, assessed, proposed, capped, recorded,
+    headline: resultHeadline, overviewReductionPercent,
+    outcome: assessmentOutcome(current, initial),
+    narrative: `${trend}${cap} ${outcome}`, overviewNarrative,
+    protest, agents, seasonNote,
+  };
 }

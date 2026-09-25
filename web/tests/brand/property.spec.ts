@@ -264,6 +264,55 @@ test('PAR-45 assessment-record disclosure stays concise, reachable and readable'
   await expect(page.locator('.overview-source')).toContainText('Missing or withheld records remain unavailable');
 });
 
+test('PAR-51 approved protest, prior-year and cap wording stays evidence-specific and responsive', async ({page}, info) => {
+  test.skip(info.project.name !== 'width-1440', 'Runs the focused 390/1440 PAR-51 visual matrix once.');
+  const capExplanation='If your home qualified for a homestead exemption last year and this year, the cap generally limits increases in its appraised value to 10%, plus new improvements. Its market value can still rise more.';
+  for (const width of [390,1440]) {
+    await page.setViewportSize({width,height:1100});
+    await page.goto('/property/999014');
+    const hero=page.locator('.current-assessment');
+    const heading=hero.getByRole('heading',{name:'Protest recorded. Value reduced 20.3% from your preliminary appraisal.'});
+    await expect(heading).toBeVisible();
+    await expect(hero).toContainText('Your 2026 certified market value is 0.4% lower than in 2025.');
+    await expect(hero).toContainText('Protest recorded - Agent not identified.');
+    await expect(hero).toContainText('This may indicate that the homeowner protested without an agent.');
+    await expect(hero).not.toContainText('The records do not establish what caused a reduction or who handled the case.');
+    await expect(hero.locator('.current-assessment-favorable-arrow')).toHaveAttribute('aria-hidden','true');
+    const contrast=await hero.locator('.current-assessment-favorable').evaluate(element=>{
+      const rgb=(value:string)=>value.match(/[\d.]+/g)!.slice(0,3).map(Number).map(channel=>channel/255).map(channel=>channel<=0.03928?channel/12.92:((channel+0.055)/1.055)**2.4);
+      const luminance=(value:string)=>{const [r,g,b]=rgb(value);return 0.2126*r+0.7152*g+0.0722*b;};
+      const foreground=luminance(getComputedStyle(element).color),background=luminance(getComputedStyle(element.closest('.current-assessment')!).backgroundColor);
+      return (Math.max(foreground,background)+0.05)/(Math.min(foreground,background)+0.05);
+    });
+    expect(contrast).toBeGreaterThanOrEqual(4.5);
+    const arrow=await hero.locator('.current-assessment-favorable-arrow').boundingBox();
+    const lead=await hero.locator('.current-assessment-favorable-lead').boundingBox();
+    expect(arrow!.y).toBeGreaterThanOrEqual(lead!.y-1);
+    expect(arrow!.y+arrow!.height).toBeLessThanOrEqual(lead!.y+lead!.height+1);
+    const cap=page.locator('.cap-section');
+    await expect(cap).toContainText(capExplanation);
+    await expect(cap.locator('.cap-guidance')).toContainText('Your final assessed value is $68,375 below the capped amount on your preliminary appraisal. That final value becomes the starting point for next year’s homestead cap.');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect((await new AxeBuilder({page}).include('.current-assessment').include('.cap-section').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
+    await hero.screenshot({path:info.outputPath(`par51-hero-${width}.png`)});
+    await cap.screenshot({path:info.outputPath(`par51-cap-${width}.png`)});
+  }
+
+  await page.goto('/property/999015');
+  await expect(page.locator('.current-assessment')).toContainText('Reduction evidence suggests a possible protest; no protest record found');
+  await expect(page.locator('.current-assessment')).not.toContainText('Protest recorded. Value reduced');
+  await expect(page.locator('.cap-guidance')).toContainText('Your market value fell, but your assessed value did not change. This reduction does not lower next year’s starting point.');
+
+  await page.goto('/property/999016');
+  await expect(page.locator('.current-assessment-impact')).toContainText('Your recorded assessed value also fell $53,650 from the preliminary assessed value.');
+  await expect(page.locator('.cap-guidance')).toContainText('Your final assessed value is $53,650 lower than on your preliminary appraisal. That final value becomes next year’s starting point.');
+
+  await page.goto('/property/999017');
+  await expect(page.locator('.current-assessment')).toContainText('Comparable preliminary value unavailable');
+  await expect(page.locator('.cap-guidance')).toContainText('Your 2026 assessed value is the starting point for next year’s homestead cap');
+  await expect(page.locator('.cap-guidance')).not.toContainText('lower starting point');
+});
+
 test('PAR-9 approved Figma reference property 736164', async ({page},info) => {
   await page.goto('/property/736164');
   await expect(page.getByRole('heading',{level:1})).toHaveText('3709 LAJITAS');

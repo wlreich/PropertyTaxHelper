@@ -10,7 +10,8 @@ export function CapAndExemptions({ model, annualReviewHref }: { model: CapModel;
   const authority = model.authorities.find(a => a.code === selected) ?? model.authorities[0];
   const deduction = (value: number | null) => value === null ? 'Not reported' : `${value > 0 ? '− ' : ''}${currency(value)}`;
   return <section className="overview-section property-section cap-section" aria-labelledby="exemptions-heading">
-    <h2 id="exemptions-heading" tabIndex={-1}>What is the cap doing for you?</h2>
+    <h2 id="exemptions-heading" className={model.capExplanation ? 'cap-heading-with-explanation' : undefined} tabIndex={-1}>What is the cap doing for you?</h2>
+    {model.capExplanation && <p className="cap-explanation">{model.capExplanation}</p>}
     <div className="cap-columns">
       <div>
         <dl className="cap-calculation" aria-label="Market to taxable value calculation">

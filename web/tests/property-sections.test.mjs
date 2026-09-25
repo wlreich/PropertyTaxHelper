@@ -17,6 +17,7 @@ test('reference calculation reconciles independently for every authority', () =>
   assert.equal(m.authorities.find(a => a.code === '03').exemptions, 420740);
   assert.equal(m.priorAssessed, 1252140);
   assert.notEqual(m.priorAssessed, previous.market_value);
+  assert.equal(m.capExplanation, 'If your home qualified for a homestead exemption last year and this year, the cap generally limits increases in its appraised value to 10%, plus new improvements. Its market value can still rise more.');
 });
 test('binding, nonbinding, unconfirmed eligibility and no homestead have distinct guidance', () => {
   assert.equal(capModel({ ...current, market_value: current.assessed_value }, previous).state, 'nonbinding');
@@ -26,7 +27,11 @@ test('binding, nonbinding, unconfirmed eligibility and no homestead have distinc
   const newHS = capModel({ ...current, market_value: current.assessed_value }, { ...previous, exemptions: [], entities: [] });
   assert.equal(newHS.state, 'eligibility-unconfirmed');
   assert.equal(newHS.outlook, null);
+  assert.equal(newHS.capExplanation, null);
   assert.equal(newHS.priorAssessed, null);
+  const newBindingHS = capModel(current, { ...previous, exemptions: [], entities: [] });
+  assert.equal(newBindingHS.state, 'eligibility-unconfirmed');
+  assert.equal(newBindingHS.outlook, null);
   assert.equal(capModel({ ...current, market_value: current.assessed_value }).state, 'eligibility-unconfirmed');
   // Newly recorded features must not be interpreted as qualifying new improvements
   // or used to recalculate the district's reported assessed value.

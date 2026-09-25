@@ -5,12 +5,12 @@ import { currency } from './property-search.ts';
 const hasHomestead = (s: Snapshot | undefined) => Boolean(s && (s.exemptions.includes('HS') || s.entities.some(e => Object.hasOwn(e.exemptions, 'HS'))));
 const review = "Review your assessment every year. Consider a protest when property details or comparable values support it, even if this year's tax bill may not change.";
 
-export function capModel(current: Snapshot, previous?: Snapshot, available = true, initial?: Snapshot) {
+export function capModel(current: Snapshot, previous?: Snapshot, available = true, initial?: Snapshot, presentation: 'overview' | 'report' = 'overview') {
   const market = current.market_value, assessed = current.assessed_value;
   const difference = market !== null && assessed !== null && assessed <= market ? market - assessed : null;
   const homestead = available && hasHomestead(current);
   const priorHomestead = previous?.tax_year === current.tax_year - 1 && hasHomestead(previous);
-  const state = !available || difference === null ? 'unavailable' : !homestead ? 'no-homestead' : difference > 0 ? 'binding' : priorHomestead ? 'nonbinding' : 'eligibility-unconfirmed';
+  const state = !available || difference === null ? 'unavailable' : !homestead ? 'no-homestead' : !priorHomestead ? 'eligibility-unconfirmed' : difference > 0 ? 'binding' : 'nonbinding';
   const title = state === 'binding' ? 'Your cap helps. Keep reviewing.' : state === 'unavailable' ? 'More cap information needed.' : state === 'eligibility-unconfirmed' ? 'Check when your cap takes effect.' : 'Keep reviewing your market value.';
   const paragraphs = state === 'binding' ? [
     'Your cap limits growth in assessed value; it does not confirm that your market value is accurate.', review,
@@ -34,7 +34,10 @@ export function capModel(current: Snapshot, previous?: Snapshot, available = tru
     return { code: e.code, name: entityDisplayName(e), taxable: e.taxable_value, exemptions, reconciles,
       entries: entries.map(([code, value]) => ({ code, label: exemptionName(code).replace('TCAD', 'Appraisal District'), value })) };
   });
-  return { market, assessed, difference, homestead, state, title, paragraphs, authorities, outlook: nextYearCap(current, initial, available && (state === 'binding' || state === 'nonbinding')),
+  const capExplanation = available && homestead && priorHomestead
+    ? 'If your home qualified for a homestead exemption last year and this year, the cap generally limits increases in its appraised value to 10%, plus new improvements. Its market value can still rise more.'
+    : null;
+  return { market, assessed, difference, homestead, state, title, paragraphs, capExplanation, authorities, outlook: nextYearCap(current, initial, available && (state === 'binding' || state === 'nonbinding'), presentation),
     defaultAuthority: authorities.find(e => /\bISD\b|SCHOOL/i.test(e.name))?.code ?? authorities[0]?.code ?? '',
     exemptionNames: [...new Set([...current.exemptions, ...current.entities.flatMap(e => Object.keys(e.exemptions))])].map(c => exemptionName(c).replace('TCAD', 'Appraisal District')),
     priorAssessed: priorHomestead ? previous?.assessed_value ?? null : null,

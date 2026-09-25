@@ -36,8 +36,10 @@ test('missing values remain unavailable; preliminary records never acquire final
 test('hero separates recorded and inferred protest, agent attribution, rising/falling and uncapped values',()=>{
   const recorded=currentAssessmentStory(final,fixtureHistory.snapshots,evidence,null);
   assert.equal(recorded.proposed.dollars,-100000);assert.equal(recorded.protest,'Protest recorded');
+  assert.equal(recorded.recorded,true);assert.equal(recorded.overviewReductionPercent,'18.2');
   assert.equal(recorded.agents[0].name,'FIXTURE TAX PARTNERS');
-  assert.match(currentAssessmentStory(final,fixtureHistory.snapshots,[],null).protest,/suggests a possible protest/);
+  const inferred=currentAssessmentStory(final,fixtureHistory.snapshots,[],null);
+  assert.match(inferred.protest,/suggests a possible protest/);assert.equal(inferred.recorded,false);assert.equal(inferred.overviewReductionPercent,null);
   const unchanged=currentAssessmentStory({...final,market_value:preliminary.market_value},fixtureHistory.snapshots,[],null);
   assert.equal(unchanged.proposed.dollars,0);
   const noCap=currentAssessmentStory({...final,exemptions:[],entities:[]},fixtureHistory.snapshots,[],null);
@@ -47,4 +49,13 @@ test('hero separates recorded and inferred protest, agent attribution, rising/fa
   const unavailable=currentAssessmentStory(final,[old],[],null,true);
   assert.equal(unavailable.protest,'Protest records temporarily unavailable');
   assert.match(currentAssessmentStory(final,fixtureHistory.snapshots,[],null,true).protest,/protest records temporarily unavailable/);
+});
+test('overview prior-year decrease copy is distinct from the preliminary-to-certified result',()=>{
+  const prior={...old,market_value:452000};
+  const story=currentAssessmentStory(final,[prior,preliminary,final],evidence,null);
+  assert.equal(story.overviewNarrative,'Your 2026 certified market value is 0.4% lower than in 2025.');
+  assert.match(story.narrative,/Market value decreased 0.4% from 2025/);
+  assert.doesNotMatch(story.overviewNarrative,/proposed|preliminary/);
+  const unavailable=currentAssessmentStory(final,[final],[],null);
+  assert.match(unavailable.overviewNarrative,/prior-year certified market value is not available/);
 });

@@ -28,21 +28,33 @@ export function assessmentOutcome(current: Snapshot, initial?: Snapshot) {
       : assessedReduction === 0 ? 'The market-value reduction did not change your recorded assessed value.'
       : 'Market value fell, but recorded assessed value rose. Other assessment changes may affect the result.';
   }
-  return { marketReduction, assessedReduction, capExcluded, reconciles, explanation };
+  const overviewExplanation = explanation?.replace('from the proposal.', 'from the preliminary assessed value.') ?? null;
+  return { marketReduction, assessedReduction, capExcluded, reconciles, explanation, overviewExplanation };
 }
 
-export function nextYearCap(current: Snapshot, initial?: Snapshot, available = true) {
+export function nextYearCap(current: Snapshot, initial?: Snapshot, available = true, presentation: 'overview' | 'report' = 'overview') {
   if (!available || current.roll_stage !== 'certified' || !homestead(current) || !usable(current) || current.assessed_value === 0) return null;
   const outcome = assessmentOutcome(current, initial);
   const reduced = outcome !== null && outcome.assessedReduction > 0;
-  const unchangedAfterReduction = outcome !== null && outcome.marketReduction > 0 && outcome.assessedReduction === 0;
+  const reconciledCapReduction = reduced && outcome.reconciles && outcome.capExcluded !== null && outcome.capExcluded > 0;
+  const reportUnchangedAfterReduction = outcome !== null && outcome.marketReduction > 0 && outcome.assessedReduction === 0;
+  const unchangedAfterReduction = outcome !== null && outcome.marketReduction > 0 && outcome.assessedReduction === 0 &&
+    outcome.reconciles && outcome.capExcluded !== null && outcome.capExcluded > 0;
+  const overviewExplanation = reconciledCapReduction
+    ? `Your final assessed value is ${currency(outcome.assessedReduction)} below the capped amount on your preliminary appraisal. That final value becomes the starting point for next year’s homestead cap.`
+    : reduced
+      ? `Your final assessed value is ${currency(outcome.assessedReduction)} lower than on your preliminary appraisal. That final value becomes next year’s starting point.`
+      : unchangedAfterReduction
+        ? 'Your market value fell, but your assessed value did not change. This reduction does not lower next year’s starting point.'
+        : `Your ${current.tax_year} assessed value is the starting point for next year’s homestead cap. The cap limits assessment growth; it does not establish whether market value is accurate.`;
+  const reportExplanation = reduced
+    ? `Your assessed value finished ${currency(outcome.assessedReduction)} below the proposal. That lower value becomes the starting point for next year’s homestead cap.`
+    : reportUnchangedAfterReduction
+      ? 'Your market value fell, but your assessed value stayed the same. This reduction did not lower the starting point for next year’s cap.'
+      : `Your ${current.tax_year} assessed value is the starting point for next year’s homestead cap. The cap limits assessment growth; it does not establish whether market value is accurate.`;
   return {
     year: current.tax_year + 1, base: current.assessed_value!, ceiling: Math.round(current.assessed_value! * 1.1),
     title: reduced ? 'A lower starting point for next year' : 'Your starting point for next year',
-    explanation: reduced
-      ? `Your assessed value finished ${currency(outcome.assessedReduction)} below the proposal. That lower value becomes the starting point for next year’s homestead cap.`
-      : unchangedAfterReduction
-        ? 'Your market value fell, but your assessed value stayed the same. This reduction did not lower the starting point for next year’s cap.'
-        : `Your ${current.tax_year} assessed value is the starting point for next year’s homestead cap. The cap limits assessment growth; it does not establish whether market value is accurate.`,
+    explanation: presentation === 'report' ? reportExplanation : overviewExplanation,
   };
 }

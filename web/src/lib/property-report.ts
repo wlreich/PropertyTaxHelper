@@ -62,7 +62,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);
-  const cap = capModel(current,story.previous,available,story.initial);
+  const cap = capModel(current,story.previous,available,story.initial,'report');
   const facts = propertyFacts(current);
   const history = annualHistory(snapshots,evidence).filter(r=>r.year<=current.tax_year);
   const n = input.neighborhood;
