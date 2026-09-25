@@ -131,7 +131,8 @@
 }
 @media(max-width: 700px) {
   .comparison-view-controls { align-items: stretch; flex-direction: column; }
-  .comparison-view-options, .comparison-view-switch, .comparison-view-controls .comparison-add-link { width: 100%; }
+  .comparison-view-options { flex: 0 1 auto; width: 100%; }
+  .comparison-view-switch, .comparison-view-controls .comparison-add-link { width: 100%; }
 }
 
 /* Results and selection share compact rows and aligned mobile values. */
