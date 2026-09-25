@@ -7,6 +7,16 @@ import { currency } from '@/lib/property-search';
 const amount = (value: number | null) => value === null ? 'Not available' : currency(value);
 const columns = ['Proposed market', 'Certified market', 'Change from proposal', 'After cap', 'Protest record'];
 const protestStatus = (row: AnnualYear, unavailable: boolean) => row.protests.some(p => p.recorded) ? 'Recorded' : unavailable ? 'Unavailable' : row.within && row.within.dollars < 0 ? 'Reduction only' : 'Not found';
+const assessedStageLabel = (row: AnnualYear) => row.assessedAfterCap
+  ? 'Assessed value after cap'
+  : 'Assessed value';
+const unavailableStage = (row: AnnualYear, kind: 'proposed' | 'final' | 'assessed', pendingYear: number | null) =>
+  kind !== 'proposed' && row.status === 'Preliminary only' && row.year === pendingYear ? 'Pending' : 'Not available';
+const chartStages = (row: AnnualYear) => ([
+  {kind: 'proposed', label: 'Proposed market value', value: row.trendProposed},
+  {kind: 'final', label: 'Final market value', value: row.market},
+  {kind: 'assessed', label: assessedStageLabel(row), value: row.assessed},
+] as const);
 
 function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnavailable: boolean}) {
   return <div className="annual-year-details">
@@ -52,7 +62,7 @@ function YearDetails({row, protestsUnavailable}: {row: AnnualYear; protestsUnava
 }
 
 
-type HistoryState = {rows: AnnualYear[]; unavailable: boolean; protestsUnavailable: boolean; openYear: (year: number, trigger: HTMLElement) => void};
+type HistoryState = {rows: AnnualYear[]; unavailable: boolean; protestsUnavailable: boolean; pendingYear: number | null; openYear: (year: number, trigger: HTMLElement) => void};
 const HistoryContext = createContext<HistoryState | null>(null);
 function useHistory() {
   const value = useContext(HistoryContext);
@@ -60,7 +70,7 @@ function useHistory() {
   return value;
 }
 
-export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, children}: Omit<HistoryState, 'openYear'> & {children: ReactNode}) {
+export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, pendingYear, children}: Omit<HistoryState, 'openYear'> & {children: ReactNode}) {
   const [year, setYear] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
@@ -74,7 +84,7 @@ export function AnnualHistoryProvider({rows, unavailable, protestsUnavailable, c
   }, [row]);
   const openYear = (selected: number, source: HTMLElement) => { trigger.current = source; setYear(selected); };
   const closed = () => { setYear(null); trigger.current?.focus({preventScroll: true}); };
-  return <HistoryContext.Provider value={{rows, unavailable, protestsUnavailable, openYear}}>
+  return <HistoryContext.Provider value={{rows, unavailable, protestsUnavailable, pendingYear, openYear}}>
     {children}
     {row && <dialog ref={dialog} className="annual-dialog" aria-labelledby="annual-dialog-heading" onClose={closed}>
       <div className="annual-dialog-toolbar"><button type="button" className="annual-year-toggle" onClick={() => dialog.current?.close()}>Close record <span aria-hidden="true">×</span></button></div>
@@ -90,14 +100,15 @@ export function CurrentYearRecord({year}: {year: number}) {
 }
 
 export function AnnualAssessmentHistory() {
-  const {rows, unavailable, protestsUnavailable, openYear} = useHistory();
+  const {rows, unavailable, protestsUnavailable, pendingYear, openYear} = useHistory();
   const [page, setPage] = useState(0);
   const lastPage = Math.max(0, Math.ceil(rows.length / 5) - 1);
   const activePage = Math.min(page, lastPage);
   const visible = rows.slice(activePage * 5, activePage * 5 + 5);
-  const plotted = [...visible].reverse().filter(row => row.market !== null || row.assessed !== null);
+  const plotted = [...visible].reverse().filter(row => chartStages(row).some(stage => stage.value !== null));
   const scale = chartScale(plotted);
   const gap = capGapSummary(visible);
+  const hasUnavailableStages = plotted.some(row => chartStages(row).some(stage => stage.value === null));
   return <section className="overview-section property-section annual-history" aria-labelledby="history-heading">
     <p className="eyebrow">Your property over time</p>
     <h2 id="history-heading" tabIndex={-1}>Assessment &amp; protest history</h2>
@@ -123,25 +134,33 @@ export function AnnualAssessmentHistory() {
         <p role="status">Showing {visible.at(-1)?.year}{visible.length > 1 ? `–${visible[0].year}` : ''} · {rows.length} {rows.length === 1 ? 'year' : 'years'} available{rows.length > 5 ? ` · Page ${activePage + 1} of ${lastPage + 1}` : ''}</p>
         {rows.length > 5 && <nav aria-label="History pages"><button type="button" className="annual-earlier" disabled={activePage === 0} onClick={() => setPage(activePage - 1)}>Newer years</button><button type="button" className="annual-earlier" disabled={activePage === lastPage} onClick={() => setPage(activePage + 1)}>Older years</button></nav>}
       </div>
-      <details className="annual-trend"><summary>View certified trend for these years</summary>
-      {plotted.length > 0 ? <figure className="annual-chart" aria-label="Annual certified market and assessed values">
-        <figcaption className="annual-legend"><span><i className="annual-market-key" aria-hidden="true" />Appraisal District market value</span><span><i className="annual-assessed-key" aria-hidden="true" />Assessed value after cap</span></figcaption>
+      <details className="annual-trend"><summary>View valuation trend for these years</summary>
+      {plotted.length > 0 ? <figure className="annual-chart" aria-label="Annual proposed, final market and assessed values">
+        <figcaption className="annual-chart-caption">Follow each year from the proposed market value to the final market value and then the assessed value. A cap may lower the assessed value.{hasUnavailableStages && ' Pending or unavailable stages are marked.'}</figcaption>
+        <div className="annual-legend" aria-label="Valuation stages"><span><i className="annual-proposed-key" aria-hidden="true" />Proposed market value</span><span><i className="annual-market-key" aria-hidden="true" />Final market value</span><span><i className="annual-assessed-key" aria-hidden="true" />Assessed value (after cap when applicable)</span></div>
         <div className="annual-chart-rows">
           {plotted.map(row => <div className="annual-chart-year" key={row.year} data-chart-year={row.year}>
             <span className="annual-chart-label">{row.year}</span>
             <div className="annual-chart-pair">
-              {([['Market value', row.market, 'market'], ['After cap', row.assessed, 'assessed']] as const).map(([name, value, kind]) =>
-                <div className={`annual-chart-series annual-series-${kind}`} key={kind}>
-                  <span className="visually-hidden">{row.year} certified {name}: </span>
-                  <div className="annual-bar-track" aria-hidden="true"><span className="annual-bar" style={{width: `${(value ?? 0) / scale.maximum * 100}%`}} /></div>
-                  <span className="annual-bar-value" style={{left: `calc(${(value ?? 0) / scale.maximum * 100}% + var(--space-3))`}}>{amount(value)}</span>
-                </div>)}
+              {chartStages(row).map(stage => {
+                const state = stage.value === null ? unavailableStage(row, stage.kind, pendingYear) : amount(stage.value);
+                const width = stage.value === null ? null : stage.value / scale.maximum * 100;
+                return <div className={`annual-chart-series annual-series-${stage.kind}`} key={stage.kind} data-chart-stage={stage.kind} role="img" aria-label={`${row.year} ${stage.label}: ${state}`}>
+                  <span className="annual-stage-label" aria-hidden="true">{stage.label}</span>
+                  <div className="annual-bar-area" aria-hidden="true">
+                    {width === null ? <span className="annual-chart-unavailable">{state}</span> : <>
+                      <div className="annual-bar-track"><span className="annual-bar" style={{width: `${width}%`}} /></div>
+                      <span className="annual-bar-value" style={{left: `calc(${width}% + var(--space-3))`}}>{state}</span>
+                    </>}
+                  </div>
+                </div>;
+              })}
             </div>
           </div>)}
         </div>
         <div className="annual-chart-axis" aria-hidden="true">{scale.ticks.map((value, i) => <span key={value} style={{left: `${i * 25}%`}}>{new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', notation:'compact', maximumFractionDigits:2}).format(value)}</span>)}</div>
         <p className="visually-hidden">Bars start at zero. Axis maximum: {currency(scale.maximum)}. Exact values are also in the annual table.</p>
-      </figure> : <p>Certified values are not available to chart yet.</p>}
+      </figure> : <p>Valuation values are not available to chart yet.</p>}
 
 
       {gap && <p className="annual-gap-summary">{gap}</p>}

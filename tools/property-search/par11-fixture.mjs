@@ -19,6 +19,7 @@ export function par11Fixture(id) {
   };
   const years = id === '999110' ? [] : id === '999111' ? [2026] : id === '999115' ? [2022,2023,2024,2025,2026] : id === '999117' ? [2024,2026] : [2021,2022,2023,2024,2025,2026];
   result.overview.history = {snapshots:years.flatMap(makeYear), protest_observations:[]};
+  if (id === '999116') result.overview.history.snapshots = result.overview.history.snapshots.filter(s => s.tax_year !== 2021 || s.roll_stage === 'preliminary');
   if (id === '999118') result.overview.history.snapshots = [...makeYear(2026),makeYear(2027)[0]];
   if (id === '999119') {
     result.overview.history = structuredClone(history);

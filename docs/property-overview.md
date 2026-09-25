@@ -41,10 +41,13 @@ comparison. Unknown amounts/dates remain unavailable and a zero prior amount has
 no invented percentage change.
 
 `AnnualAssessmentHistory` keeps the current assessment untouched while expanding
-yearly details. Certified market and assessed bars share a zero-based dynamic
-scale. Preliminary-only years appear in the table without certified bars. Up to
-five loaded years appear initially, with earlier chart/table entries expandable
-on the same page. Mobile rows retain table semantics and explicit field labels.
+yearly details. Explicitly eligible proposed, final market and matching certified
+assessed values share a zero-based dynamic scale. Preliminary-only years retain
+their proposed stage; final stages are pending only during the matching active
+season and otherwise unavailable. Certified years with no supported proposal mark
+that stage unavailable. Up to five loaded years appear
+initially, with earlier chart/table entries expandable on the same page. Mobile
+rows retain table semantics and explicit field labels.
 Source timestamps, authority exemptions, and dated protest/agent evidence remain
 available within each year. No archive ingestion or database rule changes are
 part of this feature.
@@ -163,8 +166,10 @@ focus to its summary. Other page sections and mobile sidebar ordering are unchan
 
 Annual explanations name the taxing authority. An explanation that larger exemptions softened
 an increase is used only when both years' exemption totals reconcile to assessed minus taxable
-value. Otherwise the explanation stays general. The timeline bars share a zero baseline and
-show market value only. Missing amounts are not plotted as zero. Certified is not labeled final.
+value. Otherwise the explanation stays general. The timeline bars share a zero baseline and show
+the supported proposal, final market value and matching assessed value as separate levels. Missing
+amounts are not plotted as zero. A cap is named only when the same-year records support it;
+otherwise the third stage remains “Assessed value.”
 
 The default view summarizes pool/spa features, distinguishes a changed detail from a detail no
 longer listed, and leaves ambiguous matches uncombined. Complete history, feature tables,

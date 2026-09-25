@@ -22,15 +22,26 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
     const prior = certified.get(year - 1);
     const dated = sources.filter(s => validDate(s.export_date));
     const preliminary = final && validDate(final.export_date) ? preliminaryBaseline(dated, final) : dated.find(isPreliminaryBaseline);
+    // The trend adds PAR-52's stricter eligibility rule without changing the
+    // established ledger/report contract: an absent flag is unknown and
+    // cannot become a charted proposal.
+    const trendProposals = dated.filter(s => s.roll_stage === 'preliminary' && s.preliminary_baseline_eligible === true);
+    const trendPreliminary = final && validDate(final.export_date)
+      ? trendProposals.find(s => s.export_date! < final.export_date!)
+      : trendProposals[0];
     const latest = final ?? sources.at(-1);
     const annual = final && prior && validDate(final.export_date) && validDate(prior.export_date) ? comparison(prior.market_value, final.market_value) : null;
     const within = final && validDate(final.export_date) && preliminary ? comparison(preliminary.market_value, final.market_value) : null;
+    const outcome = final ? assessmentOutcome(final, preliminary) : null;
+    const trendOutcome = final ? assessmentOutcome(final, trendPreliminary) : null;
     return {
       year, preliminary: preliminary?.market_value ?? null,
+      trendProposed: trendPreliminary?.market_value ?? null,
       preliminaryAssessed: preliminary?.assessed_value ?? null,
       preliminaryLand: preliminary?.land_value ?? null, preliminaryImprovements: preliminary?.improvement_value ?? null,
       certifiedLand: final?.land_value ?? null, certifiedImprovements: final?.improvement_value ?? null,
-      outcome: final ? assessmentOutcome(final, preliminary) : null,
+      outcome,
+      assessedAfterCap: Boolean(trendOutcome && trendOutcome.capExcluded !== null && trendOutcome.capExcluded > 0),
       annualAssessed: final && prior && validDate(final.export_date) && validDate(prior.export_date) ? comparison(prior.assessed_value, final.assessed_value) : null,
       market: final?.market_value ?? null, assessed: final?.assessed_value ?? null,
       afterCap: latest?.assessed_value ?? null,
@@ -56,7 +67,8 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
 export type AnnualYear = ReturnType<typeof annualHistory>[number];
 
 export function chartScale(rows: AnnualYear[]) {
-  const maximum = Math.max(0, ...rows.flatMap(r => [r.market ?? 0, r.assessed ?? 0]));
+  const values = rows.flatMap(r => [r.trendProposed, r.market, r.assessed]).filter((value): value is number => value !== null);
+  const maximum = Math.max(0, ...values);
   const rawStep = (maximum || 1) / 4;
   const magnitude = 10 ** Math.floor(Math.log10(rawStep));
   const step = [1, 2, 2.5, 5, 10].map(n => n * magnitude).find(n => n >= rawStep)!;

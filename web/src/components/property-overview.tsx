@@ -60,7 +60,7 @@ export function PropertyOverview({
   const preliminaryExplanationAvailable = !p.values_under_review && !historyUnavailable && hasPreliminaryValueDriverExplanation(current, preliminaryComparison);
   const yearlyReview = annualReviewPrompt(current, season, p.values_under_review || historyUnavailable);
   return (
-    <AnnualHistoryProvider key={p.property_id} rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>
+    <AnnualHistoryProvider key={p.property_id} rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable} pendingYear={season && season.phase !== 'post' ? season.config.tax_year : null}>
       <div className="profile-heading overview-heading">
         <div>
           <h1>{p.address}</h1>
