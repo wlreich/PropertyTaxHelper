@@ -1,4 +1,4 @@
-import { comparison, componentKey, componentName, entityDisplayName, exemptionName, type Snapshot } from './property-history.ts';
+import { comparison, componentKey, componentName, dateLabel, entityDisplayName, exemptionName, type Snapshot } from './property-history.ts';
 import { nextYearCap } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 
@@ -108,6 +108,14 @@ export function factorEffectContent(year: number, previousFactor: number | null 
     previousDifferenceWidth: previousFactor > currentFactor ? differenceWidth : 0,
     currentDifferenceWidth: currentFactor > previousFactor ? differenceWidth : 0,
   };
+}
+
+export function factorEligibilityNote(year: number, currentDate: string | null, previousDate: string | null) {
+  if (!currentDate) return null;
+  const source = previousDate
+    ? `Eligibility checked against preliminary records dated ${dateLabel(previousDate)} and ${dateLabel(currentDate)}.`
+    : `Eligibility checked against the current-year preliminary record dated ${dateLabel(currentDate)}.`;
+  return `${source} The supported factor estimate holds the ${year} building inputs constant.`;
 }
 
 export function valueDriverSummary(current: Snapshot, previous?: Snapshot) {
