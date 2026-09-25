@@ -109,7 +109,7 @@ export function PropertyOverview({
             </div>
           )}
           <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id), initial)} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
-          <ValueDrivers current={current} previous={previous} adjustment={marketAdjustment} propertyId={p.property_id} />
+          <ValueDrivers current={current} snapshots={snapshots} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />
           <section className="overview-context" aria-labelledby="context-heading">
             <h2 id="context-heading">Put your assessment in context</h2>

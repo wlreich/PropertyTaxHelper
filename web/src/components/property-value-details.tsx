@@ -1,38 +1,57 @@
 import Link from 'next/link';
 import { currency } from '@/lib/property-search';
-import { annualChange, propertyFeatures, valueDriverSummary } from '@/lib/property-sections';
-import { constructionClasses, propertyFacts, type Snapshot } from '@/lib/property-history';
+import { annualChange, factorEffectContent, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures } from '@/lib/property-sections';
+import { constructionClasses, dateLabel, propertyFacts, type Snapshot } from '@/lib/property-history';
 import { adjustmentReasons, adjustmentSummary, type MarketAdjustment } from '@/lib/market-adjustments';
 
-export function ValueDrivers({ current, previous, adjustment, propertyId }: { current: Snapshot; previous?: Snapshot; adjustment: MarketAdjustment | null; propertyId: string }) {
+export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { current: Snapshot; snapshots: Snapshot[]; adjustment: MarketAdjustment | null; propertyId: string }) {
   const data = adjustment?.year === current.tax_year && adjustment.neighborhood === current.neighborhood ? adjustment : null;
   const summary = data ? adjustmentSummary(data) : null;
   const home = data?.homes.find(h => h.property_id === propertyId);
+  const comparison = preliminaryValueDriverComparison(snapshots, current.tax_year);
+  const pair = comparison.status === 'ok' ? comparison : null;
   const factor = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 4 })}×`;
   const effect = home?.status === 'ok' ? home.effect : null;
-  const effectSentence = effect === null || effect === undefined
-    ? 'A supported cost estimate and both annual factors are needed to estimate the factor’s dollar effect.'
-    : effect === 0
-      ? `Using the ${data?.year ?? current.tax_year} supported cost estimate, the factor change has an estimated $0 effect on your modeled market value compared with keeping the previous year’s factor.`
-      : `Using the ${data?.year ?? current.tax_year} supported cost estimate, the factor change ${effect > 0 ? 'adds' : 'subtracts'} approximately ${currency(Math.abs(effect))} ${effect > 0 ? 'to' : 'from'} your modeled market value compared with keeping the previous year’s factor.`;
+  const factorEffect = factorEffectContent(current.tax_year, summary?.previous?.factor, summary?.current?.factor, effect);
   return <section className="overview-section property-section" id="market-adjustment" aria-labelledby="market-adjustment-heading">
-    <h2 id="market-adjustment-heading" tabIndex={-1}>Why did your value change?</h2>
-    <p>{valueDriverSummary(current, previous)}</p>
-    <p>The district estimates the cost of rebuilding your home and features such as garages and pools, then reduces that estimate for age and condition. The Appraisal District applies a neighborhood factor to that rebuilding cost after depreciation. Land is valued separately. ParcelSavvy estimates how changing the factor affects your home&apos;s modeled value, keeping the other inputs the same.</p>
+    <h2 id="market-adjustment-heading" tabIndex={-1}>{pair ? `Why did your ${current.tax_year} preliminary appraisal change from last year?` : `What changed in the ${current.tax_year} preliminary appraisal?`}</h2>
+    {pair && <p className="value-driver-baseline">{current.tax_year} preliminary compared with {current.tax_year - 1} preliminary.</p>}
+    <p>{preliminaryValueDriverSummary(comparison)}</p>
+    <p>Most homes don&apos;t sell each year. The Appraisal District compares its estimates with recent sales in your market area, then uses a multiplier to adjust the estimated value of homes and other features across that area. Land is valued separately.</p>
+    <p className="overview-note">This describes the market-modified cost method. The Appraisal District also uses an automated sales-comparison model for some residential properties.</p>
     <dl className="value-driver-columns">
-      <div><dt>Land</dt><dd className="driver-value">{currency(current.land_value)}</dd><dd>{annualChange(previous?.land_value, current.land_value, previous?.tax_year)}</dd></div>
-      <div><dt>Home &amp; other features</dt><dd className="driver-value">{currency(current.improvement_value)}</dd><dd>{annualChange(previous?.improvement_value, current.improvement_value, previous?.tax_year)}</dd></div>
+      <div><dt>Land</dt><dd className="driver-value">{pair ? currency(pair.current.land_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.land_value, pair.current.land_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
+      <div><dt>Home &amp; other features</dt><dd className="driver-value">{pair ? currency(pair.current.improvement_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.improvement_value, pair.current.improvement_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
       <div><dt>Market-area multiplier</dt><dd className="driver-value">{summary?.previous && summary.current ? `${factor(summary.previous.factor)} → ${factor(summary.current.factor)}` : 'Not available'}</dd><dd>Estimated effect: {effect === null || effect === undefined ? 'Not available' : `${effect > 0 ? '+' : effect < 0 ? '−' : ''}${currency(Math.abs(effect))}`}</dd></div>
     </dl>
     <p className="overview-note">Home &amp; other features is the Appraisal District&apos;s recorded non-land value after applicable factors. It is not the rebuilding-cost estimate.</p>
-    <p className="overview-note">{effectSentence} {summary?.previous && summary.current ? `${summary.previous.year} ${factor(summary.previous.factor)} → ${summary.current.year} ${factor(summary.current.factor)}. ` : ''}Land and other input changes are separate. This isolates the factor’s contribution; it is not necessarily the total annual change or tax savings.</p>
-    <details className="section-disclosure"><summary>How the estimate works</summary>
+    <details className="section-disclosure factor-effect-disclosure"><summary>See the multiplier&apos;s effect on this home.</summary>
+      {factorEffect ? <>
+        <p>{factorEffect.intro}</p>
+        <p>{factorEffect.boundary}</p>
+        <figure className="factor-comparison" role="img" aria-label={factorEffect.alternative}>
+          <figcaption>Same {current.tax_year} building inputs in both estimates. Only the multiplier changes.</figcaption>
+          <div className="factor-comparison-row">
+            <span>With {current.tax_year - 1} factor</span>
+            <span className="factor-bar-track" aria-hidden="true"><span className="factor-bar-base" style={{ width: `${factorEffect.sharedWidth}%` }} />{factorEffect.previousDifferenceWidth > 0 && <span className="factor-bar-difference" style={{ width: `${factorEffect.previousDifferenceWidth}%` }} />}</span>
+            <strong>{summary?.previous ? factor(summary.previous.factor) : 'Not available'}</strong>
+          </div>
+          <div className="factor-comparison-row">
+            <span>With {current.tax_year} factor</span>
+            <span className="factor-bar-track" aria-hidden="true"><span className="factor-bar-base" style={{ width: `${factorEffect.sharedWidth}%` }} />{factorEffect.currentDifferenceWidth > 0 && <span className="factor-bar-difference" style={{ width: `${factorEffect.currentDifferenceWidth}%` }} />}</span>
+            <strong>{summary?.current ? factor(summary.current.factor) : 'Not available'}</strong>
+          </div>
+          <p className="factor-comparison-result"><span>Estimated effect of the factor change</span><strong>{factorEffect.signedEffect}</strong></p>
+          <p className="factor-comparison-note">Land is separate. This is one part of the preliminary appraisal, not the total year-over-year change or tax savings.</p>
+        </figure>
+      </> : <p>A property-specific factor estimate is unavailable: {home && home.status !== 'ok' ? adjustmentReasons[home.status].toLowerCase() : 'a supported cost estimate and both annual factors are needed'}.</p>}
       <p>ParcelSavvy uses the first eligible preliminary record for {data?.year ?? current.tax_year}. It holds the supported current-year rebuilding-cost inputs constant and changes only the multiplier. A home qualifies only when a residential building is verified and those inputs reproduce the Appraisal District&apos;s recorded preliminary value of the home and other features within $1. Incomplete or unreconciled inputs are excluded rather than treated as zero.</p>
       {summary?.previous && summary.current && <p>Multiplier comparison: {summary.previous.year} {factor(summary.previous.factor)} to {summary.current.year} {factor(summary.current.factor)}, market area {data?.neighborhood}.</p>}
-      {home?.preliminary_date && <p>Inputs from the {home.preliminary_date} preliminary record. The columns above use the current {current.tax_year} {current.roll_stage} record{previous ? ` against ${previous.tax_year} certified values` : ''}.</p>}
+      {home?.preliminary_date && <p>Eligibility checked against preliminary records dated {dateLabel(home.prior_preliminary_date)} and {dateLabel(home.preliminary_date)}. The supported factor estimate holds the {current.tax_year} building inputs constant.</p>}
       {home && home.status !== 'ok' && <p>Estimate unavailable: {adjustmentReasons[home.status]}.</p>}
       <p>Rebuilding costs, depreciation, property details, land and overrides can also change the recorded value. Those changes can offset or add to the multiplier effect. Missing years are not treated as unchanged multipliers.</p>
       {data && <ul>{data.history.map(h => <li key={h.year}><a href={`/data/tcad/${h.filename}#page=${h.page}`}>{h.year} Appraisal District multiplier schedule, p. {h.page}</a></li>)}</ul>}
+      <p>See the <a href="https://traviscad.org/wp-content/uploads/2026_Mass-Appraisal-Report.pdf#page=13">2026 Mass Appraisal Report, page 13</a> for the residential valuation method.</p>
       <p><Link className="section-disclosure-link" href="/methodology#market-adjustments">Read Data &amp; methodology</Link> for source, eligibility and limitation details.</p>
     </details>
   </section>;

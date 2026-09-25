@@ -52,6 +52,64 @@ export function annualChange(before: number | null | undefined, after: number | 
   return change.dollars === 0 ? `Unchanged from ${year}` : `${change.dollars > 0 ? '↑' : '↓'} ${currency(Math.abs(change.dollars))} vs. ${year}`;
 }
 
+export type PreliminaryValueDriverComparison =
+  | { status: 'ok'; current: Snapshot; previous: Snapshot }
+  | { status: 'unavailable'; reason: string };
+
+const comparablePreliminary = (snapshots: Snapshot[], year: number) => snapshots
+  .filter(s => s.tax_year === year && s.roll_stage === 'preliminary' && s.preliminary_baseline_eligible === true && s.export_date)
+  .sort((a, b) => a.export_date!.localeCompare(b.export_date!) || a.dataset_id.localeCompare(b.dataset_id))[0];
+
+/**
+ * A strict, Value-drivers-only pair. Unlike the broader history fallback, an
+ * absent eligibility flag is unknown and cannot become a preliminary baseline.
+ */
+export function preliminaryValueDriverComparison(snapshots: Snapshot[], currentYear: number): PreliminaryValueDriverComparison {
+  const current = comparablePreliminary(snapshots, currentYear);
+  const previous = comparablePreliminary(snapshots, currentYear - 1);
+  if (!current || !previous) return {
+    status: 'unavailable',
+    reason: `A comparable preliminary record is not confirmed for both ${currentYear - 1} and ${currentYear}. Certified values are not substituted here.`,
+  };
+  if (!current.neighborhood || current.neighborhood !== previous.neighborhood) return {
+    status: 'unavailable',
+    reason: 'The same market area is not confirmed in both preliminary records. Certified values are not substituted here.',
+  };
+  if ([current.land_value, current.improvement_value, previous.land_value, previous.improvement_value].some(value => value === null)) return {
+    status: 'unavailable',
+    reason: 'Land or home-and-features values are missing from a comparable preliminary record. Missing values are not treated as zero.',
+  };
+  return { status: 'ok', current, previous };
+}
+
+const preliminaryDirection = (before: number, after: number) => {
+  const difference = after - before;
+  return difference === 0 ? 'stayed the same' : `${difference > 0 ? 'rose' : 'fell'} by ${currency(Math.abs(difference))}`;
+};
+
+export function preliminaryValueDriverSummary(comparison: PreliminaryValueDriverComparison) {
+  if (comparison.status === 'unavailable') return comparison.reason;
+  return `Land ${preliminaryDirection(comparison.previous.land_value!, comparison.current.land_value!)}. The preliminary value of your home and other features ${preliminaryDirection(comparison.previous.improvement_value!, comparison.current.improvement_value!)} from last year.`;
+}
+
+export function factorEffectContent(year: number, previousFactor: number | null | undefined, currentFactor: number | null | undefined, effect: number | null | undefined) {
+  if (previousFactor == null || currentFactor == null || effect == null || previousFactor <= 0 || currentFactor <= 0) return null;
+  const signedEffect = `${effect > 0 ? '+' : effect < 0 ? '−' : ''}${currency(Math.abs(effect))}`;
+  const maximum = Math.max(previousFactor, currentFactor);
+  const sharedWidth = (Math.min(previousFactor, currentFactor) / maximum) * 100;
+  const differenceWidth = (Math.abs(currentFactor - previousFactor) / maximum) * 100;
+  const factor = (value: number) => `${value.toLocaleString('en-US', { maximumFractionDigits: 4 })}×`;
+  return {
+    signedEffect,
+    intro: `Using the same ${year} building inputs, ParcelSavvy calculated this home’s value with the ${year - 1} multiplier of ${factor(previousFactor)}, then with the ${year} multiplier of ${factor(currentFactor)}. The difference is an estimated ${signedEffect}. Land is separate.`,
+    boundary: 'This is the multiplier’s estimated effect, not the total change in your appraisal or tax savings. Building inputs and the final protest result can change the overall value too.',
+    alternative: `Using the same ${year} building inputs, the ${year - 1} factor is ${factor(previousFactor)} and the ${year} factor is ${factor(currentFactor)}. The estimated factor effect is ${signedEffect}. Land is separate.`,
+    sharedWidth,
+    previousDifferenceWidth: previousFactor > currentFactor ? differenceWidth : 0,
+    currentDifferenceWidth: currentFactor > previousFactor ? differenceWidth : 0,
+  };
+}
+
 export function valueDriverSummary(current: Snapshot, previous?: Snapshot) {
   const land = comparison(previous?.land_value, current.land_value);
   const home = comparison(previous?.improvement_value, current.improvement_value);
