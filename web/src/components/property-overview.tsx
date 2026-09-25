@@ -4,7 +4,7 @@ import { selectCurrentAssessment } from "@/lib/current-assessment";
 import { CapAndExemptions } from './cap-and-exemptions';
 import { annualReviewGuideHref } from '@/content/guide-navigation';
 import { ValueDrivers, RecordedPropertyDetails } from './property-value-details';
-import { capModel, preliminaryValueDriverComparison } from '@/lib/property-sections';
+import { capModel, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison } from '@/lib/property-sections';
 import { annualReviewPrompt } from '@/lib/property-overview-guidance';
 import type {MarketAdjustment} from '@/lib/market-adjustments';
 import Link from "next/link";
@@ -57,7 +57,7 @@ export function PropertyOverview({
   const evidence = protestEvidence(snapshots, protests);
   const historyRows = annualHistory(snapshots, evidence);
   const preliminaryComparison = preliminaryValueDriverComparison(snapshots, current.tax_year);
-  const preliminaryExplanationAvailable = !p.values_under_review && !historyUnavailable && preliminaryComparison.status === 'ok';
+  const preliminaryExplanationAvailable = !p.values_under_review && !historyUnavailable && hasPreliminaryValueDriverExplanation(current, preliminaryComparison);
   const yearlyReview = annualReviewPrompt(current, season, p.values_under_review || historyUnavailable);
   return (
     <AnnualHistoryProvider key={p.property_id} rows={historyRows} unavailable={historyUnavailable} protestsUnavailable={protestsUnavailable}>

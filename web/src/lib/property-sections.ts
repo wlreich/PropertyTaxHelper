@@ -85,6 +85,11 @@ export function preliminaryValueDriverComparison(snapshots: Snapshot[], currentY
   return { status: 'ok', current, previous };
 }
 
+export function hasPreliminaryValueDriverExplanation(current: Snapshot, comparison: PreliminaryValueDriverComparison) {
+  return comparison.status === 'ok'
+    && (current.roll_stage !== 'preliminary' || current.dataset_id === comparison.current.dataset_id);
+}
+
 const preliminaryDirection = (before: number, after: number) => {
   const difference = after - before;
   return difference === 0 ? 'stayed the same' : `${difference > 0 ? 'rose' : 'fell'} by ${currency(Math.abs(difference))}`;

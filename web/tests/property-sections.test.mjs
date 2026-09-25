@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { annualChange, capModel, factorEffectContent, factorEligibilityNote, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from '../src/lib/property-sections.ts';
+import { annualChange, capModel, factorEffectContent, factorEligibilityNote, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from '../src/lib/property-sections.ts';
 import { par9Reference } from '../../tools/property-search/par9-reference-fixture.mjs';
 import { reference as par28Reference } from '../../tools/property-search/par28-reference.mjs';
 import { parseHistory } from '../src/lib/property-history.ts';
@@ -73,6 +73,9 @@ test('Value drivers uses the first explicitly eligible preliminary pair instead 
   assert.equal(result.current.improvement_value, 1000000);
   assert.notEqual(result.current.improvement_value, list.find(s => s.tax_year === 2026 && s.roll_stage === 'certified').improvement_value);
   assert.equal(preliminaryValueDriverSummary(result), 'Land stayed the same. The preliminary value of your home and other features rose by $200,000 from last year.');
+  assert.equal(hasPreliminaryValueDriverExplanation(result.current, result), true);
+  assert.equal(hasPreliminaryValueDriverExplanation(list.find(s => s.tax_year === 2026 && s.roll_stage === 'certified'), result), true);
+  assert.equal(hasPreliminaryValueDriverExplanation({...result.current, dataset_id:'later-interim', preliminary_baseline_eligible:false}, result), false);
 });
 test('Value drivers treats absent eligibility and unusable components as unavailable without changing history fallback', () => {
   const list = parseHistory(par28Reference.overview.history);
