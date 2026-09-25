@@ -102,7 +102,7 @@ export function factorEffectContent(year: number, previousFactor: number | null 
   return {
     signedEffect,
     intro: `Using the same ${year} building inputs, ParcelSavvy calculated this home’s value with the ${year - 1} multiplier of ${factor(previousFactor)}, then with the ${year} multiplier of ${factor(currentFactor)}. The difference is an estimated ${signedEffect}. Land is separate.`,
-    boundary: 'This is the multiplier’s estimated effect, not the total change in your appraisal or tax savings. Building inputs and the final protest result can change the overall value too.',
+    boundary: 'This is the multiplier’s estimated effect, not the total change in your appraisal. Building inputs and the final protest result can change the overall value too.',
     alternative: `Using the same ${year} building inputs, the ${year - 1} factor is ${factor(previousFactor)} and the ${year} factor is ${factor(currentFactor)}. The estimated factor effect is ${signedEffect}. Land is separate.`,
     sharedWidth,
     previousDifferenceWidth: previousFactor > currentFactor ? differenceWidth : 0,
