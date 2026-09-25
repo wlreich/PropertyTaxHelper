@@ -77,7 +77,8 @@ begin
     when s.snapshot->>'market_value' is null or (s.snapshot->>'market_value')::numeric<1000 then 'unusable_value' end,
    'protested',coalesce(s.snapshot->>'protest_flag'='true',false) or coalesce(s.snapshot->>'arb_case_listed'='true',false)
     or exists(select 1 from public.property_protest_observations o where o.anchor_dataset_id=anchor and o.property_id=s.property_id
-     and o.tax_year=(period->>'tax_year')::integer and (o.protest_flag is true or o.arb_case_listed))
+     and o.tax_year=(period->>'tax_year')::integer and o.export_date is not null and o.export_date<=cutoff
+     and (o.protest_flag is true or o.arb_case_listed))
    ) order by s.property_id),'[]') into rows
   from public.property_snapshot_profiles s where s.anchor_dataset_id=anchor and s.dataset_id=period_id and s.property_id=any(ids);
   caps:=case when period->>'roll_stage'='preliminary' then parcel_comparison.cap_inputs(anchor,period_id,ids) else '[]'::jsonb end;

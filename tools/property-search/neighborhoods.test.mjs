@@ -21,11 +21,16 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"arb_agent_listed":true}'::jsonb
   where dataset_id in ($1,$2) and property_id='100' or dataset_id=$2 and property_id in ('120','121')`,[pre,anchor]);
  await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed)
-  values($1,$2,'120',2026,'2026-07-18',true,true,true),($1,$2,'121',2026,'2026-07-18',true,true,true)`,[anchor,sameDate]);
+  values($1,$2,'120',2026,'2026-07-18',true,true,true),($1,$2,'121',2026,'2026-07-18',false,false,true)`,[anchor,sameDate]);
  await db.query(`insert into public.property_agent_names(anchor_dataset_id,dataset_id,property_id,tax_year,agent_name) values
   ($1,$2,'100',2026,'EARLY AGENT'),($1,$1,'100',2026,'LATEST AGENT'),
   ($1,$1,'120',2026,'CONFLICT ONE'),($1,$3,'120',2026,'CONFLICT TWO'),
   ($1,$1,'121',2026,'ALPHA TAX'),($1,$3,'121',2026,'Alpha-Tax')`,[anchor,pre,sameDate]);
+ const afterCutoff='77777777-7777-4777-8777-777777777777';
+ await db.query(`insert into public.property_protest_observations(anchor_dataset_id,dataset_id,property_id,tax_year,export_date,protest_flag,arb_case_listed,arb_agent_listed)
+  values($1,$2,'121',2026,'2026-08-01',true,true,true)`,[anchor,afterCutoff]);
+ await db.query(`insert into public.property_agent_names(anchor_dataset_id,dataset_id,property_id,tax_year,agent_name)
+  values($1,$2,'121',2026,'FUTURE AGENT')`,[anchor,afterCutoff]);
  await db.exec('set role anon');
  const call=async(phase=null,year=null,subject='100')=>(await db.query('select public.property_neighborhood_analysis($1,$2,$3) r',[subject,phase,year])).rows[0].r;
  const raw=await call('post',2026),parsed=parseNeighborhoodAnalysis(raw,'100');assert.ok(parsed);
@@ -33,6 +38,8 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  assert.deepEqual(parsed.agent_assignments.find(x=>x.property_id==='120'),{property_id:'120',tax_year:2026,agent_name:null,status:'ambiguous'});
  assert.equal(parsed.agent_assignments.find(x=>x.property_id==='121').status,'named');
  assert.match(parsed.agent_assignments.find(x=>x.property_id==='121').agent_name,/alpha.?tax/i);
+ assert.doesNotMatch(parsed.agent_assignments.find(x=>x.property_id==='121').agent_name,/future/i);
+ assert.equal(parsed.annual_periods.find(x=>x.release.dataset_id===anchor).homes.find(x=>x.property_id==='121').protested,false);
  const legacy=parseNeighborhood((await db.query("select public.property_neighborhood_v4('100') r")).rows[0].r,'100');
  assert.deepEqual(parsed.homes,legacy.homes);assert.deepEqual(parsed.population,legacy.population);assert.deepEqual(parsed.market_adjustment,legacy.market_adjustment);
  const analysis=neighborhoodAnalysis(parsed);assert.equal(analysis.current.dataset_id,anchor);assert.equal(analysis.latestOutcome.certified.tax_year,2026);
