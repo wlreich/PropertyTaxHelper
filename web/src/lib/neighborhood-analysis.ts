@@ -24,6 +24,30 @@ function index(period: AnnualPeriod | undefined) {
 }
 const valid = (h: AnnualHome | undefined): h is AnnualHome & { market: number } => !!h && h.exclusion === null && usable(h.market);
 
+function capProgression(homes: Home[], caps: Cap[]) {
+  const byId = new Map(caps.map(cap => [cap.property_id, cap]));
+  // The usable denominator is one matched preliminary/certified population.
+  // An eligible, non-binding cap is still a usable comparison; unknown,
+  // inapplicable, unreconciled, or unpaired records are excluded.
+  const usableComparisons = homes.filter(home => {
+    const cap = byId.get(home.property_id);
+    if (!home.protested || !usable(home.preliminary) || !usable(home.certified) || cap?.eligible !== true) return false;
+    return cap.above === false || cap.above === true && cap.threshold !== null && cap.threshold > 0 && home.preliminary >= cap.threshold;
+  });
+  const startedAbove = usableComparisons.filter(home => {
+    const cap = byId.get(home.property_id)!;
+    return cap.above === true && cap.threshold !== null && cap.threshold > 0 && home.preliminary! >= cap.threshold;
+  });
+  const reduced = startedAbove.filter(home => home.certified! < home.preliminary!);
+  const finishedBelow = startedAbove.filter(home => home.certified! < byId.get(home.property_id)!.threshold!);
+  return {
+    usableCount: usableComparisons.length,
+    startedAbove: share(startedAbove.length, usableComparisons.length),
+    reduced: share(reduced.length, startedAbove.length),
+    finishedBelow: share(finishedBelow.length, startedAbove.length),
+  };
+}
+
 export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
   const ids = data.homes.map(h => h.property_id);
   if (new Set(ids).size !== ids.length) throw new Error('Duplicate neighborhood property');
@@ -86,7 +110,8 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
     const protested = homes.filter(h => h.protested);
     return [{ preliminary: preliminary.release, certified: certified.release, capSource: preliminary.release,
       all: summarizeGroup(homes, caps), protested: summarizeGroup(protested, caps),
-      other: summarizeGroup(homes.filter(h => !h.protested), caps), participation: share(protested.length, homes.length) }];
+      other: summarizeGroup(homes.filter(h => !h.protested), caps), participation: share(protested.length, homes.length),
+      capProgression: capProgression(homes, caps) }];
   }).reverse();
   const coverage = periods.map(p => ({ release: p.release, baseCount: ids.length,
     missingCount: ids.length - p.homes.length,

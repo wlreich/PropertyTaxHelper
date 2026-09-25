@@ -78,6 +78,18 @@
 .neighborhood-page th,.neighborhood-page td {padding:var(--space-2);border-bottom:var(--border-width) solid var(--color-border);text-align:left;vertical-align:top;}
 .neighborhood-page td {text-align:right;}
 .neighborhood-page thead {background:var(--color-background);}
+.neighborhood-position-results:has(.neighborhood-results .neighborhood-details[open])>* {grid-column:1/-1;}
+.neighborhood-cap-progression {display:grid;gap:var(--space-4);padding:var(--space-4);border-radius:var(--radius-card);background:var(--color-surface-info);}
+.neighborhood-cap-progression header {display:grid;gap:var(--space-1);}
+.neighborhood-cap-progression ol {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;padding:0;list-style:none;}
+.neighborhood-cap-progression li {position:relative;display:flex;flex-direction:column;gap:var(--space-2);padding:0 var(--space-6);}
+.neighborhood-cap-progression li:first-child {padding-left:0;}
+.neighborhood-cap-progression li:last-child {padding-right:0;}
+.neighborhood-cap-progression li+li {border-left:var(--border-width) solid var(--color-border-strong);}
+.neighborhood-cap-progression li strong {font-family:var(--font-heading);font-size:var(--text-h2);line-height:var(--line-h2);color:var(--color-brand-primary);}
+.neighborhood-cap-progression li:last-child strong {color:var(--color-success);}
+.neighborhood-cap-unavailable {display:grid;gap:var(--space-1);}
+.neighborhood-cap-unavailable strong {font-family:var(--font-heading);font-size:var(--text-h3);line-height:var(--line-h3);color:var(--color-brand-primary);}
 .neighborhood-supporting {gap:0;}
 .neighborhood-supporting>.neighborhood-details:first-child {border:0;}
 @media(max-width:900px) {
@@ -87,6 +99,11 @@
  .neighborhood-story-stage+.neighborhood-story-stage {border-left:0;border-top:var(--border-width) solid var(--color-border-strong);}
  .neighborhood-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
  .multiplier-metrics {grid-template-columns:1fr;}
+ .neighborhood-cap-progression ol {grid-template-columns:1fr;}
+ .neighborhood-cap-progression li {padding:var(--space-4) 0;}
+ .neighborhood-cap-progression li:first-child {padding-top:0;}
+ .neighborhood-cap-progression li:last-child {padding-bottom:0;}
+ .neighborhood-cap-progression li+li {border-left:0;border-top:var(--border-width) solid var(--color-border-strong);}
 }
 @media(max-width:700px) {
  .neighborhood-page,.neighborhood-analysis {gap:var(--space-4);}
@@ -149,3 +166,12 @@
  .activity-shortlist .activity-link {text-align:left;}
 }
 .neighborhood-activity .sr-only {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;}
+@media print {
+ .neighborhood-cap-progression,.neighborhood-cap-progression li {break-inside:avoid;}
+ .neighborhood-cap-progression {padding:var(--space-3);}
+ .neighborhood-cap-progression ol {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .neighborhood-cap-progression li {padding:0 var(--space-3);}
+ .neighborhood-cap-progression li:first-child {padding-left:0;}
+ .neighborhood-cap-progression li:last-child {padding-right:0;}
+ .neighborhood-cap-progression li+li {border-top:0;border-left:var(--border-width) solid var(--color-border-strong);}
+}

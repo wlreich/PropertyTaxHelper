@@ -86,6 +86,44 @@ test('latest completed outcomes retain their own year, conditional caps and infe
  assert.equal(s.latestOutcome.all.shares.crossed.total,4);
  assert.equal(s.story.year,2026);assert.equal(s.story.outcome.certified.tax_year,2025);assert.equal(s.story.final,null);
 });
+test('cap progression keeps the reconciled 319 to 315 to 297 to 77 cohort',()=>{
+ const p=period(2026,'preliminary',Array(319).fill(150000));
+ const c=period(2026,'certified',Array.from({length:319},(_,i)=>i<77?90000:i<297?120000:i<315?150000:140000));
+ p.homes.forEach(h=>{h.protested=true;});
+ p.caps=p.homes.map((h,i)=>i<315?{property_id:h.property_id,eligible:true,above:true,threshold:100000}:{property_id:h.property_id,eligible:true,above:false,threshold:null});
+ const progression=neighborhoodAnalysis(data([p,c])).latestOutcome.capProgression;
+ assert.equal(progression.usableCount,319);
+ assert.deepEqual({count:progression.startedAbove.count,total:progression.startedAbove.total},{count:315,total:319});
+ assert.deepEqual({count:progression.reduced.count,total:progression.reduced.total},{count:297,total:315});
+ assert.deepEqual({count:progression.finishedBelow.count,total:progression.finishedBelow.total},{count:77,total:315});
+});
+test('cap progression excludes inapplicable, unreconciled and unpaired records without treating missing as zero',()=>{
+ const p=period(2026,'preliminary',[150000,150000,150000,80000,150000,150000,null,150000,150000]);
+ const c=period(2026,'certified',[100000,100000,100000,70000,100000,100000,90000,null,90000]);
+ p.homes.forEach(h=>{h.protested=true;});
+ p.caps=[
+  {property_id:'1',eligible:true,above:true,threshold:100000}, // Final equals the threshold: not below.
+  {property_id:'2',eligible:false,above:null,threshold:null}, // No homestead recorded.
+  {property_id:'3',eligible:false,above:null,threshold:null}, // Newly qualified in this year.
+  {property_id:'4',eligible:true,above:false,threshold:null}, // Eligible, but the cap was not binding.
+  {property_id:'5',eligible:null,above:null,threshold:null}, // Unknown cap inputs.
+  {property_id:'6',eligible:true,above:true,threshold:null}, // Unreconciled source cap figures.
+  {property_id:'7',eligible:true,above:true,threshold:100000}, // Missing preliminary value.
+  {property_id:'8',eligible:true,above:true,threshold:100000}, // Missing certified value.
+  {property_id:'9',eligible:true,above:true,threshold:100000},
+ ];
+ const progression=neighborhoodAnalysis(data([p,c],9)).latestOutcome.capProgression;
+ assert.equal(progression.usableCount,3);assert.deepEqual([progression.startedAbove.count,progression.startedAbove.total],[2,3]);
+ assert.deepEqual([progression.reduced.count,progression.reduced.total],[2,2]);assert.deepEqual([progression.finishedBelow.count,progression.finishedBelow.total],[1,2]);
+ const zeroP=period(2027,'preliminary',[150000]),zeroC=period(2027,'certified',[100000]);zeroP.homes[0].protested=true;
+ zeroP.caps=[{property_id:'1',eligible:false,above:null,threshold:null}];
+ const zero=neighborhoodAnalysis(data([zeroP,zeroC])).latestOutcome.capProgression;
+ assert.equal(zero.usableCount,0);assert.equal(zero.startedAbove.percent,null);assert.equal(zero.reduced.percent,null);assert.equal(zero.finishedBelow.percent,null);
+ const changedP=period(2028,'preliminary',[150000,150000]),changedC=period(2028,'certified',[90000,150000]);changedP.homes.forEach(h=>{h.protested=true;});
+ changedP.caps=changedP.homes.map(h=>({property_id:h.property_id,eligible:true,above:true,threshold:100000}));
+ const changed=neighborhoodAnalysis(data([changedP,changedC])).latestOutcome;
+ assert.equal(changed.certified.tax_year,2028);assert.deepEqual([changed.capProgression.usableCount,changed.capProgression.startedAbove.count,changed.capProgression.reduced.count,changed.capProgression.finishedBelow.count],[2,2,1,1]);
+});
 test('additional years append pairs, gaps do not become one-year comparisons, and duplicates fail closed',()=>{
  const p=period(2025,'preliminary',Array(10).fill(100000)),c=period(2025,'certified',Array(10).fill(80000)),n=period(2026,'preliminary',Array(10).fill(110000));
  const d=data([p,c,n,period(2027,'preliminary',Array(10).fill(120000)),period(2029,'preliminary',Array(10).fill(130000))]);
