@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {neighborhoodAnalysis} from '../src/lib/neighborhood-analysis.ts';
+import {neighborhoodContractFailure} from '../src/lib/supabase/neighborhood-analysis.ts';
 import {perFoot} from '../src/lib/neighborhood.ts';
 
 const release=(year,stage)=>({dataset_id:`${year}-${stage}`,tax_year:year,roll_stage:stage,export_date:`${year}-${stage==='certified'?'07-18':'04-02'}`});
@@ -10,6 +11,10 @@ function data(periods,count=periods[0].homes.length){
  return {source_id:current.release.dataset_id,releases:periods.map(p=>p.release),subject:{property_id:'1',market_value:100000,living_area:1000},
   homes:Array.from({length:count},(_,i)=>({property_id:String(i+1),market:100000,area:1000,preliminary:null,certified:null,certified_area:null,prior:null,protested:false,entities:[]})),caps:[],annual_periods:periods,agent_assignments:[]};
 }
+test('missing release fields produce actionable server log diagnostics',()=>{
+ assert.equal(neighborhoodContractFailure({annual_periods:[]}), 'missing_required_field:agent_assignments');
+ assert.equal(neighborhoodContractFailure({agent_assignments:[]}), 'missing_required_field:annual_periods');
+});
 test('10% boundary and return buckets use exact values, not rounded percentages',()=>{
  const p=period(2025,'preliminary',Array(6).fill(100000));
  const c=period(2025,'certified',[90000,90001,80000,80000,80000,80000]);
