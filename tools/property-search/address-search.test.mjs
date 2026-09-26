@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 import {fixtureDatabase} from './projection.test.mjs';
 import {seedAddressSearch} from './address-search-fixture.mjs';
+
+const migrationsDirectory=fileURLToPath(new URL('../../supabase/migrations/',import.meta.url));
 test('address variants and guarded spelling suggestions run through the public RPC', async () => {
  const db=await fixtureDatabase();
  try {
@@ -90,5 +94,64 @@ test('indexed numeric searches preserve release isolation, boundaries and pagina
    assert.equal(new Set(pages.flatMap(x=>x.items.map(y=>y.property_id))).size,42);
    await db.exec('reset role');
   }
+ } finally {await db.close();}
+});
+
+test('optimized street-prefix suggestions preserve prior anon results and access controls',async()=>{
+ const db=await fixtureDatabase();
+ try {
+  await db.exec("select tcad_ingest.publish_property_search('11111111-1111-4111-8111-111111111111')");
+  await seedAddressSearch(db);
+  const publicSearchText=address=>`${address} FIXTURE CITY 78700`;
+  const add=async(id,address,extra={})=>db.query(`insert into public.property_search_documents
+   select (jsonb_populate_record(null::public.property_search_documents,to_jsonb(d)||$1::jsonb)).*
+   from public.property_search_documents d where property_id='100'`,
+   [JSON.stringify({property_id:id,address,search_text:publicSearchText(address),...extra})]);
+  await add('997000','300 BRA ST');
+  await add('997001','301 BRAVE FACE ST');
+  await add('997002','302 BRAVE FACE PARK',{is_parkland:true});
+  await add('997003','303 BRAVE FACE LOT',{is_vacant_land:true});
+  await add('997004','304 BOLD BRAVE ST');
+
+  const prior=await readFile(`${migrationsDirectory}/20260922232503_street_first_incremental_suggestions.sql`,'utf8');
+  const timeout=await readFile(`${migrationsDirectory}/20260925222242_extend_street_suggestion_timeout_for_published_release.sql`,'utf8');
+  const optimized=await readFile(`${migrationsDirectory}/20260925223731_optimize_street_first_suggestions.sql`,'utf8');
+  const queries=['bra','brave','brave face','W 36th','1800 W 36th','1104 Cedar','000990000'];
+  const suggest=async(q,showAll)=>(await db.query('select public.suggest_property_parcels($1,8,$2) result',[q,showAll])).rows[0].result;
+
+  await db.exec(prior);
+  await db.exec(timeout);
+  const timeoutConfig=(await db.query("select proconfig from pg_proc where oid='public.suggest_property_parcels(text,integer,boolean)'::regprocedure")).rows[0].proconfig;
+  assert.ok(timeoutConfig.includes('statement_timeout=6s'));
+  await db.exec('set role anon');
+  const expected=new Map();
+  for(const showAll of [false,true]) for(const query of queries) expected.set(`${query}:${showAll}`,await suggest(query,showAll));
+  await db.exec('reset role');
+
+  await db.exec(optimized);
+  await db.exec('set role anon');
+  for(const showAll of [false,true]) for(const query of queries)
+   assert.deepEqual(await suggest(query,showAll),expected.get(`${query}:${showAll}`),`${query}, show all ${showAll}`);
+  const hidden=await suggest('brave',false);
+  assert.deepEqual(hidden.items.map(x=>x.property_id),['997001','997004']);
+  const shown=await suggest('brave',true);
+  assert.deepEqual(shown.items.map(x=>x.property_id),['997001','997002','997004']);
+  assert.ok(!shown.items.some(x=>x.property_id==='997003'));
+  await assert.rejects(db.query("select public.suggest_property_parcels('brave',9,false)"),/Invalid suggestion parameters/);
+  await assert.rejects(db.query('delete from public.property_search_documents'),/permission denied/);
+  await db.exec('reset role');
+
+  const access=(await db.query(`select prosecdef, provolatile, proconfig,
+    has_function_privilege('anon','public.suggest_property_parcels(text,integer,boolean)','execute') anon_execute,
+    has_function_privilege('authenticated','public.suggest_property_parcels(text,integer,boolean)','execute') authenticated_execute,
+    has_function_privilege('public','public.suggest_property_parcels(text,integer,boolean)','execute') public_execute
+   from pg_proc where oid='public.suggest_property_parcels(text,integer,boolean)'::regprocedure`)).rows[0];
+  assert.equal(access.prosecdef,false);
+  assert.equal(access.provolatile,'s');
+  assert.ok(access.proconfig.includes('search_path=""'));
+  assert.ok(access.proconfig.includes('statement_timeout=6s'));
+  assert.equal(access.anon_execute,true);
+  assert.equal(access.authenticated_execute,true);
+  assert.equal(access.public_execute,false);
  } finally {await db.close();}
 });
