@@ -80,6 +80,17 @@ test('annual history prints proposed, final and assessed stages without substitu
  assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='proposed').display,'$889,000');
  assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='final').display,'$864,000');
 });
+test('print progression preserves eligible preliminary, certified-only, supplemental and unknown-eligibility states',()=>{
+ const eligible=input('999282');eligible.snapshots=eligible.snapshots.map(s=>({...s,preliminary_baseline_eligible:true}));
+ const eligibleTrend=reportTrend(buildPropertyReport(eligible));assert.equal(eligibleTrend.rows[0].status,'Preliminary only');
+ assert.deepEqual(eligibleTrend.rows[0].stages.map(x=>x.display),['$425,000','Pending','Pending']);
+ const unknown=buildPropertyReport(input('999282')),unknownTrend=reportTrend(unknown),unknownTable=reportTable(unknown,'Proposed market value → Final market value → Assessed value');
+ assert.deepEqual(unknownTrend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.deepEqual(unknownTable.rows[0].cells.slice(1),['Unavailable','Unavailable','Unavailable']);
+ const certifiedOnly=input('999283');certifiedOnly.snapshots=certifiedOnly.snapshots.filter(s=>s.roll_stage!=='preliminary');
+ const certifiedTrend=reportTrend(buildPropertyReport(certifiedOnly));assert.equal(certifiedTrend.rows.at(-1).status,'Certified');assert.deepEqual(certifiedTrend.rows.at(-1).stages.map(x=>x.display),['Unavailable','$950,000','$950,000']);
+ const supplemental=input('999283');supplemental.snapshots=supplemental.snapshots.map(s=>s.tax_year===2026&&s.roll_stage==='certified'?{...s,roll_stage:'supplemental'}:s);
+ const supplementalTrend=reportTrend(buildPropertyReport(supplemental));assert.equal(supplementalTrend.rows.at(-1).status,'Supplemental');assert.deepEqual(supplementalTrend.rows.at(-1).stages.map(x=>x.display),['$1,200,000','$950,000','$950,000']);
+});
 test('sparse and withheld records never acquire a certified outcome, cap ceiling or neighborhood median',()=>{
  const sparse=buildPropertyReport(input('999282'));assert.ok(sparse.compact);assert.equal(sparse.stage,'preliminary');assert.doesNotMatch(JSON.stringify(sparse),/Conditional 10% ceiling/);
  const compactReview=blocks(sparse,'review').find(b=>b.kind==='note'&&b.title==='Items to review');assert.match(compactReview.text,/Each year, check the deadline/);assert.equal(compactReview.links.length,2);

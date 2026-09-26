@@ -200,7 +200,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
     sections.push({id:'neighborhood',title:'Your home, in context',blocks:context});
   } else sections.push({id:'neighborhood',title:'Neighborhood context',blocks:[note('A reliable neighborhood comparison for this property and release is unavailable. No median, percentile or apparent zero replaces missing information.')]});
 
-  if(!compact && history.length) {
+  if(history.length) {
     const chartHistory=[...history].slice(0,5).reverse();
     const scale=chartScale(chartHistory);
     const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:history.length,rows:chartHistory.map(h=>({
