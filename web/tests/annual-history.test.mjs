@@ -89,6 +89,14 @@ test('same-day supplemental export time wins regardless of dataset ID order',()=
   assert.equal(row.sources.at(-1).id,'a-supplemental');
 });
 
+test('same-day earlier eligible proposal remains paired with the completed release',()=>{
+  const final=snapshots.find(s=>s.tax_year===2026&&s.roll_stage==='certified');
+  const proposal={...final,dataset_id:'same-day-proposal',roll_stage:'preliminary',preliminary_baseline_eligible:true,export_time_raw:'2026-07-18 08:00:00',market_value:1800000};
+  const completed={...final,dataset_id:'same-day-final',export_date:'2026-07-18',export_time_raw:'2026-07-18 12:00:00',market_value:1600000};
+  const row=annualHistory([proposal,completed])[0];
+  assert.equal(row.trendProposed,1800000);assert.equal(row.market,1600000);
+});
+
 test('year detail values share the eligible baseline and preserve protest-only years',()=>{
  const rows=annualHistory(snapshots);
  assert.equal(rows[0].preliminaryAssessed,1377354);

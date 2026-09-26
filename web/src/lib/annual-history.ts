@@ -28,7 +28,7 @@ export function annualHistory(snapshots: Snapshot[], evidence: ProtestObservatio
     // cannot become a charted proposal.
     const trendProposals = dated.filter(s => s.roll_stage === 'preliminary' && s.preliminary_baseline_eligible === true);
     const trendPreliminary = final && validDate(final.export_date)
-      ? trendProposals.find(s => s.export_date! < final.export_date!)
+      ? trendProposals.find(s => releaseKey(s) < releaseKey(final))
       : trendProposals[0];
     const latest = final ?? sources.at(-1);
     const annual = final && prior && validDate(final.export_date) && validDate(prior.export_date) ? comparison(prior.market_value, final.market_value) : null;

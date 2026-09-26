@@ -118,3 +118,13 @@ test('selected preliminary reports exclude same-day later completed releases',()
  assert.equal(report.stage,'preliminary');assert.equal(history.rows[0].cells[2],'Unavailable');assert.equal(history.rows[0].cells[3],'Unavailable');
  assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000/);
 });
+
+test('selected completed reports retain same-day earlier proposals and exclude later prior-year evidence',()=>{
+ const i=input('999282'),preliminary=i.snapshots[0];
+ preliminary.preliminary_baseline_eligible=true;preliminary.export_date='2026-04-02';preliminary.export_time_raw='2026-04-02 08:00:00';
+ const completed={...preliminary,dataset_id:'same-day-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000};i.snapshots.push(completed);
+ const futurePriorYear={dataset_id:'future-prior-year-protest',tax_year:2025,export_date:'2026-12-01',export_time_raw:'2026-12-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:true,arb_agent_name:'Future-only agent',arb_status_codes:[]};
+ const report=buildPropertyReport({...i,release:completed.dataset_id,protests:[futurePriorYear]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
+ assert.deepEqual(history.rows[0].cells.slice(1),['$425,000','$400,000','$390,000']);assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['$425,000','$400,000','$390,000']);
+ assert.doesNotMatch(JSON.stringify(report),/Future-only agent|future-prior-year-protest/);
+});
