@@ -203,9 +203,10 @@ export function buildPropertyReport(input: PropertyReportInput) {
 
   if(history.length) {
     const pendingYear=current.roll_stage==='preliminary' ? current.tax_year : null;
-    const chartHistory=[...history].slice(0,5).reverse();
+    const chartableHistory=history.filter(h=>h.status!=='Protest records only');
+    const chartHistory=chartableHistory.slice(0,5).reverse();
     const scale=chartScale(chartHistory);
-    const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:history.length,rows:chartHistory.map(h=>({
+    const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:chartableHistory.length,rows:chartHistory.map(h=>({
       year:h.year,status:h.status,stages:[
         {kind:'proposed',label:'Proposed market value',value:h.trendProposed,display:money(h.trendProposed)},
         {kind:'final',label:'Final market value',value:h.market,display:h.market===null&&h.year===pendingYear?'Pending':money(h.market)},

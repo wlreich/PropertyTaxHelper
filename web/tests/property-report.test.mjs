@@ -79,6 +79,9 @@ test('annual history prints proposed, final and assessed stages without substitu
  assert.equal(trend.totalYears,26);assert.equal(trend.rows.length,5);assert.deepEqual(trend.rows.map(x=>x.year),[2022,2023,2024,2025,2026]);
  assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='proposed').display,'$889,000');
  assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='final').display,'$864,000');
+ const protestOnly=input('999281');protestOnly.snapshots=protestOnly.snapshots.filter(s=>s.tax_year!==2024);
+ const evidence={dataset_id:'protest-only-2024',tax_year:2024,export_date:'2024-05-01',export_time_raw:'2024-05-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:false,arb_agent_name:null,arb_status_codes:[]};
+ const filteredTrend=reportTrend(buildPropertyReport({...protestOnly,protests:[evidence]}));assert.equal(filteredTrend.totalYears,25);assert.deepEqual(filteredTrend.rows.map(x=>x.year),[2021,2022,2023,2025,2026]);
 });
 test('print progression preserves eligible preliminary, certified-only, supplemental and unknown-eligibility states',()=>{
  const eligible=input('999282');eligible.snapshots=eligible.snapshots.map(s=>({...s,preliminary_baseline_eligible:true}));

@@ -1,5 +1,4 @@
-import { comparison, dateLabel, entityDisplayName, exemptionName, isFinalAssessment, isPreliminaryBaseline, preliminaryBaseline, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
-import { releaseKey } from './current-assessment.ts';
+import { comparison, dateLabel, entityDisplayName, exemptionName, isFinalAssessment, isPreliminaryBaseline, preliminaryBaseline, releaseKey, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { assessmentOutcome } from './assessment-outcome.ts';
 import { currency } from './property-search.ts';
 import { validDate } from './seasons.ts';
