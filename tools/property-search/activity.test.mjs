@@ -80,6 +80,10 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  await db.query("insert into public.property_snapshot_profiles select $1,dataset_id,property_id,snapshot from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
  // A prior-year source exported later must not define the active-year area.
  await db.query("insert into public.property_snapshot_profiles select $1,'44444444-4444-4444-8444-444444444444',property_id,snapshot||'{\"tax_year\":2025,\"roll_stage\":\"supplemental\",\"export_date\":\"2026-09-01\",\"neighborhood\":\"WRONG\"}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ // Two same-year certified exports are visible, but neither is the active
+ // export recorded in property_releases. Date and UUID ordering chose WRONG.
+ await db.query("insert into public.property_snapshot_profiles select $1,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',property_id,snapshot||'{\"export_date\":\"2026-07-19\",\"export_time_raw\":\"07/19/2026 16:27\",\"neighborhood\":\"WRONG\",\"improvement_value\":0}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ await db.query("insert into public.property_snapshot_profiles select $1,'ffffffff-ffff-4fff-8fff-ffffffffffff',property_id,snapshot||'{\"export_time_raw\":\"07/18/2026 17:27\",\"neighborhood\":\"WRONG\",\"improvement_value\":0}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
  await db.query('update public.property_search_state set dataset_id=$1',[next]);
  await db.exec('set role anon');
  assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,2);
@@ -87,7 +91,7 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  assert.equal((await db.query("select count(*)::int n from public.property_activity where property_id='120'")).rows[0].n,0);
  assert.deepEqual((await db.query('select activity_year from public.property_activity_releases')).rows.map(r=>r.activity_year),[2026]);
  assert.equal((await db.query('select appraisal_export_date::text as appraisal, sales_export_date::text as sales from public.property_activity_releases')).rows[0].sales,'2026-08-27');
- const carried=await call('100');assert.equal(carried.status,'ok');assert.equal(carried.neighborhood,'T2450');assert.equal(carried.rows.length,2);
+ const carried=await call('100');assert.equal(carried.status,'ok');assert.equal(carried.neighborhood,'T2450');assert.equal(carried.rows.length,2);assert.equal(carried.rows[0].property_type,'single_family');
  await assert.rejects(db.query('select tcad_ingest.carry_forward_property_activity($1,$2)',[anchor,next]));
  await db.exec('reset role');
  assert.equal((await db.query('select tcad_ingest.carry_forward_property_activity($1,$2) n',[anchor,next])).rows[0].n,0);
