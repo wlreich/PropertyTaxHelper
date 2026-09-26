@@ -8,10 +8,11 @@ begin
  select dataset_id into anchor from public.property_search_state where singleton;
  select a.dataset_id,a.neighborhood into source,area from public.property_comparison_areas a
  join public.property_snapshot_profiles s on s.anchor_dataset_id=a.anchor_dataset_id and s.dataset_id=a.dataset_id and s.property_id=a.property_id
+ join public.property_releases r on r.dataset_id=a.anchor_dataset_id and s.snapshot->>'tax_year'=r.tax_year::text
  join public.property_search_documents d on d.dataset_id=anchor and d.property_id=a.property_id
  where a.anchor_dataset_id=anchor and a.property_id=ltrim(p_id,'0')
  and not d.shared_ownership and not d.values_under_review and not d.is_parkland
- order by s.snapshot->>'export_date' desc nulls last,a.dataset_id desc limit 1;
+ order by (s.snapshot->>'roll_stage'=r.roll_stage) desc nulls last,s.snapshot->>'export_date' desc nulls last,a.dataset_id desc limit 1;
  if area is null then return jsonb_build_object('status','unavailable'); end if;
  select coalesce(jsonb_agg(activity_year order by activity_year desc),'[]'),coalesce(p_year,max(activity_year)) into years,yr from public.property_activity_releases where anchor_dataset_id=anchor;
  select jsonb_build_object('appraisal_export_date',appraisal_export_date,'sales_export_date',sales_export_date) into sources
@@ -41,3 +42,24 @@ begin
 end $$;
 revoke all on function public.property_neighborhood_activity(text,integer) from public;
 grant execute on function public.property_neighborhood_activity(text,integer) to anon,authenticated;
+
+-- Earlier installations may have switched more than once before installing
+-- the carry-forward trigger. Find the nearest reviewed activity projection.
+do $$
+declare active uuid; cursor_id uuid; predecessor uuid; hops integer:=0;
+begin
+ select dataset_id into active from public.property_search_state where singleton;
+ if active is null or exists(select 1 from public.property_activity_releases where anchor_dataset_id=active) then return; end if;
+ cursor_id:=active;
+ loop
+  exit when hops>=100;
+  select expected_active into predecessor from parcel_admin.preparations where id=cursor_id;
+  exit when predecessor is null or predecessor=cursor_id;
+  if exists(select 1 from public.property_activity_releases where anchor_dataset_id=predecessor) then
+   perform tcad_ingest.carry_forward_property_activity(predecessor,active);
+   exit;
+  end if;
+  cursor_id:=predecessor;
+  hops:=hops+1;
+ end loop;
+end $$;

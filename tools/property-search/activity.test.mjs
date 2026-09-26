@@ -78,6 +78,8 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  await db.query("insert into public.property_search_documents select $1,property_id,address,city,postal_code,property_type,search_text,market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland,is_vacant_land from public.property_search_documents where dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
  await db.query("update public.property_search_documents set values_under_review=true where dataset_id=$1 and property_id='120'",[next]);
  await db.query("insert into public.property_snapshot_profiles select $1,dataset_id,property_id,snapshot from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
+ // A prior-year source exported later must not define the active-year area.
+ await db.query("insert into public.property_snapshot_profiles select $1,'44444444-4444-4444-8444-444444444444',property_id,snapshot||'{\"tax_year\":2025,\"roll_stage\":\"supplemental\",\"export_date\":\"2026-09-01\",\"neighborhood\":\"WRONG\"}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
  await db.query('update public.property_search_state set dataset_id=$1',[next]);
  await db.exec('set role anon');
  assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,2);
