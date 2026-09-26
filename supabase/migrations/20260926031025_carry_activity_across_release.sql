@@ -6,6 +6,7 @@ create function tcad_ingest.carry_forward_property_activity(p_from uuid,p_to uui
 declare copied integer; copied_years integer[];
 begin
  if p_from is null or p_to is null or p_from=p_to then return 0; end if;
+ perform pg_advisory_xact_lock(hashtextextended('publish_property_activity',0));
  if not exists(select 1 from public.property_search_state where dataset_id=p_to) then
   raise exception 'Activity target is not the active search release';
  end if;
@@ -44,3 +45,18 @@ end $$;
 revoke all on function tcad_ingest.carry_activity_on_release_switch() from public,anon,authenticated,service_role,tcad_loader;
 create trigger carry_activity_on_release_switch after update of dataset_id on public.property_search_state
  for each row execute function tcad_ingest.carry_activity_on_release_switch();
+
+-- This release was already published before the trigger existed. The same
+-- helper performs a one-time backfill here; repeat migration attempts remain
+-- harmless because a target year with its own projection is left untouched.
+do $$
+declare prior uuid; active uuid; copied integer;
+begin
+ select p.expected_active,p.id into prior,active
+ from parcel_admin.preparations p join public.property_search_state s on s.dataset_id=p.id
+ where p.state='published' and p.expected_active is not null;
+ if active is not null then
+  copied:=tcad_ingest.carry_forward_property_activity(prior,active);
+  raise notice 'Carried % activity rows into active release %',copied,active;
+ end if;
+end $$;
