@@ -12,7 +12,8 @@ test('market factors, matched median, unavailable preliminary baseline and sourc
  await page.goto('/property/736164');
  await expect(panel).toContainText('What changed in the 2026 preliminary appraisal?');
  await expect(panel).toContainText('A comparable preliminary record is not confirmed for both 2025 and 2026. Certified values are not substituted here.');
- await expect(panel).toContainText('The Appraisal District uses recent area sales to set a multiplier for estimated rebuilding cost');
+ await expect(panel).toContainText('In its cost model, the Appraisal District uses recent area sales to set a multiplier on estimated rebuilding cost');
+ await expect(panel).toContainText('Some homes use a sales-comparison model instead. Land is separate.');
  await expect(panel).toContainText("The multiplier's estimated effect is one part of the preliminary appraisal, not the total annual change or tax savings.");
  await expect(panel).toContainText('+$214,054');
  await expect(panel).toContainText('Preliminary comparison unavailable');

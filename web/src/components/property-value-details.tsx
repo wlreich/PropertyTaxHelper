@@ -19,7 +19,7 @@ export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { c
     {pair && <p className="value-driver-baseline">{current.tax_year} preliminary compared with {current.tax_year - 1} preliminary.</p>}
     {pair && <p className="overview-note">Records used: {dateLabel(pair.previous.export_date)} preliminary and {dateLabel(pair.current.export_date)} preliminary.</p>}
     <p>{preliminaryValueDriverSummary(comparison)}</p>
-    <p>The Appraisal District uses recent area sales to set a multiplier for estimated rebuilding cost after accounting for age and condition. Land is valued separately.</p>
+    <p>In its cost model, the Appraisal District uses recent area sales to set a multiplier on estimated rebuilding cost after accounting for age and condition. Some homes use a sales-comparison model instead. Land is separate.</p>
     <dl className="value-driver-columns">
       <div><dt>Land</dt><dd className="driver-value">{pair ? currency(pair.current.land_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.land_value, pair.current.land_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
       <div><dt>Home &amp; other features</dt><dd className="driver-value">{pair ? currency(pair.current.improvement_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.improvement_value, pair.current.improvement_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
