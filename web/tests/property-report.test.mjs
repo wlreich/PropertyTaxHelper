@@ -109,3 +109,12 @@ test('historical reports exclude later-year and later-release protest observatio
  const actual=buildPropertyReport({...i,release:prior.dataset_id,protests:[observation,{...observation,dataset_id:'next-year',tax_year:2026}]});
  assert.deepEqual(actual,baseline);
 });
+
+test('selected preliminary reports exclude same-day later completed releases',()=>{
+ const i=input('999282'),preliminary=i.snapshots[0];
+ preliminary.export_date='2026-04-02';preliminary.export_time_raw='2026-04-02 08:00:00';
+ i.snapshots.push({...preliminary,dataset_id:'same-day-later-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000});
+ const report=buildPropertyReport({...i,release:preliminary.dataset_id}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
+ assert.equal(report.stage,'preliminary');assert.equal(history.rows[0].cells[2],'Unavailable');assert.equal(history.rows[0].cells[3],'Unavailable');
+ assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000/);
+});

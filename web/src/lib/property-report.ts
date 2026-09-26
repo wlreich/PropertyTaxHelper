@@ -1,5 +1,5 @@
 import { annualHistory, chartScale, changeLabel } from './annual-history.ts';
-import { currentAssessmentStory, selectCurrentAssessment } from './current-assessment.ts';
+import { currentAssessmentStory, releaseKey, selectCurrentAssessment } from './current-assessment.ts';
 import { capModel, factorEffectContent, factorEligibilityNote, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from './property-sections.ts';
 import { comparison, componentKey, componentName, constructionClasses, dateLabel, propertyFacts, protestEvidence, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { adjustmentReasons, adjustmentSummary, type MarketAdjustment } from './market-adjustments.ts';
@@ -74,8 +74,9 @@ export function buildPropertyReport(input: PropertyReportInput) {
   if (!current) return null;
   // Under-review profiles must never recover withheld values from older snapshots.
   if (p.values_under_review && current.dataset_id !== selected.dataset_id) return null;
-  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>s.tax_year<current.tax_year || s.tax_year===current.tax_year && (!current.export_date || s.export_date!==null && s.export_date<=current.export_date));
-  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && s.export_date<=current.export_date);
+  const selectedReleaseKey=releaseKey(current);
+  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>s.tax_year<current.tax_year || s.tax_year===current.tax_year && releaseKey(s)<=selectedReleaseKey);
+  const observations = (input.protests ?? []).filter(s=>current.export_date!==null && (s.tax_year<current.tax_year || s.tax_year===current.tax_year && releaseKey(s)<=selectedReleaseKey));
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);
