@@ -66,7 +66,11 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.evaluate(()=>{document.documentElement.style.fontSize='';document.documentElement.style.zoom='2';});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const zoomLayout=await page.evaluate(()=>({
+   innerWidth,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,
+   offenders:[...document.querySelectorAll<HTMLElement>('body *')].map(element=>{const rect=element.getBoundingClientRect();return {tag:element.tagName.toLowerCase(),className:element.className?.toString().slice(0,120),left:rect.left,right:rect.right,width:rect.width,clientWidth:element.clientWidth,scrollWidth:element.scrollWidth,text:element.innerText?.replace(/\s+/g,' ').slice(0,80)};}).filter(item=>item.right>innerWidth+.5||item.left<-.5).sort((a,b)=>b.right-a.right).slice(0,12),
+  }));
+  expect(zoomLayout.offenders,JSON.stringify(zoomLayout)).toEqual([]);expect(zoomLayout.scrollWidth,JSON.stringify(zoomLayout)).toBeLessThanOrEqual(zoomLayout.innerWidth);
   await page.evaluate(()=>{document.documentElement.style.zoom='';});
   if(info.project.use.viewport!.width===1440) {
     await page.screenshot({path:info.outputPath('par57-desktop.png'),fullPage:true});
