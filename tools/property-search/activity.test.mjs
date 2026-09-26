@@ -87,6 +87,15 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  await assert.rejects(db.query('select tcad_ingest.carry_forward_property_activity($1,$2)',[anchor,next]));
  await db.exec('reset role');
  assert.equal((await db.query('select tcad_ingest.carry_forward_property_activity($1,$2) n',[anchor,next])).rows[0].n,0);
+ const prepared='33333333-3333-4333-8333-333333333333';
+ await db.query("insert into public.property_releases select $1,tax_year,roll_stage,export_time_raw,source_url,published_at from public.property_releases where dataset_id=$2",[prepared,anchor]);
+ await db.query('insert into public.property_search_documents select $1,property_id,address,city,postal_code,property_type,search_text,market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland,is_vacant_land from public.property_search_documents where dataset_id=$2 and property_id=\'100\'',[prepared,anchor]);
+ await db.query('insert into public.property_activity_releases select $1,activity_year,appraisal_export_date,sales_export_date,import_id,now() from public.property_activity_releases where anchor_dataset_id=$2',[prepared,next]);
+ await db.query("insert into public.property_activity select $1,activity_year,property_id,event_key,deed_date,sale_date,filed_date,instrument,deed_type,sale_type,sale_source,status,price,price_status,match_method,deed_source from public.property_activity where anchor_dataset_id=$2 and property_id='100' and event_key='s:2'",[prepared,next]);
+ await db.query('update public.property_search_state set dataset_id=$1',[prepared]);
+ await db.exec('set role anon');
+ assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,1); // Never mix a prebuilt target with the carried source.
+ await db.exec('reset role');
 });
 
 test('activity matching batches published inputs without truncation or private access',async t=>{
