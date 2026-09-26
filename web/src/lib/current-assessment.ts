@@ -1,22 +1,10 @@
-import { annualBaseline, comparison, isFinalAssessment, preliminaryBaseline, type Snapshot, type ProtestObservation } from './property-history.ts';
+import { annualBaseline, comparison, exportDate, isFinalAssessment, preliminaryBaseline, releaseKey, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { assessmentOutcome } from './assessment-outcome.ts';
 import { agentsForYear, assessmentSummary } from './homeowner-insights.ts';
-import { validDate, type SeasonContext } from './seasons.ts';
+import { type SeasonContext } from './seasons.ts';
 import type { Property } from './supabase/properties.ts';
 
-// District exports use both ISO and month/day/year timestamps. Do not infer a timezone.
-export function exportDate(raw: string | null): string | null {
-  if (!raw) return null;
-  const iso = raw.match(/^(\d{4}-\d{2}-\d{2})(?:[ T]|$)/)?.[1];
-  const us = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s|$)/);
-  const date = iso ?? (us ? `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}` : null);
-  return validDate(date) ? date : null;
-}
-export function releaseKey(s: Snapshot) {
-  const date = validDate(s.export_date) ? s.export_date : exportDate(s.export_time_raw);
-  const time = s.export_time_raw?.match(/[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  return `${date ?? ''} ${time ? `${time[1].padStart(2, '0')}:${time[2]}:${time[3] ?? '00'}` : ''}`;
-}
+export { exportDate, releaseKey } from './property-history.ts';
 export function selectCurrentAssessment(p: Property, snapshots: Snapshot[]) {
   const fallback: Snapshot = {
     dataset_id: `active-${p.property_id}`, tax_year: p.tax_year, roll_stage: p.roll_stage,

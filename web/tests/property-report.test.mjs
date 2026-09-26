@@ -9,6 +9,7 @@ const input=id=>{const r=par28Fixture(id),p=parseProperty(r.overview.profile,id)
 const rows=r=>r.sections.flatMap(s=>s.blocks.flatMap(b=>b.kind==='table'?b.rows:[]));
 const blocks=(r,id)=>r.sections.find(s=>s.id===id).blocks;
 const reportTable=(r,title)=>r.sections.flatMap(s=>s.blocks).find(b=>b.kind==='table'&&b.title===title);
+const reportTrend=r=>r.sections.flatMap(s=>s.blocks).find(b=>b.kind==='trend');
 test('recorded favorable outcome, no-agent evidence, cap labels and annual review links match the approved print story',()=>{
  const r=buildPropertyReport(input('999283')),text=JSON.stringify(r);assert.equal(r.releaseLabel,'2026 certified');
  for(const token of ['$950,000','$200,000','−$50,000','$1,045,000','+$120,000','2025 interim snapshot','Not proof of physical removal'])assert.ok(text.includes(token),token);
@@ -69,12 +70,32 @@ test('certified report uses the strict preliminary pair, labels the final outcom
  const missingReport=buildPropertyReport(missing),missingText=JSON.stringify(missingReport);assert.equal(reportTable(missingReport,'Market-area multiplier: same 2026 building inputs'),undefined);assert.match(missingText,/Isolated multiplier effect unavailable: Components do not reproduce/);assert.doesNotMatch(missingText,/fabricated bars/);
 });
 test('annual history prints proposed, final and assessed stages without substituting excluded or missing values',()=>{
- const report=buildPropertyReport(input('999281')),history=reportTable(report,'Proposed market value → Final market value → Assessed value');
+ const report=buildPropertyReport(input('999281')),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
  assert.deepEqual(history.columns,['Year / result','Proposed market value','Final market value','Assessed value']);
  assert.equal(history.rows.find(x=>x.id==='history-2026').cells[1],'$889,000');
  assert.equal(history.rows.find(x=>x.id==='history-2018').cells[1],'Unavailable');
  assert.equal(history.rows.find(x=>x.id==='history-2009').cells[1],'Unavailable');
  assert.match(history.rows.find(x=>x.id==='history-2009').note,/eligible proposed value is unavailable/);
+ assert.equal(trend.totalYears,26);assert.equal(trend.rows.length,5);assert.deepEqual(trend.rows.map(x=>x.year),[2022,2023,2024,2025,2026]);
+ assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='proposed').display,'$889,000');
+ assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='final').display,'$864,000');
+ const protestOnly=input('999281');protestOnly.snapshots=protestOnly.snapshots.filter(s=>s.tax_year!==2024);
+ const evidence={dataset_id:'protest-only-2024',tax_year:2024,export_date:'2024-05-01',export_time_raw:'2024-05-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:false,arb_agent_name:null,arb_status_codes:[]};
+ const filteredTrend=reportTrend(buildPropertyReport({...protestOnly,protests:[evidence]}));assert.equal(filteredTrend.totalYears,25);assert.deepEqual(filteredTrend.rows.map(x=>x.year),[2021,2022,2023,2025,2026]);
+});
+test('print progression preserves eligible preliminary, certified-only, supplemental and unknown-eligibility states',()=>{
+ const eligible=input('999282');eligible.snapshots=eligible.snapshots.map(s=>({...s,preliminary_baseline_eligible:true}));
+ const eligibleTrend=reportTrend(buildPropertyReport(eligible));assert.equal(eligibleTrend.rows[0].status,'Preliminary only');
+ assert.deepEqual(eligibleTrend.rows[0].stages.map(x=>x.display),['$425,000','Pending','Pending']);
+ const unknown=buildPropertyReport(input('999282')),unknownTrend=reportTrend(unknown),unknownTable=reportTable(unknown,'Proposed market value → Final market value → Assessed value');
+ assert.deepEqual(unknownTrend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.deepEqual(unknownTable.rows[0].cells.slice(1),['Unavailable','Unavailable','Unavailable']);
+ const certifiedOnly=input('999283');certifiedOnly.snapshots=certifiedOnly.snapshots.filter(s=>s.roll_stage!=='preliminary');
+ const certifiedTrend=reportTrend(buildPropertyReport(certifiedOnly));assert.equal(certifiedTrend.rows.at(-1).status,'Certified');assert.deepEqual(certifiedTrend.rows.at(-1).stages.map(x=>x.display),['Unavailable','$950,000','$950,000']);
+ const supplemental=input('999283');supplemental.snapshots=supplemental.snapshots.map(s=>s.tax_year===2026&&s.roll_stage==='certified'?{...s,roll_stage:'supplemental'}:s);
+ const supplementalTrend=reportTrend(buildPropertyReport(supplemental));assert.equal(supplementalTrend.rows.at(-1).status,'Supplemental');assert.deepEqual(supplementalTrend.rows.at(-1).stages.map(x=>x.display),['$1,200,000','$950,000','$950,000']);
+ const historicalPreliminary=input('999283');historicalPreliminary.snapshots=historicalPreliminary.snapshots.filter(s=>!(s.tax_year===2025&&s.roll_stage!=='preliminary'));
+ const historicalReport=buildPropertyReport(historicalPreliminary),historicalTrend=reportTrend(historicalReport),historicalRow=reportTable(historicalReport,'Proposed market value → Final market value → Assessed value').rows.find(x=>x.id==='history-2025');
+ assert.deepEqual(historicalTrend.rows.find(x=>x.year===2025).stages.map(x=>x.display),['$1,000,000','Unavailable','Unavailable']);assert.match(historicalRow.note,/Final market value and assessed value are unavailable/);assert.doesNotMatch(historicalRow.note,/pending/);
 });
 test('sparse and withheld records never acquire a certified outcome, cap ceiling or neighborhood median',()=>{
  const sparse=buildPropertyReport(input('999282'));assert.ok(sparse.compact);assert.equal(sparse.stage,'preliminary');assert.doesNotMatch(JSON.stringify(sparse),/Conditional 10% ceiling/);
@@ -90,4 +111,33 @@ test('historical reports exclude later-year and later-release protest observatio
  const baseline=buildPropertyReport({...i,release:prior.dataset_id,protests:[]});
  const actual=buildPropertyReport({...i,release:prior.dataset_id,protests:[observation,{...observation,dataset_id:'next-year',tax_year:2026}]});
  assert.deepEqual(actual,baseline);
+});
+
+test('selected preliminary reports exclude same-day later completed releases',()=>{
+ const i=input('999282'),preliminary=i.snapshots[0];
+ preliminary.export_date='2026-04-02';preliminary.export_time_raw='2026-04-02 08:00:00';
+ i.snapshots.push({...preliminary,dataset_id:'same-day-later-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000});
+ i.snapshots.push({...preliminary,dataset_id:'unknown-order-final',roll_stage:'certified',export_date:null,export_time_raw:null,market_value:410000,assessed_value:395000});
+ i.snapshots.push({...preliminary,dataset_id:'date-only-final',roll_stage:'certified',export_time_raw:null,market_value:420000,assessed_value:405000});
+ const ambiguousEvidence={dataset_id:'date-only-protest',tax_year:2026,export_date:'2026-04-02',export_time_raw:null,protest_flag:true,arb_case_listed:false,arb_agent_listed:true,arb_agent_name:'Ambiguous same-day agent',arb_status_codes:[]};
+ const report=buildPropertyReport({...i,release:preliminary.dataset_id,protests:[ambiguousEvidence]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
+ assert.equal(report.stage,'preliminary');assert.equal(history.rows[0].cells[2],'Unavailable');assert.equal(history.rows[0].cells[3],'Unavailable');
+ assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000|\$410,000|\$395,000|\$420,000|\$405,000|Ambiguous same-day agent/);
+});
+
+test('protest-only history retains its exact row without rendering an empty trend',()=>{
+ const i=input('999282');i.snapshots=[];
+ const evidence={dataset_id:'protest-only',tax_year:2025,export_date:'2025-05-01',export_time_raw:'2025-05-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:false,arb_agent_name:null,arb_status_codes:[]};
+ const report=buildPropertyReport({...i,protests:[evidence]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value');
+ assert.equal(history.rows[0].cells[0],'2025 · Protest records only');assert.equal(reportTrend(report),undefined);
+});
+
+test('selected completed reports retain same-day earlier proposals and exclude later prior-year evidence',()=>{
+ const i=input('999282'),preliminary=i.snapshots[0];
+ preliminary.preliminary_baseline_eligible=true;preliminary.export_date='2026-04-02';preliminary.export_time_raw='2026-04-02 08:00:00';
+ const completed={...preliminary,dataset_id:'same-day-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000};i.snapshots.push(completed);
+ const futurePriorYear={dataset_id:'future-prior-year-protest',tax_year:2025,export_date:'2026-12-01',export_time_raw:'2026-12-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:true,arb_agent_name:'Future-only agent',arb_status_codes:[]};
+ const report=buildPropertyReport({...i,release:completed.dataset_id,protests:[futurePriorYear]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
+ assert.deepEqual(history.rows[0].cells.slice(1),['$425,000','$400,000','$390,000']);assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['$425,000','$400,000','$390,000']);
+ assert.doesNotMatch(JSON.stringify(report),/Future-only agent|future-prior-year-protest/);
 });

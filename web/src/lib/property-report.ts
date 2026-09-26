@@ -1,5 +1,5 @@
-import { annualHistory, changeLabel } from './annual-history.ts';
-import { currentAssessmentStory, selectCurrentAssessment } from './current-assessment.ts';
+import { annualHistory, chartScale, changeLabel } from './annual-history.ts';
+import { currentAssessmentStory, releaseKey, selectCurrentAssessment } from './current-assessment.ts';
 import { capModel, factorEffectContent, factorEligibilityNote, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from './property-sections.ts';
 import { comparison, componentKey, componentName, constructionClasses, dateLabel, propertyFacts, protestEvidence, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
 import { adjustmentReasons, adjustmentSummary, type MarketAdjustment } from './market-adjustments.ts';
@@ -12,6 +12,7 @@ export type ReportRow = { id: string; cells: string[]; note?: string };
 export type ReportBlock =
   | { kind: 'note'; title?: string; text: string; emphasis?: boolean; positive?: boolean; links?: {label:string;href:string}[] }
   | { kind: 'table'; title: string; columns: string[]; rows: ReportRow[] }
+  | { kind: 'trend'; maximum: number; rows: {year:number;status:string;stages:{kind:'proposed'|'final'|'assessed';label:string;value:number|null;display:string}[]}[]; totalYears: number }
   | { kind: 'chart'; subject: number; median: number };
 export type ReportSection = { id: string; title: string; blocks: ReportBlock[] };
 
@@ -73,8 +74,17 @@ export function buildPropertyReport(input: PropertyReportInput) {
   if (!current) return null;
   // Under-review profiles must never recover withheld values from older snapshots.
   if (p.values_under_review && current.dataset_id !== selected.dataset_id) return null;
-  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>s.tax_year<current.tax_year || s.tax_year===current.tax_year && (!current.export_date || s.export_date!==null && s.export_date<=current.export_date));
-  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && s.export_date<=current.export_date);
+  const selectedReleaseKey=releaseKey(current);
+  const orderedAtOrBeforeSelected=(s: Pick<Snapshot,'export_date'|'export_time_raw'>)=>{
+    const key=releaseKey(s),date=key.slice(0,10),selectedDate=selectedReleaseKey.slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate))return false;
+    if(date!==selectedDate)return date<selectedDate;
+    return key.slice(11).trim()!==''&&selectedReleaseKey.slice(11).trim()!==''&&key<=selectedReleaseKey;
+  };
+  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>{
+    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || orderedAtOrBeforeSelected(s));
+  });
+  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && orderedAtOrBeforeSelected(s));
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);
@@ -199,17 +209,29 @@ export function buildPropertyReport(input: PropertyReportInput) {
     sections.push({id:'neighborhood',title:'Your home, in context',blocks:context});
   } else sections.push({id:'neighborhood',title:'Neighborhood context',blocks:[note('A reliable neighborhood comparison for this property and release is unavailable. No median, percentile or apparent zero replaces missing information.')]});
 
-  if(!compact && history.length) {
+  if(history.length) {
+    const pendingYear=current.roll_stage==='preliminary' ? current.tax_year : null;
+    const chartableHistory=history.filter(h=>h.status!=='Protest records only');
+    const chartHistory=chartableHistory.slice(0,5).reverse();
+    const scale=chartScale(chartHistory);
+    const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:chartableHistory.length,rows:chartHistory.map(h=>({
+      year:h.year,status:h.status,stages:[
+        {kind:'proposed',label:'Proposed market value',value:h.trendProposed,display:money(h.trendProposed)},
+        {kind:'final',label:'Final market value',value:h.market,display:h.market===null&&h.year===pendingYear?'Pending':money(h.market)},
+        {kind:'assessed',label:h.assessedAfterCap?'Assessed value after cap':'Assessed value',value:h.assessed,display:h.assessed===null&&h.year===pendingYear?'Pending':money(h.assessed)},
+      ],
+    }))};
     sections.push({id:'history',title:'Your assessment over time',blocks:[
       note('Each year follows the same stage order: proposed market value, final market value, then assessed value. Proposed values use only explicitly eligible preliminary records. Missing, excluded and pending stages are unavailable, not zero.'),
       table('Proposed market value → Final market value → Assessed value',['Year / result','Proposed market value','Final market value','Assessed value'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.trendProposed),money(h.market),money(h.assessed)],note:[
-        h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? 'Final market value and assessed value are pending.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
+        h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? h.year===pendingYear ? 'Final market value and assessed value are pending.' : 'Final market value and assessed value are unavailable.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
         h.assessedAfterCap ? 'The assessed value is shown after the supported cap.' : '',
         `Annual final market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
         h.protests.length ? h.protests.map(p=>`${p.basis} (${p.date})${p.agent ? `; agent: ${p.agent}` : ''}${p.codes.length ? `; recorded status: ${p.codes.join(', ')}` : ''}`).join('. ') : input.protestsUnavailable ? 'Protest records temporarily unavailable.' : 'No protest found in available records; this does not establish that none was filed.',
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,
         ...snapshots.filter(s=>s.tax_year===h.year && s.valuation_note).map(s=>s.valuation_note!),
       ].filter(Boolean).join(' ')}))),
+      ...(chartHistory.length ? [trend] : []),
       note('An agent assignment does not confirm who handled a case. Interim releases remain identified by date and stage; known conflicting preliminary baselines are excluded from reduction calculations. A recorded protest alongside a reduction does not establish causation.'),
     ]});
   }

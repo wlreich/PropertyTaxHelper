@@ -11,7 +11,7 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await expect(prior.locator('td').nth(0)).toHaveText('Proposed market$1,365,039');
   await expect(prior).toContainText('$1,252,140');
   await expect(history.getByRole('button',{name:'Older years'})).toHaveCount(0);
-  await expect(history.locator('.annual-trend')).not.toHaveAttribute('open','');
+  await expect(history.getByRole('heading',{name:'Valuation progression'})).toBeVisible();
   for(const forbidden of ['Two years','View full record history','coming soon','2025 preliminary source']) await expect(history).not.toContainText(forbidden);
   if(info.project.use.viewport!.width===1440) {
     const cells=await current.locator('td').all(), headers=await history.locator('thead th').all();
@@ -46,10 +46,10 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   const currentRecord=page.getByRole('button',{name:'View 2026 assessment & protest record'});
   await currentRecord.click();await expect(page.getByRole('dialog')).toContainText('+$210,274 / 15.4%');
   await page.getByRole('button',{name:'Close record'}).click();await expect(currentRecord).toBeFocused();
-  const trend=history.locator('.annual-trend summary');
-  await expect(trend).toHaveText('View valuation trend for these years');await trend.focus();await page.keyboard.press('Enter');
   await expect(history.locator('.annual-chart-year')).toHaveCount(2);
-  await expect(history.locator('.annual-chart-caption')).toContainText('A cap may lower the assessed value');
+  await expect(history.locator('.annual-chart-caption')).toContainText('explicitly eligible preliminary records');
+  await expect(history.locator('.annual-chart-caption')).toContainText('completed certified or supplemental assessments');
+  await expect(history.locator('.annual-chart-caption')).toContainText('does not establish what caused the change');
   const stages2025=history.locator('[data-chart-year="2025"] [data-chart-stage]');
   await expect(stages2025).toHaveCount(3);
   expect(await stages2025.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('data-chart-stage')))).toEqual(['proposed','final','assessed']);
@@ -66,7 +66,11 @@ test('PAR-25 compact ledger, year dialog, provenance and focus restoration',asyn
   await page.evaluate(()=>{document.documentElement.style.fontSize='200%';});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.evaluate(()=>{document.documentElement.style.fontSize='';document.documentElement.style.zoom='2';});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const zoomLayout=await page.evaluate(()=>({
+   innerWidth,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,
+   offenders:[...document.querySelectorAll<HTMLElement>('body *')].map(element=>{const rect=element.getBoundingClientRect();return {tag:element.tagName.toLowerCase(),className:element.className?.toString().slice(0,120),left:rect.left,right:rect.right,width:rect.width,clientWidth:element.clientWidth,scrollWidth:element.scrollWidth,text:element.innerText?.replace(/\s+/g,' ').slice(0,80)};}).filter(item=>item.right>innerWidth+.5||item.left<-.5).sort((a,b)=>b.right-a.right).slice(0,12),
+  }));
+  expect(zoomLayout.scrollWidth,JSON.stringify(zoomLayout)).toBeLessThanOrEqual(zoomLayout.innerWidth);
   await page.evaluate(()=>{document.documentElement.style.zoom='';});
   if(info.project.use.viewport!.width===1440) {
     await page.screenshot({path:info.outputPath('par57-desktop.png'),fullPage:true});
@@ -91,7 +95,6 @@ test('PAR-25 one, five and six years stay bounded through navigation and dialogs
       const dialog=page.getByRole('dialog');await dialog.locator('summary').filter({hasText:'Assessment records'}).click();
       await expect(dialog).toContainText('Apr 2, 2021');await dialog.getByRole('button',{name:'Close record'}).click();
       await expect(trigger).toBeFocused();await expect(history.locator('.annual-value-row')).toHaveCount(1);
-      await history.locator('.annual-trend summary').click();
       const olderStages=history.locator('[data-chart-year="2021"] [data-chart-stage]');
       await expect(olderStages.nth(1)).toHaveAccessibleName('2021 Final market value: Not available');
       await expect(olderStages.nth(2)).toHaveAccessibleName('2021 Assessed value: Not available');
@@ -110,7 +113,7 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
   await page.goto('/property/999118');const future=page.locator('[data-year="2027"]');
   await expect(future).toContainText('Preliminary only');await expect(future.locator('td').nth(0)).toContainText('$685,000');
   for(const i of [1,2])await expect(future.locator('td').nth(i)).toContainText('Not available');
-  const futureHistory=page.locator('.annual-history');await futureHistory.locator('.annual-trend summary').click();
+  const futureHistory=page.locator('.annual-history');
   const futureStages=futureHistory.locator('[data-chart-year="2027"] [data-chart-stage]');
   await expect(futureStages.nth(0)).toHaveAccessibleName('2027 Proposed market value: $685,000');
   await expect(futureStages.nth(1)).toHaveAccessibleName('2027 Final market value: Not available');
@@ -118,7 +121,7 @@ test('PAR-25 missing, nonconsecutive, preliminary-only and excluded-baseline his
   await page.getByRole('button',{name:'View 2027 details'}).click();await expect(page.getByRole('dialog').locator('.annual-detail-comparison')).toContainText('$590,000');await page.keyboard.press('Escape');
   await page.goto('/property/999119');const row=page.locator('[data-year="2025"]');
   for(const i of [0,2])await expect(row.locator('td').nth(i)).toContainText('Not available');
-  const excludedHistory=page.locator('.annual-history');await excludedHistory.locator('.annual-trend summary').click();
+  const excludedHistory=page.locator('.annual-history');
   await expect(excludedHistory.locator('[data-chart-year="2025"] [data-chart-stage="proposed"]')).toHaveAccessibleName('2025 Proposed market value: Not available');
   await page.getByRole('button',{name:'View 2025 details'}).click();const dialog=page.getByRole('dialog');
   await dialog.locator('summary').filter({hasText:'Assessment records'}).click();await expect(dialog).toContainText('$1,365,039');

@@ -13,7 +13,7 @@
 .report-heading>p:last-child {font-size:13px;color:var(--color-text-muted);}
 .report-section {margin-top:var(--space-8);}
 .report-section h2 {font-family:var(--font-heading);font-size:24px;font-weight:var(--weight-bold);line-height:1.3;margin:0 0 var(--space-4);}
-.report-section h3,.report-chart figcaption {font-family:var(--font-heading);font-size:18px;line-height:1.4;font-weight:var(--weight-bold);margin:0 0 var(--space-2);}
+.report-section h3,.report-chart figcaption,.report-trend figcaption {font-family:var(--font-heading);font-size:18px;line-height:1.4;font-weight:var(--weight-bold);margin:0 0 var(--space-2);}
 .report-note {margin:var(--space-3) 0;}
 .report-note p {margin:0;}
 .report-callout {background:var(--color-surface-info);padding:var(--space-4);border-left:2px solid var(--color-border-strong);}
@@ -37,6 +37,23 @@
 .report-bar-track>span {display:block;height:100%;background:var(--color-action);border-right:2px solid var(--color-text);}
 .report-bar-row:nth-child(2) .report-bar-track>span {background:var(--color-success);}
 .report-chart>p {font-size:12px;color:var(--color-text-muted);}
+.report-trend {margin:var(--space-6) 0;}
+.report-trend>p {font-size:12px;color:var(--color-text-muted);margin:0 0 var(--space-4);}
+.report-trend-rows {display:grid;gap:var(--space-4);}
+.report-trend-year {display:grid;grid-template-columns:82px minmax(0,1fr);gap:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--color-border);break-inside:avoid;}
+.report-trend-year-label {display:flex;flex-direction:column;font-variant-numeric:tabular-nums;}
+.report-trend-year-label span {font-size:11px;color:var(--color-text-muted);}
+.report-trend-stages {display:grid;gap:6px;}
+.report-trend-stage {display:grid;grid-template-columns:150px minmax(0,1fr) 100px;align-items:center;gap:var(--space-2);min-width:0;color:var(--color-brand-primary);}
+.report-trend-final {color:var(--color-action);}
+.report-trend-assessed {color:var(--color-success);}
+.report-trend-stage-label {color:var(--color-text);font-size:12px;font-weight:var(--weight-semibold);}
+.report-trend-track {display:block;height:16px;border:1px solid var(--color-border-strong);}
+.report-trend-fill {display:block;box-sizing:border-box;height:100%;min-width:2px;background:currentColor;border:2px solid currentColor;}
+.report-trend-final .report-trend-fill {border-style:double;}
+.report-trend-assessed .report-trend-fill {border-style:dashed;}
+.report-trend-stage>strong,.report-trend-unavailable {text-align:right;color:var(--color-text);font-size:12px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+.report-trend-unavailable {grid-column:2 / -1;text-align:left;color:var(--color-text-muted);}
 @media(max-width:700px) {
  .property-print-preview {padding:var(--space-3);}
  .property-print-toolbar {flex-direction:column;}
@@ -45,6 +62,10 @@
  .report-table {min-width:640px;}
  .report-bar-row {grid-template-columns:1fr 100px;}
  .report-bar-track {grid-column:1;grid-row:auto;}
+ .report-trend-year {grid-template-columns:1fr;}
+ .report-trend-year-label {flex-direction:row;gap:var(--space-2);align-items:baseline;}
+ .report-trend-stage {grid-template-columns:1fr 92px;}
+ .report-trend-stage-label {grid-column:1 / -1;}
 }
 @page {
  size:letter portrait;margin:0.5in;
@@ -62,7 +83,7 @@
  .report-compact .report-section h2 {font-size:16pt;margin-bottom:6px;}
  .report-compact .report-note {margin:8px 0;}
  .report-compact .report-table-wrap {margin:8px 0;}
- .report-heading,.report-callout,.report-chart,.report-table tr,.report-first-rows,.report-record,.report-note-links {break-inside:avoid;}
+ .report-heading,.report-callout,.report-chart,.report-table tr,.report-first-rows,.report-record,.report-note-links,.report-trend-year {break-inside:avoid;}
  .report-heading,.report-section h2,.report-section h3 {break-after:avoid;}
  .report-section h2 {font-size:22pt;}
  .report-section h3 {font-size:14pt;}
@@ -73,6 +94,8 @@
  .report-table small,.report-chart>p,.report-table thead th {font-size:9pt;}
  .report-table .report-table-context th {font-size:12pt;}
  .report-bar-row {grid-template-columns:170px 1fr 120px;}
+ .report-trend-stage {grid-template-columns:140px minmax(0,1fr) 90px;}
+ .report-trend-fill {-webkit-print-color-adjust:economy;print-color-adjust:economy;}
  p {orphans:3;widows:3;}
 }
 

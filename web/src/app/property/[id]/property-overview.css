@@ -55,11 +55,18 @@
 .annual-expand-help { color: var(--color-action); font-size: var(--text-small); margin-top: var(--space-4); }
 .annual-earlier { margin-top: var(--space-4); border-color: var(--color-border-strong); }
 @media (max-width: 900px) {
+  .annual-trend, .annual-chart, .annual-chart-rows, .annual-chart-year, .annual-chart-pair, .annual-chart-series, .annual-bar-area { min-width: 0; max-width: 100%; }
+  .annual-chart { width: 100%; }
+  .annual-legend > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
   .annual-chart-year { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
   .annual-chart-series { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .annual-bar-area { margin-right: 0; }
-  .annual-chart-axis { margin-inline: 0; }
-  .annual-bar-value { position: static; display: block; width: auto; text-align: right; margin-top: var(--space-1); font-size: var(--text-label); }
+  .annual-chart-axis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-1); margin-inline: 0; }
+  .annual-chart-axis span { position: static; left: auto !important; width: auto; min-width: 0; white-space: normal; text-align: center; transform: none; overflow-wrap: anywhere; }
+  .annual-chart-axis span:first-child { text-align: left; }
+  .annual-chart-axis span:last-child { text-align: right; transform: none; }
+  .annual-bar-track { width: 100%; }
+  .annual-bar-value { position: static; left: auto !important; display: block; width: auto; max-width: 100%; text-align: right; margin-top: var(--space-1); font-size: var(--text-label); }
   .annual-table, .annual-table tbody, .annual-table tr, .annual-table td, .annual-table th { display: block; width: 100%; }
   .annual-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .annual-table .annual-value-row { padding-block: var(--space-3); }
@@ -979,6 +986,9 @@
 
 .current-assessment .definition-content { left: 0; right: auto; width: min(300px, calc(100vw - 96px)); text-transform: none; }
 .current-assessment .definition-trigger { text-transform: inherit; }
+@media (max-width: 900px) {
+  .current-assessment .definition-content { width: min(300px, calc(50vw - var(--space-12))); }
+}
 
 .current-assessment-impact { padding: var(--space-4); background: var(--color-surface-info); color: var(--color-text); border-radius: var(--radius-input); }
 .cap-outlook-values { margin-block: var(--space-4); }
@@ -992,8 +1002,9 @@
 .annual-pagination nav { display: flex; gap: var(--space-3); }
 .annual-pagination .annual-earlier { margin-top: 0; }
 .annual-earlier:disabled { color: var(--color-text-muted); cursor: default; text-decoration: none; }
-.annual-trend { margin-top: var(--space-4); }
-.annual-trend summary, .annual-record-disclosure > summary { color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); cursor: pointer; }
+.annual-trend { margin-top: var(--space-6); padding-top: var(--space-6); border-top: var(--border-width) solid var(--color-border); }
+.annual-trend h3 { font-family: var(--font-heading); font-size: var(--text-h3); line-height: var(--line-h3); margin: 0; }
+.annual-record-disclosure > summary { color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); cursor: pointer; }
 .annual-dialog { margin: auto; width: min(860px, calc(100vw - var(--space-8))); max-height: calc(100dvh - var(--space-8)); overflow-y: auto; overscroll-behavior: contain; color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); padding: 0; }
 .annual-dialog::backdrop { background: color-mix(in srgb, var(--color-brand-primary) 60%, transparent); }
 .annual-dialog-toolbar { display: flex; justify-content: flex-end; position: sticky; top: 0; z-index: 1; background: var(--color-surface); padding: var(--space-2) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }

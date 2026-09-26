@@ -1,3 +1,5 @@
+import { validDate } from './seasons.ts';
+
 // Curated snapshot contract and deterministic comparison rules; no credentials.
 export type Component = {
   id: string | null;
@@ -37,6 +39,19 @@ export type Snapshot = {
   components: Component[];
   entities: Entity[];
 };
+
+export function exportDate(raw: string | null): string | null {
+  if (!raw) return null;
+  const iso = raw.match(/^(\d{4}-\d{2}-\d{2})(?:[ T]|$)/)?.[1];
+  const us = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s|$)/);
+  const date = iso ?? (us ? `${us[3]}-${us[1].padStart(2, '0')}-${us[2].padStart(2, '0')}` : null);
+  return validDate(date) ? date : null;
+}
+export function releaseKey(s: Pick<Snapshot,'export_date'|'export_time_raw'>) {
+  const date = validDate(s.export_date) ? s.export_date : exportDate(s.export_time_raw);
+  const time = s.export_time_raw?.match(/[ T](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  return `${date ?? ''} ${time ? `${time[1].padStart(2, '0')}:${time[2]}:${time[3] ?? '00'}` : ''}`;
+}
 const object = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 const number = (v: unknown): v is number =>
@@ -207,7 +222,7 @@ export function preliminaryBaseline(snapshots: Snapshot[], current: Snapshot) {
       isPreliminaryBaseline(s) &&
       s.export_date &&
       current.export_date &&
-      s.export_date < current.export_date,
+      releaseKey(s) < releaseKey(current),
   );
 }
 export const snapshotLabel = (s: Pick<Snapshot, 'tax_year' | 'roll_stage' | 'preliminary_baseline_eligible'>) => `${s.tax_year} ${s.preliminary_baseline_eligible === false ? "interim snapshot" : s.roll_stage}`;
