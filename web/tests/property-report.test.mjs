@@ -90,6 +90,9 @@ test('print progression preserves eligible preliminary, certified-only, suppleme
  const certifiedTrend=reportTrend(buildPropertyReport(certifiedOnly));assert.equal(certifiedTrend.rows.at(-1).status,'Certified');assert.deepEqual(certifiedTrend.rows.at(-1).stages.map(x=>x.display),['Unavailable','$950,000','$950,000']);
  const supplemental=input('999283');supplemental.snapshots=supplemental.snapshots.map(s=>s.tax_year===2026&&s.roll_stage==='certified'?{...s,roll_stage:'supplemental'}:s);
  const supplementalTrend=reportTrend(buildPropertyReport(supplemental));assert.equal(supplementalTrend.rows.at(-1).status,'Supplemental');assert.deepEqual(supplementalTrend.rows.at(-1).stages.map(x=>x.display),['$1,200,000','$950,000','$950,000']);
+ const historicalPreliminary=input('999283');historicalPreliminary.snapshots=historicalPreliminary.snapshots.filter(s=>!(s.tax_year===2025&&s.roll_stage!=='preliminary'));
+ const historicalReport=buildPropertyReport(historicalPreliminary),historicalTrend=reportTrend(historicalReport),historicalRow=reportTable(historicalReport,'Proposed market value → Final market value → Assessed value').rows.find(x=>x.id==='history-2025');
+ assert.deepEqual(historicalTrend.rows.find(x=>x.year===2025).stages.map(x=>x.display),['$1,000,000','Unavailable','Unavailable']);assert.match(historicalRow.note,/Final market value and assessed value are unavailable/);assert.doesNotMatch(historicalRow.note,/pending/);
 });
 test('sparse and withheld records never acquire a certified outcome, cap ceiling or neighborhood median',()=>{
  const sparse=buildPropertyReport(input('999282'));assert.ok(sparse.compact);assert.equal(sparse.stage,'preliminary');assert.doesNotMatch(JSON.stringify(sparse),/Conditional 10% ceiling/);

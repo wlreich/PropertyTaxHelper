@@ -201,19 +201,20 @@ export function buildPropertyReport(input: PropertyReportInput) {
   } else sections.push({id:'neighborhood',title:'Neighborhood context',blocks:[note('A reliable neighborhood comparison for this property and release is unavailable. No median, percentile or apparent zero replaces missing information.')]});
 
   if(history.length) {
+    const pendingYear=current.roll_stage==='preliminary' ? current.tax_year : null;
     const chartHistory=[...history].slice(0,5).reverse();
     const scale=chartScale(chartHistory);
     const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:history.length,rows:chartHistory.map(h=>({
       year:h.year,status:h.status,stages:[
         {kind:'proposed',label:'Proposed market value',value:h.trendProposed,display:money(h.trendProposed)},
-        {kind:'final',label:'Final market value',value:h.market,display:h.market===null&&h.status==='Preliminary only'?'Pending':money(h.market)},
-        {kind:'assessed',label:h.assessedAfterCap?'Assessed value after cap':'Assessed value',value:h.assessed,display:h.assessed===null&&h.status==='Preliminary only'?'Pending':money(h.assessed)},
+        {kind:'final',label:'Final market value',value:h.market,display:h.market===null&&h.year===pendingYear?'Pending':money(h.market)},
+        {kind:'assessed',label:h.assessedAfterCap?'Assessed value after cap':'Assessed value',value:h.assessed,display:h.assessed===null&&h.year===pendingYear?'Pending':money(h.assessed)},
       ],
     }))};
     sections.push({id:'history',title:'Your assessment over time',blocks:[
       note('Each year follows the same stage order: proposed market value, final market value, then assessed value. Proposed values use only explicitly eligible preliminary records. Missing, excluded and pending stages are unavailable, not zero.'),
       table('Proposed market value → Final market value → Assessed value',['Year / result','Proposed market value','Final market value','Assessed value'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.trendProposed),money(h.market),money(h.assessed)],note:[
-        h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? 'Final market value and assessed value are pending.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
+        h.trendProposed!==null&&h.market!==null ? `Proposal-to-final change: ${changeLabel(comparison(h.trendProposed,h.market))}.` : h.trendProposed!==null&&!h.market ? h.year===pendingYear ? 'Final market value and assessed value are pending.' : 'Final market value and assessed value are unavailable.' : !h.trendProposed&&h.market!==null ? 'An eligible proposed value is unavailable for this completed result.' : '',
         h.assessedAfterCap ? 'The assessed value is shown after the supported cap.' : '',
         `Annual final market change: ${changeLabel(h.annual)}; assessed change: ${changeLabel(h.annualAssessed)}.`,
         h.protests.length ? h.protests.map(p=>`${p.basis} (${p.date})${p.agent ? `; agent: ${p.agent}` : ''}${p.codes.length ? `; recorded status: ${p.codes.join(', ')}` : ''}`).join('. ') : input.protestsUnavailable ? 'Protest records temporarily unavailable.' : 'No protest found in available records; this does not establish that none was filed.',
