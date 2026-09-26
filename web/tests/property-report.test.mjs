@@ -9,6 +9,7 @@ const input=id=>{const r=par28Fixture(id),p=parseProperty(r.overview.profile,id)
 const rows=r=>r.sections.flatMap(s=>s.blocks.flatMap(b=>b.kind==='table'?b.rows:[]));
 const blocks=(r,id)=>r.sections.find(s=>s.id===id).blocks;
 const reportTable=(r,title)=>r.sections.flatMap(s=>s.blocks).find(b=>b.kind==='table'&&b.title===title);
+const reportTrend=r=>r.sections.flatMap(s=>s.blocks).find(b=>b.kind==='trend');
 test('recorded favorable outcome, no-agent evidence, cap labels and annual review links match the approved print story',()=>{
  const r=buildPropertyReport(input('999283')),text=JSON.stringify(r);assert.equal(r.releaseLabel,'2026 certified');
  for(const token of ['$950,000','$200,000','−$50,000','$1,045,000','+$120,000','2025 interim snapshot','Not proof of physical removal'])assert.ok(text.includes(token),token);
@@ -69,12 +70,15 @@ test('certified report uses the strict preliminary pair, labels the final outcom
  const missingReport=buildPropertyReport(missing),missingText=JSON.stringify(missingReport);assert.equal(reportTable(missingReport,'Market-area multiplier: same 2026 building inputs'),undefined);assert.match(missingText,/Isolated multiplier effect unavailable: Components do not reproduce/);assert.doesNotMatch(missingText,/fabricated bars/);
 });
 test('annual history prints proposed, final and assessed stages without substituting excluded or missing values',()=>{
- const report=buildPropertyReport(input('999281')),history=reportTable(report,'Proposed market value → Final market value → Assessed value');
+ const report=buildPropertyReport(input('999281')),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
  assert.deepEqual(history.columns,['Year / result','Proposed market value','Final market value','Assessed value']);
  assert.equal(history.rows.find(x=>x.id==='history-2026').cells[1],'$889,000');
  assert.equal(history.rows.find(x=>x.id==='history-2018').cells[1],'Unavailable');
  assert.equal(history.rows.find(x=>x.id==='history-2009').cells[1],'Unavailable');
  assert.match(history.rows.find(x=>x.id==='history-2009').note,/eligible proposed value is unavailable/);
+ assert.equal(trend.totalYears,26);assert.equal(trend.rows.length,5);assert.deepEqual(trend.rows.map(x=>x.year),[2022,2023,2024,2025,2026]);
+ assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='proposed').display,'$889,000');
+ assert.equal(trend.rows.at(-1).stages.find(x=>x.kind==='final').display,'$864,000');
 });
 test('sparse and withheld records never acquire a certified outcome, cap ceiling or neighborhood median',()=>{
  const sparse=buildPropertyReport(input('999282'));assert.ok(sparse.compact);assert.equal(sparse.stage,'preliminary');assert.doesNotMatch(JSON.stringify(sparse),/Conditional 10% ceiling/);

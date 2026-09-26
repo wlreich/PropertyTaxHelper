@@ -1,4 +1,4 @@
-import { annualHistory, changeLabel } from './annual-history.ts';
+import { annualHistory, chartScale, changeLabel } from './annual-history.ts';
 import { currentAssessmentStory, selectCurrentAssessment } from './current-assessment.ts';
 import { capModel, factorEffectContent, factorEligibilityNote, hasPreliminaryValueDriverExplanation, preliminaryValueDriverComparison, preliminaryValueDriverSummary, propertyFeatures, valueDriverSummary } from './property-sections.ts';
 import { comparison, componentKey, componentName, constructionClasses, dateLabel, propertyFacts, protestEvidence, snapshotLabel, type Snapshot, type ProtestObservation } from './property-history.ts';
@@ -12,6 +12,7 @@ export type ReportRow = { id: string; cells: string[]; note?: string };
 export type ReportBlock =
   | { kind: 'note'; title?: string; text: string; emphasis?: boolean; positive?: boolean; links?: {label:string;href:string}[] }
   | { kind: 'table'; title: string; columns: string[]; rows: ReportRow[] }
+  | { kind: 'trend'; maximum: number; rows: {year:number;status:string;stages:{kind:'proposed'|'final'|'assessed';label:string;value:number|null;display:string}[]}[]; totalYears: number }
   | { kind: 'chart'; subject: number; median: number };
 export type ReportSection = { id: string; title: string; blocks: ReportBlock[] };
 
@@ -200,6 +201,15 @@ export function buildPropertyReport(input: PropertyReportInput) {
   } else sections.push({id:'neighborhood',title:'Neighborhood context',blocks:[note('A reliable neighborhood comparison for this property and release is unavailable. No median, percentile or apparent zero replaces missing information.')]});
 
   if(!compact && history.length) {
+    const chartHistory=[...history].slice(0,5).reverse();
+    const scale=chartScale(chartHistory);
+    const trend: ReportBlock={kind:'trend',maximum:scale.maximum,totalYears:history.length,rows:chartHistory.map(h=>({
+      year:h.year,status:h.status,stages:[
+        {kind:'proposed',label:'Proposed market value',value:h.trendProposed,display:money(h.trendProposed)},
+        {kind:'final',label:'Final market value',value:h.market,display:h.market===null&&h.status==='Preliminary only'?'Pending':money(h.market)},
+        {kind:'assessed',label:h.assessedAfterCap?'Assessed value after cap':'Assessed value',value:h.assessed,display:h.assessed===null&&h.status==='Preliminary only'?'Pending':money(h.assessed)},
+      ],
+    }))};
     sections.push({id:'history',title:'Your assessment over time',blocks:[
       note('Each year follows the same stage order: proposed market value, final market value, then assessed value. Proposed values use only explicitly eligible preliminary records. Missing, excluded and pending stages are unavailable, not zero.'),
       table('Proposed market value → Final market value → Assessed value',['Year / result','Proposed market value','Final market value','Assessed value'],history.map(h=>({id:`history-${h.year}`,cells:[`${h.year} · ${h.status}`,money(h.trendProposed),money(h.market),money(h.assessed)],note:[
@@ -210,6 +220,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,
         ...snapshots.filter(s=>s.tax_year===h.year && s.valuation_note).map(s=>s.valuation_note!),
       ].filter(Boolean).join(' ')}))),
+      trend,
       note('An agent assignment does not confirm who handled a case. Interim releases remain identified by date and stage; known conflicting preliminary baselines are excluded from reduction calculations. A recorded protest alongside a reduction does not establish causation.'),
     ]});
   }

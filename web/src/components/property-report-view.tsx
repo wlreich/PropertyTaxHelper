@@ -6,6 +6,20 @@ import { reportRowParts, type PropertyReport, type ReportBlock } from '@/lib/pro
 
 function Block({block,lead}:{block:ReportBlock;lead?:ReactNode}) {
   if(block.kind==='note')return <div className={`report-note${block.emphasis ? ' report-callout' : ''}${block.positive ? ' report-callout-positive' : ''}`}>{block.title && <h3>{block.title}</h3>}<p>{block.text}</p>{block.links?.length && <p className="report-note-links">{block.links.map((link,i)=><Fragment key={link.href}>{i>0&&<span aria-hidden="true"> · </span>}<a href={link.href}>{link.label}: {link.href}</a></Fragment>)}</p>}</div>;
+  if(block.kind==='trend')return <figure className="report-trend" aria-label="Annual proposed, final market and assessed values">
+    <figcaption>Valuation progression</figcaption>
+    <p>Bars start at $0 and share a {currency(block.maximum)} scale. Proposed values use only explicitly eligible preliminary records; completed results may be certified or supplemental. {block.totalYears>block.rows.length ? `The most recent ${block.rows.length} of ${block.totalYears} available years are charted; ` : ''}Exact values and source qualifications are in the table above.</p>
+    <div className="report-trend-rows">{block.rows.map(row=><div className="report-trend-year" key={row.year} data-report-trend-year={row.year}>
+      <div className="report-trend-year-label"><strong>{row.year}</strong><span>{row.status}</span></div>
+      <div className="report-trend-stages">{row.stages.map(stage=>{
+        const width=stage.value===null?null:stage.value/block.maximum*100;
+        return <div className={`report-trend-stage report-trend-${stage.kind}`} key={stage.kind} data-report-trend-stage={stage.kind} role="img" aria-label={`${row.year} ${stage.label}: ${stage.display}`}>
+          <span className="report-trend-stage-label" aria-hidden="true">{stage.label}</span>
+          {width===null?<span className="report-trend-unavailable" aria-hidden="true">{stage.display}</span>:<><span className="report-trend-track" aria-hidden="true"><span className="report-trend-fill" style={{width:`${width}%`}}/></span><strong aria-hidden="true">{stage.display}</strong></>}
+        </div>;
+      })}</div>
+    </div>)}</div>
+  </figure>;
   if(block.kind==='chart') {
     const maximum=Math.ceil(Math.max(block.subject,block.median,1)/100000)*100000;
     return <figure className="report-chart"><figcaption>Market value compared with the median</figcaption>{[['Your home',block.subject],['Neighborhood median',block.median]].map(([label,value])=><div className="report-bar-row" key={label}><span>{label}</span><span className="report-bar-track"><span style={{width:`${Number(value)/maximum*100}%`}}/></span><strong>{currency(Number(value))}</strong></div>)}<p>Both bars start at $0. Full scale: {currency(maximum)}. Labels remain readable without color.</p></figure>;

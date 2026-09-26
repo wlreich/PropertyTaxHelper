@@ -992,8 +992,9 @@
 .annual-pagination nav { display: flex; gap: var(--space-3); }
 .annual-pagination .annual-earlier { margin-top: 0; }
 .annual-earlier:disabled { color: var(--color-text-muted); cursor: default; text-decoration: none; }
-.annual-trend { margin-top: var(--space-4); }
-.annual-trend summary, .annual-record-disclosure > summary { color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); cursor: pointer; }
+.annual-trend { margin-top: var(--space-6); padding-top: var(--space-6); border-top: var(--border-width) solid var(--color-border); }
+.annual-trend h3 { font-family: var(--font-heading); font-size: var(--text-h3); line-height: var(--line-h3); margin: 0; }
+.annual-record-disclosure > summary { color: var(--color-action); min-height: var(--target-min); padding-block: var(--space-3); cursor: pointer; }
 .annual-dialog { margin: auto; width: min(860px, calc(100vw - var(--space-8))); max-height: calc(100dvh - var(--space-8)); overflow-y: auto; overscroll-behavior: contain; color: var(--color-text); background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-card); padding: 0; }
 .annual-dialog::backdrop { background: color-mix(in srgb, var(--color-brand-primary) 60%, transparent); }
 .annual-dialog-toolbar { display: flex; justify-content: flex-end; position: sticky; top: 0; z-index: 1; background: var(--color-surface); padding: var(--space-2) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }

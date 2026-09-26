@@ -134,9 +134,10 @@ export function AnnualAssessmentHistory() {
         <p role="status">Showing {visible.at(-1)?.year}{visible.length > 1 ? `–${visible[0].year}` : ''} · {rows.length} {rows.length === 1 ? 'year' : 'years'} available{rows.length > 5 ? ` · Page ${activePage + 1} of ${lastPage + 1}` : ''}</p>
         {rows.length > 5 && <nav aria-label="History pages"><button type="button" className="annual-earlier" disabled={activePage === 0} onClick={() => setPage(activePage - 1)}>Newer years</button><button type="button" className="annual-earlier" disabled={activePage === lastPage} onClick={() => setPage(activePage + 1)}>Older years</button></nav>}
       </div>
-      <details className="annual-trend"><summary>View valuation trend for these years</summary>
+      <div className="annual-trend" aria-labelledby="annual-trend-heading">
+      <h3 id="annual-trend-heading">Valuation progression</h3>
       {plotted.length > 0 ? <figure className="annual-chart" aria-label="Annual proposed, final market and assessed values">
-        <figcaption className="annual-chart-caption">Follow each year from the proposed market value to the final market value and then the assessed value. A cap may lower the assessed value.{hasUnavailableStages && ' Pending or unavailable stages are marked.'}</figcaption>
+        <figcaption className="annual-chart-caption">Follow each year from the proposed market value to the final market value and then the assessed value. Proposed values appear only from explicitly eligible preliminary records. Final values come from completed certified or supplemental assessments. A cap may lower the assessed value, and a lower final value does not establish what caused the change.{hasUnavailableStages && ' Pending or unavailable stages are marked.'}</figcaption>
         <div className="annual-legend" aria-label="Valuation stages"><span><i className="annual-proposed-key" aria-hidden="true" />Proposed market value</span><span><i className="annual-market-key" aria-hidden="true" />Final market value</span><span><i className="annual-assessed-key" aria-hidden="true" />Assessed value (after cap when applicable)</span></div>
         <div className="annual-chart-rows">
           {plotted.map(row => <div className="annual-chart-year" key={row.year} data-chart-year={row.year}>
@@ -164,7 +165,7 @@ export function AnnualAssessmentHistory() {
 
 
       {gap && <p className="annual-gap-summary">{gap}</p>}
-      </details>
+      </div>
     </>}
   </section>;
 }
