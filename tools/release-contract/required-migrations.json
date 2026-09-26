@@ -2,9 +2,9 @@
   "contracts": [
     {
       "name": "property_neighborhood_analysis.current_release_source",
-      "version": "20260926173000",
-      "file": "supabase/migrations/20260926173000_current_supplemental_neighborhood.sql",
-      "supersedesRepositoryVersion": "20260925223030"
+      "version": "20260926183000",
+      "file": "supabase/migrations/20260926183000_reuse_neighborhood_cap_inputs.sql",
+      "supersedesRepositoryVersion": "20260926173000"
     }
   ]
 }
