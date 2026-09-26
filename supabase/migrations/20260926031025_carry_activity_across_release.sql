@@ -3,17 +3,20 @@
 -- A later reviewed activity import may rebuild this projection for that anchor.
 create function tcad_ingest.carry_forward_property_activity(p_from uuid,p_to uuid) returns integer
  language plpgsql security definer set search_path='' set statement_timeout='30s' as $$
-declare copied integer;
+declare copied integer; copied_years integer[];
 begin
  if p_from is null or p_to is null or p_from=p_to then return 0; end if;
  if not exists(select 1 from public.property_search_state where dataset_id=p_to) then
   raise exception 'Activity target is not the active search release';
  end if;
- insert into public.property_activity_releases
- (anchor_dataset_id,activity_year,appraisal_export_date,sales_export_date,import_id,published_at)
- select p_to,r.activity_year,r.appraisal_export_date,r.sales_export_date,r.import_id,now()
- from public.property_activity_releases r where r.anchor_dataset_id=p_from
- on conflict(anchor_dataset_id,activity_year) do nothing;
+ with inserted as (
+  insert into public.property_activity_releases
+  (anchor_dataset_id,activity_year,appraisal_export_date,sales_export_date,import_id,published_at)
+  select p_to,r.activity_year,r.appraisal_export_date,r.sales_export_date,r.import_id,now()
+  from public.property_activity_releases r where r.anchor_dataset_id=p_from
+  on conflict(anchor_dataset_id,activity_year) do nothing returning activity_year
+ ) select array_agg(activity_year) into copied_years from inserted;
+ if copied_years is null then return 0; end if;
 
  insert into public.property_activity
  (anchor_dataset_id,activity_year,property_id,event_key,deed_date,sale_date,filed_date,instrument,
@@ -22,7 +25,8 @@ begin
   a.deed_type,a.sale_type,a.sale_source,a.status,a.price,a.price_status,a.match_method,a.deed_source
  from public.property_activity a join public.property_search_documents d
   on d.dataset_id=p_to and d.property_id=a.property_id
- where a.anchor_dataset_id=p_from and not d.shared_ownership and not d.values_under_review and not d.is_parkland
+ where a.anchor_dataset_id=p_from and a.activity_year=any(copied_years)
+  and not d.shared_ownership and not d.values_under_review and not d.is_parkland
  on conflict(anchor_dataset_id,activity_year,property_id,event_key) do nothing;
  get diagnostics copied=row_count;
  return copied;
