@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { checkMigrationParity } from './check-migration-parity.mjs';
 import { validatePublishedNeighborhood } from './contract.mjs';
+import { readFile } from 'node:fs/promises';
 
 const release = { dataset_id: '11111111-1111-4111-8111-111111111111', tax_year: 2026, roll_stage: 'certified', export_date: '2026-07-18' };
 const fixture = {
@@ -40,4 +41,12 @@ test('migration gate distinguishes missing versions from known version drift', a
   const drift = await checkMigrationParity('20260925203301\n');
   assert.match(drift.failures[0], /version drift.*20260925203301.*20260925223030/);
   assert.deepEqual((await checkMigrationParity('20260925223030\n')).failures, []);
+});
+
+test('release workflow exposes a PR gate and requires exact main-SHA nonproduction provenance', async () => {
+  const workflow = await readFile(new URL('../../.github/workflows/release-gate.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /\n  pull_request:\n/);
+  assert.match(workflow, /github\.event_name == 'pull_request'/);
+  assert.match(workflow, /head_sha===process\.env\.GITHUB_SHA&&a\.workflow_run\?\.head_branch==='main'/);
+  assert.match(workflow, /name: nonproduction-release-\$\{\{ github\.sha \}\}/);
 });
