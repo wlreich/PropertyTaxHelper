@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {pathToFileURL} from 'node:url';
 import {validatePublishedNeighborhood} from './published-release-contract.mjs';
+import {parseNeighborhoodAnalysis} from '../src/lib/supabase/neighborhood-analysis.ts';
 
 export async function checkReleaseContract(env=process.env,fetchRequest=fetch) {
   if(env.VERCEL_ENV!=='production' && env.RELEASE_CONTRACT_CHECK!=='1') return 'Skipped release contract outside production.';
@@ -14,8 +15,10 @@ export async function checkReleaseContract(env=process.env,fetchRequest=fetch) {
     signal:AbortSignal.timeout(30_000),
   });
   if(!response.ok) throw new Error(`Production release RPC returned HTTP ${response.status}.`);
-  const result=validatePublishedNeighborhood(await response.json());
+  const payload=await response.json();
+  const result=validatePublishedNeighborhood(payload);
   if(result.failures.length) throw new Error(`Production release contract failed:\n- ${result.failures.join('\n- ')}`);
+  if(!parseNeighborhoodAnalysis(payload,'736302')) throw new Error('Production release contract failed: the page parser rejected the RPC response.');
   return `Production release contract passed (${result.eligiblePropertyCount} eligible homes observed).`;
 }
 
