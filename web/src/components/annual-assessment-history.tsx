@@ -99,45 +99,22 @@ export function CurrentYearRecord({year}: {year: number}) {
   return <button type="button" className="current-record-link" aria-haspopup="dialog" onClick={e => openYear(year, e.currentTarget)}>View {year} assessment &amp; protest record</button>;
 }
 
-export function AnnualAssessmentHistory() {
-  const {rows, unavailable, protestsUnavailable, pendingYear, openYear} = useHistory();
-  const [page, setPage] = useState(0);
-  const lastPage = Math.max(0, Math.ceil(rows.length / 5) - 1);
-  const activePage = Math.min(page, lastPage);
-  const visible = rows.slice(activePage * 5, activePage * 5 + 5);
-  const plotted = [...visible].reverse().filter(row => chartStages(row).some(stage => stage.value !== null));
+
+export function AnnualValuationProgression() {
+  const {rows, unavailable, pendingYear} = useHistory();
+  const latest = rows.slice(0, 5);
+  const plotted = [...latest].reverse().filter(row => chartStages(row).some(stage => stage.value !== null));
   const scale = chartScale(plotted);
-  const gap = capGapSummary(visible);
+  const gap = capGapSummary(latest);
   const hasUnavailableStages = plotted.some(row => chartStages(row).some(stage => stage.value === null));
-  return <section className="overview-section property-section annual-history" aria-labelledby="history-heading">
+  return <section className="overview-section property-section annual-progression" aria-labelledby="annual-trend-heading">
     <p className="eyebrow">Your property over time</p>
-    <h2 id="history-heading" tabIndex={-1}>Assessment &amp; protest history</h2>
-    <p className="overview-note">Values and protest records together, year by year. Select a year for the full record.</p>
-    {unavailable && rows.length > 0 && <p>Some assessment history is temporarily unavailable. Available protest and assessment records are shown below.</p>}
-    {unavailable && !rows.length ? <p>Assessment history is temporarily unavailable. Try again in a few minutes.</p> : !rows.length ?
-      <p>No annual assessment records are available for this property yet.</p> : <>
-      <table className="annual-table" role="table">
-        <caption className="visually-hidden">Annual assessment values, newest year first</caption>
-        <thead role="rowgroup"><tr role="row"><th scope="col" id="annual-year" role="columnheader">Year</th>{columns.map((label, i) => <th key={label} scope="col" id={`annual-col-${i}`} role="columnheader">{label}</th>)}</tr></thead>
-        <tbody role="rowgroup">{visible.map(row => {
-          const values = [amount(row.preliminary), amount(row.market), changeLabel(row.within), amount(row.afterCap), protestStatus(row, protestsUnavailable)];
-          return <tr key={row.year} role="row" className="annual-value-row" data-year={row.year}>
-            <th scope="row" role="rowheader" id={`annual-year-${row.year}`}><button type="button" className="annual-year-toggle" aria-label={`View ${row.year} details`} aria-haspopup="dialog" onClick={e => openYear(row.year, e.currentTarget)}>{row.year}<span aria-hidden="true">→</span></button>{row.status !== 'Certified' && <span className="annual-status">{row.status}</span>}<span className="annual-mobile-protest"><span className="visually-hidden">Protest: </span>{protestStatus(row, protestsUnavailable)}</span></th>
-            {values.map((value, i) => <td key={columns[i]} role="cell" headers={`annual-year-${row.year} annual-col-${i}`}><span className="annual-mobile-label" aria-hidden="true">{columns[i]}</span><span className="annual-cell-value">{i === 2 ? <><span className="annual-change-full">{value}</span><span className="annual-change-mobile">{row.within && row.within.dollars !== 0 && row.within.percent !== null ? `${Math.abs(row.within.percent).toFixed(1)}% ${row.within.dollars < 0 ? 'lower' : 'higher'}` : value}</span></> : value}{i === 3 && row.afterCapStatus && <span className="annual-status">{row.afterCapStatus}</span>}</span></td>)}
-          </tr>;
-        })}</tbody>
-      </table>
-      <p className="overview-note">Change compares proposed with final market value, not tax savings. A missing protest entry does not rule out a protest.</p>
-      {visible.some(row => protestStatus(row, protestsUnavailable) === 'Reduction only') && <p className="overview-note">“Reduction only” means the value fell without a protest found in available records; it does not establish the cause.</p>}
-      <p className="annual-mobile-protest-help">Protest status appears under each year. Open a year for proposed values, assessed values and the full record.</p>
-      <div className="annual-pagination">
-        <p role="status">Showing {visible.at(-1)?.year}{visible.length > 1 ? `–${visible[0].year}` : ''} · {rows.length} {rows.length === 1 ? 'year' : 'years'} available{rows.length > 5 ? ` · Page ${activePage + 1} of ${lastPage + 1}` : ''}</p>
-        {rows.length > 5 && <nav aria-label="History pages"><button type="button" className="annual-earlier" disabled={activePage === 0} onClick={() => setPage(activePage - 1)}>Newer years</button><button type="button" className="annual-earlier" disabled={activePage === lastPage} onClick={() => setPage(activePage + 1)}>Older years</button></nav>}
-      </div>
-      <div className="annual-trend" aria-labelledby="annual-trend-heading">
-      <h3 id="annual-trend-heading">Valuation progression</h3>
+    <h2 id="annual-trend-heading" tabIndex={-1}>Valuation progression</h2>
+    {rows.length > 5 && <p className="overview-note">Latest five years shown. Earlier years are in History below.</p>}
+    {unavailable && <p className="overview-note">Some assessment history is temporarily unavailable. Available values are shown below.</p>}
+    <div className="annual-trend">
       {plotted.length > 0 ? <figure className="annual-chart" aria-label="Annual proposed, final market and assessed values">
-        <figcaption className="annual-chart-caption">Follow each year from the proposed market value to the final market value and then the assessed value. Proposed values appear only from explicitly eligible preliminary records. Final values come from completed certified or supplemental assessments. A cap may lower the assessed value, and a lower final value does not establish what caused the change.{hasUnavailableStages && ' Pending or unavailable stages are marked.'}</figcaption>
+        <figcaption className="annual-chart-caption">Proposed values use explicitly eligible preliminary records; final and assessed values use completed certified or supplemental records. A cap may lower assessed value. A lower final value does not establish the cause. See exact values and sources in History below.{hasUnavailableStages && ' Pending or unavailable stages are marked.'}</figcaption>
         <div className="annual-legend" aria-label="Valuation stages"><span><i className="annual-proposed-key" aria-hidden="true" />Proposed market value</span><span><i className="annual-market-key" aria-hidden="true" />Final market value</span><span><i className="annual-assessed-key" aria-hidden="true" />Assessed value (after cap when applicable)</span></div>
         <div className="annual-chart-rows">
           {plotted.map(row => <div className="annual-chart-year" key={row.year} data-chart-year={row.year}>
@@ -165,7 +142,42 @@ export function AnnualAssessmentHistory() {
 
 
       {gap && <p className="annual-gap-summary">{gap}</p>}
+    </div>
+  </section>;
+}
+
+export function AnnualAssessmentHistory() {
+  const {rows, unavailable, protestsUnavailable, openYear} = useHistory();
+  const [page, setPage] = useState(0);
+  const lastPage = Math.max(0, Math.ceil(rows.length / 5) - 1);
+  const activePage = Math.min(page, lastPage);
+  const visible = rows.slice(activePage * 5, activePage * 5 + 5);
+  return <section className="overview-section property-section annual-history" aria-labelledby="history-heading">
+    <p className="eyebrow">Full annual records</p>
+    <h2 id="history-heading" tabIndex={-1}>Assessment &amp; protest history</h2>
+    <p className="overview-note">Values and protest records together, year by year. Select a year for the full record.</p>
+    {unavailable && rows.length > 0 && <p>Some assessment history is temporarily unavailable. Available protest and assessment records are shown below.</p>}
+    {unavailable && !rows.length ? <p>Assessment history is temporarily unavailable. Try again in a few minutes.</p> : !rows.length ?
+      <p>No annual assessment records are available for this property yet.</p> : <>
+      <table className="annual-table" role="table">
+        <caption className="visually-hidden">Annual assessment values, newest year first</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" id="annual-year" role="columnheader">Year</th>{columns.map((label, i) => <th key={label} scope="col" id={`annual-col-${i}`} role="columnheader">{label}</th>)}</tr></thead>
+        <tbody role="rowgroup">{visible.map(row => {
+          const values = [amount(row.preliminary), amount(row.market), changeLabel(row.within), amount(row.afterCap), protestStatus(row, protestsUnavailable)];
+          return <tr key={row.year} role="row" className="annual-value-row" data-year={row.year}>
+            <th scope="row" role="rowheader" id={`annual-year-${row.year}`}><button type="button" className="annual-year-toggle" aria-label={`View ${row.year} details`} aria-haspopup="dialog" onClick={e => openYear(row.year, e.currentTarget)}>{row.year}<span aria-hidden="true">→</span></button>{row.status !== 'Certified' && <span className="annual-status">{row.status}</span>}<span className="annual-mobile-protest"><span className="visually-hidden">Protest: </span>{protestStatus(row, protestsUnavailable)}</span></th>
+            {values.map((value, i) => <td key={columns[i]} role="cell" headers={`annual-year-${row.year} annual-col-${i}`}><span className="annual-mobile-label" aria-hidden="true">{columns[i]}</span><span className="annual-cell-value">{i === 2 ? <><span className="annual-change-full">{value}</span><span className="annual-change-mobile">{row.within && row.within.dollars !== 0 && row.within.percent !== null ? `${Math.abs(row.within.percent).toFixed(1)}% ${row.within.dollars < 0 ? 'lower' : 'higher'}` : value}</span></> : value}{i === 3 && row.afterCapStatus && <span className="annual-status">{row.afterCapStatus}</span>}</span></td>)}
+          </tr>;
+        })}</tbody>
+      </table>
+      <p className="overview-note">Change compares proposed with final market value, not tax savings. A missing protest entry does not rule out a protest.</p>
+      {visible.some(row => protestStatus(row, protestsUnavailable) === 'Reduction only') && <p className="overview-note">“Reduction only” means the value fell without a protest found in available records; it does not establish the cause.</p>}
+      <p className="annual-mobile-protest-help">Protest status appears under each year. Open a year for proposed values, assessed values and the full record.</p>
+      <div className="annual-pagination">
+        <p role="status">Showing {visible.at(-1)?.year}{visible.length > 1 ? `–${visible[0].year}` : ''} · {rows.length} {rows.length === 1 ? 'year' : 'years'} available{rows.length > 5 ? ` · Page ${activePage + 1} of ${lastPage + 1}` : ''}</p>
+        {rows.length > 5 && <nav aria-label="History pages"><button type="button" className="annual-earlier" disabled={activePage === 0} onClick={() => setPage(activePage - 1)}>Newer years</button><button type="button" className="annual-earlier" disabled={activePage === lastPage} onClick={() => setPage(activePage + 1)}>Older years</button></nav>}
       </div>
+
     </>}
   </section>;
 }
