@@ -13,7 +13,7 @@ import { PropertySectionLink } from "./property-section-link";
 import { PropertyNavigation } from "./property-navigation";
 import { SeasonNotice } from "./season-notice";
 import type { SeasonContext } from "@/lib/seasons";
-import { AnnualAssessmentHistory, AnnualHistoryProvider } from "./annual-assessment-history";
+import { AnnualAssessmentHistory, AnnualHistoryProvider, AnnualValuationProgression } from "./annual-assessment-history";
 import { annualHistory } from "@/lib/annual-history";
 import {
   annualBaseline,
@@ -89,6 +89,7 @@ export function PropertyOverview({
       <CurrentAssessment current={current} snapshots={snapshots} evidence={evidence} season={season} unavailable={protestsUnavailable} preliminaryExplanationAvailable={preliminaryExplanationAvailable} />
       <nav className="overview-section-nav" aria-label="Property sections">
         <span className="overview-section-nav-label">On this page</span>
+        <PropertySectionLink target="annual-trend-heading">Valuation trend</PropertySectionLink>
         <PropertySectionLink target="exemptions-heading">Cap &amp; exemptions</PropertySectionLink>
         <PropertySectionLink target="market-adjustment-heading">Value drivers</PropertySectionLink>
         <PropertySectionLink target="property-facts-heading">Property details</PropertySectionLink>
@@ -112,6 +113,7 @@ export function PropertyOverview({
               </p>
             </div>
           )}
+          <AnnualValuationProgression />
           <CapAndExemptions model={capModel(current, previous, !historyUnavailable && snapshots.some(s => s.dataset_id === current.dataset_id), initial)} propertyId={p.property_id} annualReviewHref={annualReviewGuideHref(p.property_id)} />
           <ValueDrivers current={current} snapshots={snapshots} adjustment={marketAdjustment} propertyId={p.property_id} />
           <RecordedPropertyDetails current={current} previous={previous} propertyId={p.property_id} />

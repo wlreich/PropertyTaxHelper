@@ -19,15 +19,15 @@ export function ValueDrivers({ current, snapshots, adjustment, propertyId }: { c
     {pair && <p className="value-driver-baseline">{current.tax_year} preliminary compared with {current.tax_year - 1} preliminary.</p>}
     {pair && <p className="overview-note">Records used: {dateLabel(pair.previous.export_date)} preliminary and {dateLabel(pair.current.export_date)} preliminary.</p>}
     <p>{preliminaryValueDriverSummary(comparison)}</p>
-    <p>Most homes don&apos;t sell each year. The Appraisal District compares its estimates with recent sales in your market area, then uses a multiplier to adjust the estimated value of homes and other features across that area. Land is valued separately.</p>
-    <p className="overview-note">This describes the market-modified cost method. The Appraisal District also uses an automated sales-comparison model for some residential properties.</p>
+    <p>The Appraisal District uses recent area sales to set a multiplier for estimated rebuilding cost after accounting for age and condition. Land is valued separately.</p>
     <dl className="value-driver-columns">
       <div><dt>Land</dt><dd className="driver-value">{pair ? currency(pair.current.land_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.land_value, pair.current.land_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
       <div><dt>Home &amp; other features</dt><dd className="driver-value">{pair ? currency(pair.current.improvement_value) : 'Not available'}</dd><dd>{pair ? annualChange(pair.previous.improvement_value, pair.current.improvement_value, pair.previous.tax_year) : 'Preliminary comparison unavailable'}</dd></div>
       <div><dt>Market-area multiplier</dt><dd className="driver-value">{summary?.previous && summary.current ? `${factor(summary.previous.factor)} → ${factor(summary.current.factor)}` : 'Not available'}</dd><dd>Estimated effect: {effect === null || effect === undefined ? 'Not available' : `${effect > 0 ? '+' : effect < 0 ? '−' : ''}${currency(Math.abs(effect))}`}</dd></div>
     </dl>
-    <p className="overview-note">Home &amp; other features is the Appraisal District&apos;s recorded non-land value after applicable factors. It is not the rebuilding-cost estimate.</p>
+    <p className="overview-note">Home &amp; other features is recorded non-land value, not rebuilding cost. The multiplier&apos;s estimated effect is one part of the preliminary appraisal, not the total annual change or tax savings.</p>
     <details className="section-disclosure factor-effect-disclosure"><summary>See the multiplier&apos;s effect on this home.</summary>
+      <p>Most homes don&apos;t sell each year. The Appraisal District compares its estimates with recent sales in your market area, then uses a multiplier to adjust the estimated value of homes and other features across that area. Land is valued separately. This describes the market-modified cost method; some residential properties use an automated sales-comparison model instead.</p>
       {factorEffect ? <>
         <p>{factorEffect.intro}</p>
         <p>{factorEffect.boundary}</p>
