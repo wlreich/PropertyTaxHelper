@@ -75,13 +75,16 @@ export function buildPropertyReport(input: PropertyReportInput) {
   // Under-review profiles must never recover withheld values from older snapshots.
   if (p.values_under_review && current.dataset_id !== selected.dataset_id) return null;
   const selectedReleaseKey=releaseKey(current);
+  const orderedAtOrBeforeSelected=(s: Pick<Snapshot,'export_date'|'export_time_raw'>)=>{
+    const key=releaseKey(s),date=key.slice(0,10),selectedDate=selectedReleaseKey.slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate))return false;
+    if(date!==selectedDate)return date<selectedDate;
+    return key.slice(11).trim()!==''&&selectedReleaseKey.slice(11).trim()!==''&&key<=selectedReleaseKey;
+  };
   const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>{
-    const key=releaseKey(s);
-    const date=key.slice(0,10),selectedDate=selectedReleaseKey.slice(0,10);
-    const ordered=key.trim()!=='' && selectedReleaseKey.trim()!=='' && (date<selectedDate || date===selectedDate && key.slice(11).trim()!=='' && selectedReleaseKey.slice(11).trim()!=='' && key<=selectedReleaseKey);
-    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || ordered);
+    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || orderedAtOrBeforeSelected(s));
   });
-  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && releaseKey(s)<=selectedReleaseKey);
+  const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && orderedAtOrBeforeSelected(s));
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
   const available = !input.historyUnavailable && snapshots.some(s=>s.dataset_id===current.dataset_id);

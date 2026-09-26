@@ -119,9 +119,10 @@ test('selected preliminary reports exclude same-day later completed releases',()
  i.snapshots.push({...preliminary,dataset_id:'same-day-later-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000});
  i.snapshots.push({...preliminary,dataset_id:'unknown-order-final',roll_stage:'certified',export_date:null,export_time_raw:null,market_value:410000,assessed_value:395000});
  i.snapshots.push({...preliminary,dataset_id:'date-only-final',roll_stage:'certified',export_time_raw:null,market_value:420000,assessed_value:405000});
- const report=buildPropertyReport({...i,release:preliminary.dataset_id}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
+ const ambiguousEvidence={dataset_id:'date-only-protest',tax_year:2026,export_date:'2026-04-02',export_time_raw:null,protest_flag:true,arb_case_listed:false,arb_agent_listed:true,arb_agent_name:'Ambiguous same-day agent',arb_status_codes:[]};
+ const report=buildPropertyReport({...i,release:preliminary.dataset_id,protests:[ambiguousEvidence]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
  assert.equal(report.stage,'preliminary');assert.equal(history.rows[0].cells[2],'Unavailable');assert.equal(history.rows[0].cells[3],'Unavailable');
- assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000|\$410,000|\$395,000|\$420,000|\$405,000/);
+ assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000|\$410,000|\$395,000|\$420,000|\$405,000|Ambiguous same-day agent/);
 });
 
 test('protest-only history retains its exact row without rendering an empty trend',()=>{
