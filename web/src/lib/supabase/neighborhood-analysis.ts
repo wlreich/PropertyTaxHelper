@@ -11,6 +11,15 @@ const amount = (v: unknown): v is number | null => v === null || typeof v === 'n
 const money = (v: unknown): v is number | null => amount(v) && (v === null || Number.isSafeInteger(v));
 const nullableBool = (v: unknown) => v === null || typeof v === 'boolean';
 
+export function neighborhoodContractFailure(value: unknown) {
+  if (!object(value)) return 'response_not_object';
+  if (!Object.hasOwn(value, 'annual_periods')) return 'missing_required_field:annual_periods';
+  if (!Object.hasOwn(value, 'agent_assignments')) return 'missing_required_field:agent_assignments';
+  if (!Array.isArray(value.annual_periods)) return 'invalid_required_field:annual_periods';
+  if (!Array.isArray(value.agent_assignments)) return 'invalid_required_field:agent_assignments';
+  return 'invalid_neighborhood_contract';
+}
+
 export function parseNeighborhoodAnalysis(value: unknown, id: string): NeighborhoodAnalysisData | null {
   const base = parseNeighborhood(value, id);
   if (!base || !object(value) || !Array.isArray(value.annual_periods) || value.annual_periods.length > 100 || !Array.isArray(value.agent_assignments)) return null;
@@ -78,5 +87,9 @@ export async function getNeighborhoodAnalysis(id: string, season: SeasonContext 
     return { status: value.status as 'missing_property' | 'missing_snapshot' | 'missing_area' | 'area_too_large' | 'too_many_releases' };
   }
   const data = parseNeighborhoodAnalysis(value, id);
-  return data ? { status: 'ok' as const, data, analysis: neighborhoodAnalysis(data) } : { status: 'unavailable' as const };
+  if (data) return { status: 'ok' as const, data, analysis: neighborhoodAnalysis(data) };
+  // This is intentionally server-side only. The page already exposes its safe,
+  // visible unavailable state; logs retain the actionable contract diagnosis.
+  console.error('Neighborhood release contract failure', { propertyId: id, reason: neighborhoodContractFailure(value) });
+  return { status: 'unavailable' as const };
 }

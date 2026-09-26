@@ -9,6 +9,7 @@ on:
       - "supabase/migrations/**"
       - "tools/property-search/**"
       - "tools/market-adjustments/**"
+      - "tools/release-contract/**"
       - ".github/workflows/property-search-checks.yml"
   workflow_dispatch:
 permissions:
@@ -46,6 +47,9 @@ jobs:
       - name: Test publication and access controls
         id: database
         run: npm test --prefix tools/property-search
+      - name: Test release gates and published contract fixtures
+        id: release_contract
+        run: node --test tools/release-contract/release-contract.test.mjs
       - name: Exercise rendered pages with synthetic data
         id: rendered_pages
         run: node tools/property-search/render-smoke.mjs
@@ -84,6 +88,7 @@ jobs:
               "install_fixture": "Synthetic database setup",
               "market_factors": "Market-factor parser",
               "database": "Database, search and access controls",
+              "release_contract": "Migration parity and published release contracts",
               "rendered_pages": "Rendered-page smoke",
               "install_browser": "Browser installation",
               "site_browser": "Site-wide browser checks, including comparisons and printed reports",

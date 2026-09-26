@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node --experimental-strip-types --conditions=react-server scripts/check-release-contract.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --experimental-strip-types --conditions=react-server --test tests/*.test.mjs",
