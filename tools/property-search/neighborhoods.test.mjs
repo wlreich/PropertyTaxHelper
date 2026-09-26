@@ -34,6 +34,9 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  await db.exec('set role anon');
  const call=async(phase=null,year=null,subject='100')=>(await db.query('select public.property_neighborhood_analysis($1,$2,$3) r',[subject,phase,year])).rows[0].r;
  const raw=await call('post',2026),parsed=parseNeighborhoodAnalysis(raw,'100');assert.ok(parsed);
+ const currentPre=parsed.annual_periods.find(p=>p.release.dataset_id===pre);
+ const directCaps=(await db.query('select parcel_comparison.cap_inputs($1,$2,$3) caps',[anchor,pre,parsed.homes.map(h=>h.property_id)])).rows[0].caps;
+ assert.deepEqual(currentPre.caps,directCaps);
  assert.deepEqual(parsed.agent_assignments.find(x=>x.property_id==='100'),{property_id:'100',tax_year:2026,agent_name:'LATEST AGENT',status:'named'});
  assert.deepEqual(parsed.agent_assignments.find(x=>x.property_id==='120'),{property_id:'120',tax_year:2026,agent_name:null,status:'ambiguous'});
  assert.equal(parsed.agent_assignments.find(x=>x.property_id==='121').status,'named');
