@@ -974,6 +974,7 @@
 .overview-donation a { align-self: start; }
 @media (max-width: 700px) {
   .current-assessment { padding: var(--space-6); }
+  .current-assessment .definition-content { width: min(300px, calc(50vw - var(--space-12))); }
   .current-assessment-metrics { grid-template-columns: 1fr; }
   .overview-context { padding: var(--space-6); }
   .overview-donation { grid-template-columns: 1fr; }
