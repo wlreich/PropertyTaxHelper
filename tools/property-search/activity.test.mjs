@@ -71,9 +71,44 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  await assert.rejects(db.query("update tcad_ingest.activity_imports set status='complete',completed_at=now() where id=$1",[partial]));
 
  assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,result.rows.length);
- await db.query("insert into public.property_releases select '22222222-2222-4222-8222-222222222222',tax_year,roll_stage,export_time_raw,source_url,published_at from public.property_releases where dataset_id=$1",[anchor]);
- await db.exec("update public.property_search_state set dataset_id='22222222-2222-4222-8222-222222222222'; set role anon");
- assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,0);
+ const next='22222222-2222-4222-8222-222222222222';
+ await db.query("insert into parcel_admin.preparations(id,source_dataset,expected_active,state) values($1,$2,$2,'ready')",[next,anchor]);
+ await db.query("insert into public.property_releases(dataset_id,tax_year,roll_stage,export_time_raw,source_url,published_at) select $1,tax_year,roll_stage,export_time_raw,source_url,published_at from public.property_releases where dataset_id=$2",[next,anchor]);
+ // The next release retains one public property, excludes a now-hidden property,
+ // and has no matching activity import of its own.
+ await db.query("insert into public.property_search_documents select $1,property_id,address,city,postal_code,property_type,search_text,market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland,is_vacant_land from public.property_search_documents where dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
+ await db.query("update public.property_search_documents set values_under_review=true where dataset_id=$1 and property_id='120'",[next]);
+ await db.query("insert into public.property_snapshot_profiles select $1,dataset_id,property_id,snapshot from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
+ // A prior-year source exported later must not define the active-year area.
+ await db.query("insert into public.property_snapshot_profiles select $1,'44444444-4444-4444-8444-444444444444',property_id,snapshot||'{\"tax_year\":2025,\"roll_stage\":\"supplemental\",\"export_date\":\"2026-09-01\",\"neighborhood\":\"WRONG\"}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ // Two same-year certified exports are visible, but neither is the active
+ // export recorded in property_releases. Date and UUID ordering chose WRONG.
+ await db.query("insert into public.property_snapshot_profiles select $1,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',property_id,snapshot||'{\"export_date\":\"2026-07-19\",\"export_time_raw\":\"07/19/2026 16:27\",\"neighborhood\":\"WRONG\",\"improvement_value\":0}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ await db.query("insert into public.property_snapshot_profiles select $1,'ffffffff-ffff-4fff-8fff-ffffffffffff',property_id,snapshot||'{\"export_time_raw\":\"07/18/2026 17:27\",\"neighborhood\":\"WRONG\",\"improvement_value\":0}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ // A distinct dataset can even advertise the identical timestamp; the
+ // preparation's source_dataset ID, not metadata ordering, breaks that tie.
+ await db.query("insert into public.property_snapshot_profiles select $1,'00000000-0000-4000-8000-000000000001',property_id,snapshot||'{\"neighborhood\":\"WRONG\",\"improvement_value\":0}'::jsonb from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id='100'",[next,anchor]);
+ await db.query('update public.property_search_state set dataset_id=$1',[next]);
+ await db.exec('set role anon');
+ assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,2);
+ assert.equal((await db.query('select count(*)::int n from public.property_activity where anchor_dataset_id=$1',[anchor])).rows[0].n,0);
+ assert.equal((await db.query("select count(*)::int n from public.property_activity where property_id='120'")).rows[0].n,0);
+ assert.deepEqual((await db.query('select activity_year from public.property_activity_releases')).rows.map(r=>r.activity_year),[2026]);
+ assert.equal((await db.query('select appraisal_export_date::text as appraisal, sales_export_date::text as sales from public.property_activity_releases')).rows[0].sales,'2026-08-27');
+ const carried=await call('100');assert.equal(carried.status,'ok');assert.equal(carried.neighborhood,'T2450');assert.equal(carried.rows.length,2);assert.equal(carried.rows[0].property_type,'single_family');
+ await assert.rejects(db.query('select tcad_ingest.carry_forward_property_activity($1,$2)',[anchor,next]));
+ await db.exec('reset role');
+ assert.equal((await db.query('select tcad_ingest.carry_forward_property_activity($1,$2) n',[anchor,next])).rows[0].n,0);
+ const prepared='33333333-3333-4333-8333-333333333333';
+ await db.query("insert into parcel_admin.preparations(id,source_dataset,expected_active,state) values($1,$2,$3,'ready')",[prepared,anchor,next]);
+ await db.query("insert into public.property_releases(dataset_id,tax_year,roll_stage,export_time_raw,source_url,published_at) select $1,tax_year,roll_stage,export_time_raw,source_url,published_at from public.property_releases where dataset_id=$2",[prepared,anchor]);
+ await db.query('insert into public.property_search_documents select $1,property_id,address,city,postal_code,property_type,search_text,market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland,is_vacant_land from public.property_search_documents where dataset_id=$2 and property_id=\'100\'',[prepared,anchor]);
+ await db.query('insert into public.property_activity_releases select $1,activity_year,appraisal_export_date,sales_export_date,import_id,now() from public.property_activity_releases where anchor_dataset_id=$2',[prepared,next]);
+ await db.query("insert into public.property_activity select $1,activity_year,property_id,event_key,deed_date,sale_date,filed_date,instrument,deed_type,sale_type,sale_source,status,price,price_status,match_method,deed_source from public.property_activity where anchor_dataset_id=$2 and property_id='100' and event_key='s:2'",[prepared,next]);
+ await db.query('update public.property_search_state set dataset_id=$1',[prepared]);
+ await db.exec('set role anon');
+ assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,1); // Never mix a prebuilt target with the carried source.
+ await db.exec('reset role');
 });
 
 test('activity matching batches published inputs without truncation or private access',async t=>{
