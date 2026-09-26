@@ -179,8 +179,18 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
   const currentCertified = find(current.tax_year, 'certified');
   const previousCertified = find(current.tax_year - 1, 'certified');
   const reversedCertifiedChanges = certifiedChanges.reverse();
-  const completedCurrentYear = current.roll_stage !== 'preliminary' && currentCertified;
   const currentOutcome = outcomes.find(o => o.certified.tax_year === current.tax_year) ?? null;
+  // Current comparisons must use the exact active-release cohort and values.
+  // A supplemental release must not be labeled with, or compared as though it
+  // were, the older certified snapshot retained for protest-season analysis.
+  const currentPeriod: AnnualPeriod = { release: current, caps: [], homes: data.homes.map(home => ({
+    property_id: home.property_id, market: home.market, area: home.area, protested: home.protested,
+    exclusion: usable(home.market) ? null : 'unusable_value',
+  })) };
+  const finalPeriod = current.roll_stage === 'supplemental' ? currentPeriod : currentCertified;
+  const completedCurrentYear = current.roll_stage !== 'preliminary' && finalPeriod;
+  const proposalToFinal = currentPreliminary && finalPeriod && currentPreliminary.release.export_date && finalPeriod.release.export_date
+    && currentPreliminary.release.export_date < finalPeriod.release.export_date ? compare(currentPreliminary, finalPeriod) : null;
   const story = {
     year: current.tax_year,
     start: compare(previousCertified, currentPreliminary),
@@ -189,8 +199,8 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
       release: current,
       median: currentSummary.median,
       valueCount: currentSummary.valueCount,
-      versusProposal: currentOutcome ? compare(currentPreliminary, currentCertified) : null,
-      versusPriorCertified: reversedCertifiedChanges.find(x => x.current.dataset_id === currentCertified.release.dataset_id) ?? null,
+      versusProposal: proposalToFinal,
+      versusPriorCertified: compare(previousCertified, finalPeriod),
     } : null,
   };
   return { current, currentSummary, latestOutcome: outcomes[0] ?? null, outcomes, agentActivity, story,

@@ -54,13 +54,20 @@ test('annual contract preserves population/RLS, canonical stages, chronology and
  assert.deepEqual(neighborhoodAnalysis(noHistory).certifiedChanges,analysis.certifiedChanges);
  assert.equal((await db.query('select parcel_comparison.preliminary_release_eligible($1,$2,$3) eligible',[anchor,oldPre,'103'])).rows[0].eligible,false);
  assert.ok(analysis.carryForward.length);assert.equal(JSON.stringify(raw).includes('PRIVATE'),false);
+ await db.exec('reset role');
+ await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"export_time_raw":null}'::jsonb where dataset_id=$1`,[pre]);
+ await db.query(`update public.property_releases set source_dataset_id=$2,roll_stage='preliminary',export_time_raw=null where dataset_id=$1`,[anchor,pre]);
+ await db.exec('set role anon');
  for(const phase of ['preliminary','protest']){
   const early=parseNeighborhoodAnalysis(await call(phase,2026),'100');assert.ok(early);assert.equal(early.source_id,pre);
   assert.equal(early.annual_periods.some(p=>p.release.tax_year===2026&&p.release.roll_stage==='certified'),false);
   assert.equal(neighborhoodAnalysis(early).latestOutcome.certified.tax_year,2025);
   assert.deepEqual(neighborhoodAnalysis(early).agentActivity.map(x=>x.certified.tax_year),[2025]);
  }
- assert.equal(parseNeighborhoodAnalysis(await call('preliminary',2027),'100').source_id,anchor); // Data lags season: honest certified fallback.
+ await db.exec('reset role');
+ await db.query(`update public.property_releases set source_dataset_id=$1,roll_stage='certified',export_time_raw=(select snapshot->>'export_time_raw' from public.property_snapshot_profiles where anchor_dataset_id=$1 and dataset_id=$1 and property_id='100') where dataset_id=$1`,[anchor]);
+ await db.exec('set role anon');
+ assert.equal(parseNeighborhoodAnalysis(await call('preliminary',2027),'100').source_id,anchor); // Calendar phase never overrides the published source.
  const bad=structuredClone(raw);bad.annual_periods[0].homes.push(bad.annual_periods[0].homes[0]);assert.equal(parseNeighborhoodAnalysis(bad,'100'),null);
  const duplicateAgent=structuredClone(raw);duplicateAgent.agent_assignments.push(duplicateAgent.agent_assignments[0]);assert.equal(parseNeighborhoodAnalysis(duplicateAgent,'100'),null);
  const malformedAgent=structuredClone(raw);malformedAgent.agent_assignments[0].status='named';malformedAgent.agent_assignments[0].agent_name=null;assert.equal(parseNeighborhoodAnalysis(malformedAgent,'100'),null);
@@ -91,6 +98,10 @@ test('conflicting preliminary values are excluded per home without removing home
  assert.ok(home);assert.equal(home.preliminary,null);assert.equal(home.protested,true);assert.ok(home.certified>0);
  const summary=neighborhoodSummary(data);
  assert.equal(summary.all.reduced.total,2);assert.equal(summary.all.reduced.count,1);
+ await db.exec('reset role');
+ await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"export_time_raw":null}'::jsonb where dataset_id=$1`,[pre]);
+ await db.query(`update public.property_releases set source_dataset_id=$2,roll_stage='preliminary',export_time_raw=null where dataset_id=$1`,['11111111-1111-4111-8111-111111111111',pre]);
+ await db.exec('set role anon');
  const conflicted=parseNeighborhoodAnalysis((await db.query("select public.property_neighborhood_analysis('120','preliminary',2026) r")).rows[0].r,'120');assert.ok(conflicted);
  assert.equal(conflicted.source_id,pre);
  assert.ok(conflicted.annual_periods.some(p=>p.release.dataset_id===pre));
@@ -152,4 +163,54 @@ test('population v2 separates land-only and other types, retains mixed land codi
  const area=async components=>(await db.query('select public.neighborhood_floor_area($1) r',[{components}])).rows[0].r.area;
  assert.equal(await area([{code:'1ST',class_code:'R3',improvement_id:'1',area:100,value:null}]),null);
  assert.equal(await area([{code:'1ST',class_code:'R3',improvement_id:'1',area:null,value:100}]),null);
+});
+
+test('current valuation uses the exact published supplemental source and cohort',async t=>{
+ const db=await fixtureDatabase();t.after(()=>db.close());
+ const anchor='11111111-1111-4111-8111-111111111111',supp='99999999-9999-4999-8999-999999999999';
+ await db.query('select tcad_ingest.publish_property_search($1)',[anchor]);
+ await seedComparisons(db);const {pre}=await seedNeighborhood(db);
+ await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at)
+  select $1,repeat('8',64),layout_sha256,parser_version,source_encoding,2026,'supplemental',source_url,archive_location,'{"run_date_time":"08/26/2026 12:00"}'::jsonb,status,completed_at from tcad_ingest.datasets where id=$2`,[supp,anchor]);
+ await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status)
+  select $1,member_name,record_type,uncompressed_bytes,sha256,status from tcad_ingest.files where dataset_id=$2`,[supp,anchor]);
+ await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields)
+  select $1,member_name,row_number,prop_id,prop_val_yr,fields from tcad_ingest.records where dataset_id=$2`,[supp,anchor]);
+ await db.query(`insert into public.property_snapshot_profiles
+  select anchor_dataset_id,$1::uuid,property_id,snapshot||jsonb_build_object('dataset_id',$1::text,'roll_stage','supplemental','export_date','2026-08-26','export_time_raw','08/26/2026 12:00',
+   'market_value',case property_id when '100' then 610000 when '120' then 777000 else (snapshot->>'market_value')::numeric end,
+   'neighborhood',case when property_id='120' then 'SECOND' else snapshot->>'neighborhood' end)
+  from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2`,[supp,anchor]);
+ await db.query(`update public.property_comparison_areas set neighborhood='SECOND'
+  where anchor_dataset_id=$1 and dataset_id=$2 and property_id='120'`,[anchor,supp]);
+ await db.query(`update public.property_releases set source_dataset_id=$2,roll_stage='supplemental',export_time_raw='08/26/2026 12:00' where dataset_id=$1`,[anchor,supp]);
+ await db.exec('set role anon');
+ const call=async subject=>(await db.query('select public.property_neighborhood_analysis($1,$2,$3) r',[subject,'post',2026])).rows[0].r;
+ const changed=parseNeighborhoodAnalysis(await call('100'),'100');assert.ok(changed);
+ assert.equal(changed.source_id,supp);assert.deepEqual(changed.releases.find(r=>r.dataset_id===supp),{dataset_id:supp,tax_year:2026,roll_stage:'supplemental',export_date:'2026-08-26'});
+ assert.equal(changed.subject.market_value,610000);assert.equal(changed.homes.find(h=>h.property_id==='100').market,610000);
+ assert.equal(changed.homes.some(h=>h.property_id==='120'),false);
+ const unchanged=parseNeighborhoodAnalysis(await call('121'),'121');assert.ok(unchanged);
+ assert.equal(unchanged.source_id,supp);assert.equal(unchanged.subject.market_value,460000);
+ assert.equal(unchanged.homes.find(h=>h.property_id==='121').market,460000);
+ const changedAnalysis=neighborhoodAnalysis(changed);
+ assert.equal(changedAnalysis.current.dataset_id,supp);assert.equal(changedAnalysis.story.final.release.dataset_id,supp);
+ assert.equal(changedAnalysis.story.final.versusProposal.current.dataset_id,supp);
+ assert.equal(changedAnalysis.latestOutcome.certified.roll_stage,'certified');
+ assert.deepEqual(changedAnalysis.agentActivity.map(x=>x.certified.roll_stage),['certified']);
+ const other=parseNeighborhoodAnalysis(await call('120'),'120');assert.ok(other);
+ assert.equal(other.neighborhood,'SECOND');assert.equal(other.source_id,supp);assert.equal(other.subject.market_value,777000);
+ assert.deepEqual(other.homes.map(h=>[h.property_id,h.market]),[['120',777000]]);
+ await db.exec('reset role');
+ await db.query(`update public.property_snapshot_profiles set snapshot=snapshot||'{"export_time_raw":null}'::jsonb where dataset_id=$1`,[pre]);
+ await db.query(`update public.property_releases set source_dataset_id=$2,roll_stage='preliminary',export_time_raw=null where dataset_id=$1`,[anchor,pre]);
+ await db.exec('set role anon');
+ const preliminary=parseNeighborhoodAnalysis(await call('100'),'100');assert.ok(preliminary);
+ assert.equal(preliminary.source_id,pre);assert.equal(preliminary.releases.find(r=>r.dataset_id===pre).roll_stage,'preliminary');
+ assert.equal(neighborhoodAnalysis(preliminary).story.final,null);
+ await db.exec('reset role');
+ await db.query(`update public.property_releases set source_dataset_id=$2,roll_stage='supplemental',export_time_raw='08/26/2026 12:00' where dataset_id=$1`,[anchor,supp]);
+ await db.query('delete from public.property_snapshot_profiles where anchor_dataset_id=$1 and dataset_id=$2 and property_id=$3',[anchor,supp,'100']);
+ await db.exec('set role anon');
+ const missing=await call('100');assert.equal(missing.status,'missing_snapshot');assert.equal(parseNeighborhoodAnalysis(missing,'100'),null);
 });
