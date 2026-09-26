@@ -6,6 +6,10 @@ test('comparison selection, median, manual search, release switching and respons
  await page.getByRole('navigation',{name:'Property tools'}).getByRole('link',{name:'Compare properties',exact:true}).click();
  await expect(page).toHaveURL(/\/property\/100\/compare/);
  await expect(page.getByRole('heading',{name:'Choose homes to compare',exact:true})).toBeVisible();
+ const selectionIntro='Compare your home’s market value with homes like yours. If a similar home has a lower value, take a closer look at the differences. That can help you decide whether to protest and which properties may be useful as evidence.';
+ const similarityGuidance='Start with homes similar in location, size, age, and construction. Condition and other details matter too.';
+ await expect(page.getByText(selectionIntro,{exact:true})).toBeVisible();
+ await expect(page.getByText(similarityGuidance,{exact:true})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Property tools'}).locator('[aria-current="page"]')).toHaveText('Compare properties');
  await expect(page.getByLabel('Assessment release')).toHaveValue('11111111-1111-4111-8111-111111111111');
  for(const label of ['Preparing for','Evidence start','Evidence end'])await expect(page.getByLabel(label,{exact:true})).toHaveCount(0);
@@ -17,11 +21,13 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page.getByRole('complementary',{name:'Your comparison set'})).not.toContainText('Tier 0');
  await expect(page.getByRole('region',{name:'Suggested property table'})).not.toContainText('Possible Tier');
  const tierGuidance='Match tiers compare recorded market area, construction class, living area, and age. They are a starting point, not the Appraisal District’s complete comparable-property score. Condition and other eligibility factors remain unverified.';
- await expect(page.getByText(tierGuidance,{exact:true})).toBeVisible();
+ await expect(page.getByText(tierGuidance,{exact:true})).toBeHidden();
  await expect(page.getByText(tierGuidance,{exact:true})).toHaveCount(1);
  await expect(page.getByText('How matching works',{exact:true})).toHaveCount(2);
  await expect(page.locator('details.comparison-method > summary').filter({hasText:'How matching works'})).toHaveCount(1);
  await expect(page.getByText('Condition and other eligibility factors remain unverified.',{exact:false})).toHaveCount(1);
+ const selection=page.getByRole('complementary',{name:'Your comparison set'});
+ await expect(selection.getByText('Your draft does not replace the active comparison until you apply it. Cancel keeps your active comparison.',{exact:false})).toBeVisible();
  await expect(page.getByText(/deducts 15 points/)).toHaveCount(0);
  await expect(page.getByText(/undivided-interest children/)).toHaveCount(0);
  const results=page.getByRole('region',{name:'Reported comparison values'});
@@ -41,6 +47,7 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(page.getByText('2 of 10 properties selected',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Remove 123 PINE ST (123)',exact:true}).click();
  await page.getByRole('link',{name:'How matching works',exact:true}).focus();await page.keyboard.press('Enter');
+ await expect(page.getByText(tierGuidance,{exact:true})).toBeVisible();
  await expect(page.locator('#comparison-rules-heading')).toBeFocused();
  await expect(page.locator('#comparison-rules-heading')).toHaveAccessibleName('How matching works');
  await expect(page.getByText('Limits of the match:',{exact:true})).toBeVisible();
@@ -55,7 +62,10 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(viewExplanation).toHaveText('Reported values are the Appraisal District’s market values for these homes. Estimated adjusted values use adjustment logic the district provided through open records to account for recorded differences between each home and yours. ParcelSavvy calculates these estimates; they are not the district’s official results.');
  await expect(viewExplanation).toHaveCount(1);
  await expect(page.getByRole('group',{name:'Comparison values'})).toHaveAttribute('aria-describedby','comparison-view-description');
- await expect(page.getByText(tierGuidance,{exact:true})).toBeVisible();
+ await expect(page.getByText(tierGuidance,{exact:true})).toBeHidden();
+ await expect(page.getByText(selectionIntro,{exact:true})).toHaveCount(0);
+ await expect(page.getByText(similarityGuidance,{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Your draft does not replace the active comparison until you apply it.',{exact:false})).toHaveCount(0);
  await expect(results).toContainText('$50,000 above');
  await expect(results).toContainText('12.5% above');
  await page.reload();await expect(page.getByRole('button',{name:'Edit selection (1)',exact:true})).toBeVisible();await expect(viewExplanation).toBeVisible();
@@ -82,6 +92,7 @@ test('comparison selection, median, manual search, release switching and respons
  await expect(viewExplanation).toBeVisible();
  await expect(results).toContainText('$30,000 above');
  await expect(results).toContainText('2025 certified');
+ await page.locator('#comparison-rules-heading').click();
  await expect(page.getByText('2025 matching tolerances have not been verified',{exact:false})).toBeVisible();
  await page.goto('/property/103/compare');await expect(page.getByRole('heading',{name:"Let’s try another address"})).toBeVisible();
 });
