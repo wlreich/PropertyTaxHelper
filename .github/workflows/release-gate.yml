@@ -10,6 +10,7 @@ on:
         options: [nonproduction, production]
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -21,7 +22,7 @@ jobs:
     name: Required migrations and database contract
     if: inputs.target == 'nonproduction' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    environment: release-${{ inputs.target }}
+    environment: ${{ inputs.target == 'production' && 'Production' || 'Preview' }}
     timeout-minutes: 10
     outputs:
       gate: ${{ steps.complete.outputs.gate }}
@@ -32,6 +33,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Require a successful nonproduction run for this production commit
+        if: inputs.target == 'production'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?name=nonproduction-release-$GITHUB_SHA" \
+            > "$RUNNER_TEMP/nonproduction-artifacts.json"
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.artifacts?.some(a=>!a.expired&&a.workflow_run?.head_sha===process.env.GITHUB_SHA))throw Error('No successful nonproduction release artifact exists for '+process.env.GITHUB_SHA)" "$RUNNER_TEMP/nonproduction-artifacts.json"
       - name: Read migration history without applying DDL
         env:
           RELEASE_DATABASE_URL: ${{ secrets.RELEASE_DATABASE_URL }}
@@ -54,7 +66,7 @@ jobs:
     needs: migration-and-contract
     if: needs.migration-and-contract.outputs.gate == 'passed'
     runs-on: ubuntu-24.04
-    environment: release-${{ inputs.target }}
+    environment: ${{ inputs.target == 'production' && 'Production' || 'Preview' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
@@ -87,4 +99,16 @@ jobs:
           RELEASE_SUPABASE_URL: ${{ vars.RELEASE_SUPABASE_URL }}
           RELEASE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.RELEASE_SUPABASE_PUBLISHABLE_KEY }}
           RELEASE_WEB_BASE_URL: ${{ steps.deploy.outputs.url }}
+          RELEASE_WEB_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: node tools/release-contract/smoke-published-release.mjs
+      - name: Record successful nonproduction order verification
+        if: inputs.target == 'nonproduction'
+        run: printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/nonproduction-release.txt"
+      - name: Preserve nonproduction prerequisite for production
+        if: inputs.target == 'nonproduction'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonproduction-release-${{ github.sha }}
+          path: ${{ runner.temp }}/nonproduction-release.txt
+          retention-days: 30
+          if-no-files-found: error

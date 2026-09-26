@@ -16,6 +16,24 @@ export function validatePublishedNeighborhood(value, propertyId = '736302') {
   }
   if (!Array.isArray(value.homes) || value.homes.length === 0 || value.homes.some(home => !object(home) || typeof home.property_id !== 'string'))
     failures.push('eligible-property result must contain structurally valid homes');
+  if (Array.isArray(value.homes) && Array.isArray(value.agent_assignments)) {
+    const homeIds = new Set(value.homes.map(home => home?.property_id));
+    const assignmentKeys = new Set();
+    const latestYear = Array.isArray(value.annual_periods)
+      ? Math.max(...value.annual_periods.map(period => period?.release?.tax_year).filter(Number.isInteger), 0) : 0;
+    if (value.agent_assignments.length > homeIds.size * 100) failures.push('agent_assignments exceeds the bounded contract size');
+    for (const [index, assignment] of value.agent_assignments.entries()) {
+      const named = assignment?.status === 'named';
+      const validName = typeof assignment?.agent_name === 'string' && assignment.agent_name.trim() === assignment.agent_name &&
+        assignment.agent_name.length > 0 && assignment.agent_name.length <= 200 && !/[\u0000-\u001f\u007f]/.test(assignment.agent_name);
+      const valid = object(assignment) && typeof assignment.property_id === 'string' && homeIds.has(assignment.property_id) &&
+        Number.isInteger(assignment.tax_year) && assignment.tax_year >= 1900 && assignment.tax_year <= latestYear &&
+        (named && validName || assignment.status === 'ambiguous' && assignment.agent_name === null);
+      const key = `${assignment?.tax_year}:${assignment?.property_id}`;
+      if (!valid || assignmentKeys.has(key)) failures.push(`agent_assignments[${index}] is not structurally usable`);
+      assignmentKeys.add(key);
+    }
+  }
   if (!object(value.population) || !Number.isInteger(value.population.candidate_count) || value.population.candidate_count < 0 ||
     !Array.isArray(value.population.excluded) || Array.isArray(value.homes) && value.population.candidate_count < value.homes.length)
     failures.push('population eligibility metadata is structurally invalid');

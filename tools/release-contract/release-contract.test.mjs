@@ -22,6 +22,18 @@ test('missing required agent field is an explicit contract failure', () => {
   assert.deepEqual(validatePublishedNeighborhood(missing).failures, ['required field agent_assignments must be an array']);
 });
 
+test('malformed, unknown-home and duplicate agent assignments fail the release gate', () => {
+  const malformed = structuredClone(fixture);
+  malformed.agent_assignments = [{ property_id: malformed.homes[0].property_id, tax_year: 2026, status: 'named', agent_name: null }];
+  assert.match(validatePublishedNeighborhood(malformed).failures[0], /agent_assignments\[0\]/);
+  const unknown = structuredClone(fixture);
+  unknown.agent_assignments = [{ property_id: '999999', tax_year: 2026, status: 'ambiguous', agent_name: null }];
+  assert.match(validatePublishedNeighborhood(unknown).failures[0], /agent_assignments\[0\]/);
+  const duplicate = structuredClone(fixture);
+  duplicate.agent_assignments = Array(2).fill({ property_id: duplicate.homes[0].property_id, tax_year: 2026, status: 'named', agent_name: 'Fixture Agent' });
+  assert.match(validatePublishedNeighborhood(duplicate).failures[0], /agent_assignments\[1\]/);
+});
+
 test('migration gate distinguishes missing versions from known version drift', async () => {
   const missing = await checkMigrationParity('20260925222242\n');
   assert.match(missing.failures[0], /missing migration 20260925223030/);

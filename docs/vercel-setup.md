@@ -20,7 +20,7 @@ Enter environment values directly through the hosting settings. Never commit sec
 
 On September 8, 2026, Wendy authorized routine production changes within the agreed task scope without a separate approval. Root `AGENTS.md` records the policy and its exceptions. Continue to use branches, PRs, relevant tests and post-deployment verification. Do not bypass branch protections or platform/tool approval requirements.
 
-`web/vercel.json` enables automatic Git deployments. With the existing Vercel Git integration, branch pushes can produce previews and merges to the configured production branch can deploy production. Database changes required by new website code must be applied and verified before that merge. A configuration file does not itself prove the account integration, production branch, deployment, or domain assignment is correct: verify the resulting deployment when access is available.
+`web/vercel.json` disables automatic Git deployments so a merge cannot bypass required database checks. Use the **Migration-gated web release** workflow: it verifies migration parity and the published database contract before invoking Vercel, and production requires successful nonproduction evidence for the same commit. A configuration file does not itself prove the account integration, environment credentials, production branch, deployment, or domain assignment is correct; verify the resulting deployment when access is available.
 
 The Vercel connector currently returns no teams and rejects access to the `property-tax-helper` project. This account-access limitation must not be mistaken for a deployment failure. GitHub commit checks can provide deployment evidence when the integration reports it, but live-page verification is still required.
 

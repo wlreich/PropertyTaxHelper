@@ -16,11 +16,11 @@ For an environment with the old version, first verify that its installed `proper
 ## Release order
 
 1. Apply reviewed migrations to the target database using the normal database change process.
-2. Run **Migration-gated web release** with `target: nonproduction`. The `release-nonproduction` GitHub environment must provide `RELEASE_DATABASE_URL`, `RELEASE_SUPABASE_PUBLISHABLE_KEY`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, plus the nonproduction `RELEASE_SUPABASE_URL` variable. Never point this environment at production.
+2. Run **Migration-gated web release** with `target: nonproduction`. This uses the repository's existing `Preview` GitHub environment, which must provide `RELEASE_DATABASE_URL`, `RELEASE_SUPABASE_PUBLISHABLE_KEY`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, plus the nonproduction `RELEASE_SUPABASE_URL` variable. If Vercel Deployment Protection is enabled, configure its scoped automation secret as `VERCEL_AUTOMATION_BYPASS_SECRET`; it is sent only to the immutable deployment's read-only smoke requests. Never point this environment at production. The `production` target uses the existing `Production` environment.
 3. The first job reads `supabase_migrations.schema_migrations` and performs no writes. It requires version `20260925223030`, then calls `property_neighborhood_analysis` for property `736302` through the publishable API.
 4. Only after that job succeeds does the second job build and deploy the web commit. It checks both the screen and printable neighborhood URLs on the resulting nonproduction deployment.
 5. Preserve the successful run URL as deployment-order evidence. Review the application logs for no `Neighborhood release contract failure` entries.
-6. After normal PR checks and review pass, merge. Run the same workflow from `main` with `target: production`. The production option is rejected on any other branch.
+6. After normal PR checks and review pass, merge. Run the same workflow from `main` with `target: production`. The production option is rejected on any other branch and requires an unexpired successful nonproduction artifact for that exact commit.
 
 The live contract requires `status: ok`, a source UUID, usable annual periods, neighborhood `T2450`, a structurally valid nonempty eligible-home result, and `agent_assignments` as an array. The fixture records the observed count of 571 to detect validator regressions. The live gate reports its observed count but intentionally does not assert 571, so a legitimate published-data change does not freeze deployment.
 
