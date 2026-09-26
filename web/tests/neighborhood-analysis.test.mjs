@@ -9,7 +9,7 @@ const period=(year,stage,values)=>({release:release(year,stage),caps:[],homes:va
 function data(periods,count=periods[0].homes.length){
  const current=periods.at(-1);
  return {source_id:current.release.dataset_id,releases:periods.map(p=>p.release),subject:{property_id:'1',market_value:100000,living_area:1000},
-  homes:Array.from({length:count},(_,i)=>({property_id:String(i+1),market:100000,area:1000,preliminary:null,certified:null,certified_area:null,prior:null,protested:false,entities:[]})),caps:[],annual_periods:periods,agent_assignments:[]};
+  homes:Array.from({length:count},(_,i)=>({property_id:String(i+1),market:current.homes[i]?.market??null,area:1000,preliminary:null,certified:null,certified_area:null,prior:null,protested:false,entities:[]})),caps:[],annual_periods:periods,agent_assignments:[]};
 }
 test('missing release fields produce actionable server log diagnostics',()=>{
  assert.equal(neighborhoodContractFailure({annual_periods:[]}), 'missing_required_field:agent_assignments');
@@ -43,6 +43,24 @@ test('three-stage comparisons keep distinct matched populations when cohorts are
  assert.equal(story.final.versusProposal.percent,(3000/2750-1)*100);
  assert.equal(story.final.versusPriorCertified.matchedCount,2);assert.equal(story.final.versusPriorCertified.excludedCount,2);
  assert.ok(Math.abs(story.final.versusPriorCertified.percent-20)<1e-9);
+});
+test('current certified story uses the active source cohort when same-date certified datasets compete',()=>{
+ const proposed=period(2026,'preliminary',[120000,130000]);
+ const competing=period(2026,'certified',[900000,910000,920000]);
+ competing.release.dataset_id='00000000-0000-4000-8000-000000000000';
+ const active=period(2026,'certified',[150000,170000]);
+ active.release.dataset_id='ffffffff-ffff-4fff-8fff-ffffffffffff';
+ competing.release.export_date=active.release.export_date;
+ const input=data([proposed,competing,active],2);
+ input.homes=[
+  {...input.homes[0],market:150000},
+  {...input.homes[1],market:170000},
+ ];
+ const story=neighborhoodAnalysis(input).story;
+ assert.equal(story.final.release.dataset_id,active.release.dataset_id);
+ assert.equal(story.final.versusProposal.current.dataset_id,active.release.dataset_id);
+ assert.equal(story.final.versusProposal.matchedCount,2);
+ assert.equal(story.final.versusProposal.currentMedian,160000);
 });
 test('no pairs and no qualifying reductions produce null percentages, not fabricated zeros',()=>{
  const p=period(2025,'preliminary',[null]),c=period(2025,'certified',[100000]),n=period(2026,'preliminary',[110000]);

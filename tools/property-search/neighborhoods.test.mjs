@@ -170,6 +170,26 @@ test('current valuation uses the exact published supplemental source and cohort'
  const anchor='11111111-1111-4111-8111-111111111111',supp='99999999-9999-4999-8999-999999999999';
  await db.query('select tcad_ingest.publish_property_search($1)',[anchor]);
  await seedComparisons(db);const {pre}=await seedNeighborhood(db);
+ // A same-date certified dataset with a lower UUID must never beat the active
+ // release pointer or supply its amounts and cohort.
+ const competing='00000000-0000-4000-8000-000000000001';
+ await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at)
+  select $1,repeat('0',64),layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at from tcad_ingest.datasets where id=$2`,[competing,anchor]);
+ await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status)
+  select $1,member_name,record_type,uncompressed_bytes,sha256,status from tcad_ingest.files where dataset_id=$2`,[competing,anchor]);
+ await db.query(`insert into tcad_ingest.records(dataset_id,member_name,row_number,prop_id,prop_val_yr,fields)
+  select $1,member_name,row_number,prop_id,prop_val_yr,fields from tcad_ingest.records where dataset_id=$2`,[competing,anchor]);
+ await db.query(`insert into public.property_snapshot_profiles
+  select anchor_dataset_id,$1::uuid,property_id,snapshot||jsonb_build_object('dataset_id',$1::text,
+   'market_value',case when property_id='100' then 999999 else (snapshot->>'market_value')::numeric end,
+   'neighborhood',case when property_id='120' then 'COMPETING' else snapshot->>'neighborhood' end)
+  from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2`,[competing,anchor]);
+ await db.exec('set role anon');
+ const certified=(await db.query("select public.property_neighborhood_analysis('100','post',2026) r")).rows[0].r;
+ assert.equal(certified.source_id,anchor);assert.equal(certified.subject.market_value,450000);
+ assert.equal(certified.homes.find(h=>h.property_id==='100').market,450000);
+ assert.equal(certified.homes.some(h=>h.property_id==='120'),true);
+ await db.exec('reset role');
  await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at)
   select $1,repeat('8',64),layout_sha256,parser_version,source_encoding,2026,'supplemental',source_url,archive_location,'{"run_date_time":"08/26/2026 12:00"}'::jsonb,status,completed_at from tcad_ingest.datasets where id=$2`,[supp,anchor]);
  await db.query(`insert into tcad_ingest.files(dataset_id,member_name,record_type,uncompressed_bytes,sha256,status)

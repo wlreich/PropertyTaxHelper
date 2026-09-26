@@ -176,7 +176,6 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
       unusable_value: p.homes.filter(h => h.exclusion === 'unusable_value').length } }));
   const currentSummary = neighborhoodSummary(data);
   const currentPreliminary = find(current.tax_year, 'preliminary');
-  const currentCertified = find(current.tax_year, 'certified');
   const previousCertified = find(current.tax_year - 1, 'certified');
   const reversedCertifiedChanges = certifiedChanges.reverse();
   const currentOutcome = outcomes.find(o => o.certified.tax_year === current.tax_year) ?? null;
@@ -187,7 +186,7 @@ export function neighborhoodAnalysis(data: NeighborhoodAnalysisData) {
     property_id: home.property_id, market: home.market, area: home.area, protested: home.protested,
     exclusion: usable(home.market) ? null : 'unusable_value',
   })) };
-  const finalPeriod = current.roll_stage === 'supplemental' ? currentPeriod : currentCertified;
+  const finalPeriod = current.roll_stage === 'preliminary' ? undefined : currentPeriod;
   const completedCurrentYear = current.roll_stage !== 'preliminary' && finalPeriod;
   const proposalToFinal = currentPreliminary && finalPeriod && currentPreliminary.release.export_date && finalPeriod.release.export_date
     && currentPreliminary.release.export_date < finalPeriod.release.export_date ? compare(currentPreliminary, finalPeriod) : null;
