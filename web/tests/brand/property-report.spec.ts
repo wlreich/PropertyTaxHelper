@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 
 test('PAR-28 complete Letter reports preserve inventory, history and page furniture',async({page},info)=>{
  test.skip(info.project.name!=='width-1440','Four distinct pagination fixtures, generated once.');test.setTimeout(120_000);
- const pageCounts={'synthetic-reference':8,'dense-inventory':10,'long-history':8,'limited-data':1} as const;
+ const pageCounts={'synthetic-reference':8,'dense-inventory':10,'long-history':9,'limited-data':1} as const;
  for(const [id,name,features,years] of [['999283','synthetic-reference',11,2],['999280','dense-inventory',26,2],['999281','long-history',0,26],['999282','limited-data',1,0]] as const){
   await page.goto(`/property/${id}/print`);await expect(page.getByRole('button',{name:'Print / save PDF',exact:true})).toBeEnabled();
  await expect(page.locator('[data-report-record^="feature-"]:not([data-report-record^="feature-change-"])')).toHaveCount(features);

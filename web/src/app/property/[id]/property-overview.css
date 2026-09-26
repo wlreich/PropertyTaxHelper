@@ -55,14 +55,18 @@
 .annual-expand-help { color: var(--color-action); font-size: var(--text-small); margin-top: var(--space-4); }
 .annual-earlier { margin-top: var(--space-4); border-color: var(--color-border-strong); }
 @media (max-width: 900px) {
+  .annual-trend, .annual-chart, .annual-chart-rows, .annual-chart-year, .annual-chart-pair, .annual-chart-series, .annual-bar-area { min-width: 0; max-width: 100%; }
+  .annual-chart { width: 100%; }
+  .annual-legend > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
   .annual-chart-year { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
   .annual-chart-series { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .annual-bar-area { margin-right: 0; }
   .annual-chart-axis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-1); margin-inline: 0; }
-  .annual-chart-axis span { position: static; width: auto; min-width: 0; white-space: normal; text-align: center; transform: none; overflow-wrap: anywhere; }
+  .annual-chart-axis span { position: static; left: auto !important; width: auto; min-width: 0; white-space: normal; text-align: center; transform: none; overflow-wrap: anywhere; }
   .annual-chart-axis span:first-child { text-align: left; }
   .annual-chart-axis span:last-child { text-align: right; transform: none; }
-  .annual-bar-value { position: static; display: block; width: auto; text-align: right; margin-top: var(--space-1); font-size: var(--text-label); }
+  .annual-bar-track { width: 100%; }
+  .annual-bar-value { position: static; left: auto !important; display: block; width: auto; max-width: 100%; text-align: right; margin-top: var(--space-1); font-size: var(--text-label); }
   .annual-table, .annual-table tbody, .annual-table tr, .annual-table td, .annual-table th { display: block; width: 100%; }
   .annual-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .annual-table .annual-value-row { padding-block: var(--space-3); }
