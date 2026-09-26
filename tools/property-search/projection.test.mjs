@@ -323,7 +323,7 @@ if (process.argv[1]?.endsWith("projection.test.mjs"))
     await t.test("RLS hides inactive releases and their profiles", async () => {
       const inactive = "22222222-2222-4222-8222-222222222222";
       await db.query(
-        "insert into public.property_releases values($1,2025,'certified',null,'https://traviscad.org/fixture.zip',now())",
+        "insert into public.property_releases(dataset_id,tax_year,roll_stage,export_time_raw,source_url,published_at) values($1,2025,'certified',null,'https://traviscad.org/fixture.zip',now())",
         [inactive],
       );
       await db.query(

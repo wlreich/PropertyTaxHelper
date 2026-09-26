@@ -1,4 +1,23 @@
--- Select the exact published export within the active prepared release. The
+-- A preparation publishes one authoritative full dataset, even when another
+-- ready dataset has the same year, stage and export timestamp. Retain that
+-- source ID on the public release so the invoker RPC never reads admin tables.
+alter table public.property_releases add column source_dataset_id uuid;
+update public.property_releases r set source_dataset_id=coalesce(
+ (select p.source_dataset from parcel_admin.preparations p where p.id=r.dataset_id),r.dataset_id);
+
+create function tcad_ingest.assign_release_source_dataset() returns trigger
+ language plpgsql security definer set search_path='' as $$
+begin
+ new.source_dataset_id:=coalesce(
+  (select p.source_dataset from parcel_admin.preparations p where p.id=new.dataset_id),new.dataset_id);
+ return new;
+end $$;
+revoke all on function tcad_ingest.assign_release_source_dataset() from public,anon,authenticated,service_role,tcad_loader;
+create trigger assign_release_source_dataset before insert on public.property_releases
+ for each row execute function tcad_ingest.assign_release_source_dataset();
+alter table public.property_releases alter column source_dataset_id set not null;
+
+-- Select only the recorded published source within the active release. The
 -- anchor itself is a preparation ID and has no profile source rows.
 create or replace function public.property_neighborhood_activity(p_id text,p_year integer default null) returns jsonb
  language plpgsql stable security invoker set search_path='' set statement_timeout='10s' as $$
@@ -12,6 +31,7 @@ begin
   and s.snapshot->>'tax_year'=r.tax_year::text
   and s.snapshot->>'roll_stage'=r.roll_stage
   and (s.snapshot->>'export_time_raw') is not distinct from r.export_time_raw
+  and a.dataset_id=r.source_dataset_id
  join public.property_search_documents d on d.dataset_id=anchor and d.property_id=a.property_id
  where a.anchor_dataset_id=anchor and a.property_id=ltrim(p_id,'0')
  and not d.shared_ownership and not d.values_under_review and not d.is_parkland
