@@ -65,6 +65,7 @@ test('estimated adjustment breakdowns, mixed medians, selection and release cont
  await expect(adjusted).toContainText('$390,000');
  await expect(adjusted).toContainText('2025 certified');
  await expect(adjusted).toContainText('Estimate method: Appraisal District formulas');
+ await page.locator('#comparison-rules-heading').click();
  await expect(page.getByText('2025 matching tolerances have not been verified.',{exact:false})).toBeVisible();
  await expect(page.getByText('Adjustment inputs are separate:',{exact:false})).toBeVisible();
  const caveat=info.outputPath('prior-year-matching-caveat.png');await page.screenshot({path:caveat,fullPage:true});await info.attach('Prior-year matching caveat',{path:caveat,contentType:'image/png'});
