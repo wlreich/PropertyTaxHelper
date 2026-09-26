@@ -55,7 +55,6 @@
 .annual-expand-help { color: var(--color-action); font-size: var(--text-small); margin-top: var(--space-4); }
 .annual-earlier { margin-top: var(--space-4); border-color: var(--color-border-strong); }
 @media (max-width: 900px) {
-  .current-assessment .definition-content { width: min(300px, calc(50vw - var(--space-12))); }
   .annual-trend, .annual-chart, .annual-chart-rows, .annual-chart-year, .annual-chart-pair, .annual-chart-series, .annual-bar-area { min-width: 0; max-width: 100%; }
   .annual-chart { width: 100%; }
   .annual-legend > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
@@ -987,6 +986,9 @@
 
 .current-assessment .definition-content { left: 0; right: auto; width: min(300px, calc(100vw - 96px)); text-transform: none; }
 .current-assessment .definition-trigger { text-transform: inherit; }
+@media (max-width: 900px) {
+  .current-assessment .definition-content { width: min(300px, calc(50vw - var(--space-12))); }
+}
 
 .current-assessment-impact { padding: var(--space-4); background: var(--color-surface-info); color: var(--color-text); border-radius: var(--radius-input); }
 .cap-outlook-values { margin-block: var(--space-4); }
