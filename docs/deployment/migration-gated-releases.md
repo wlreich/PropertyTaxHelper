@@ -1,6 +1,6 @@
 # Database contract gate for web releases
 
-The ParcelSavvy account currently has one Supabase project and no separate staging database. Vercel Git deployment remains enabled. A production Vercel build calls the published `property_neighborhood_analysis` RPC with the existing server-side `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` before `next build`. If required response fields are absent or invalid, the build fails and the existing live deployment stays in place. Local, CI and preview builds use fixture tests and do not require live credentials. No new GitHub or Vercel secrets are needed.
+The ParcelSavvy account currently has one Supabase project and no separate staging database. Vercel Git deployment remains enabled. A production Vercel build calls the published `property_neighborhood_analysis` RPC with the existing server-side `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` before `next build`. If required response fields are absent or invalid, the build fails and the existing live deployment stays in place. Local, CI and identified preview builds use fixture tests and do not require live credentials. If Vercel does not expose its environment indicator, the build fails closed by running the contract check. No new GitHub or Vercel secrets are needed.
 
 ## Migration reconciliation
 

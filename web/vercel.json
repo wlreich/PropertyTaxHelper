@@ -3,5 +3,5 @@
   "git": {
     "deploymentEnabled": true
   },
-  "buildCommand": "npm run build"
+  "buildCommand": "if [ \"$VERCEL_ENV\" = preview ] || [ \"$VERCEL_ENV\" = development ]; then npm run build; else RELEASE_CONTRACT_CHECK=1 npm run build; fi"
 }

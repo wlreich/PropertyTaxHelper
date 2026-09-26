@@ -47,6 +47,7 @@ test('Vercel Git deployment invokes the production contract before building', as
   const config = JSON.parse(await readFile(new URL('../../web/vercel.json', import.meta.url), 'utf8'));
   const pkg = JSON.parse(await readFile(new URL('../../web/package.json', import.meta.url), 'utf8'));
   assert.equal(config.git.deploymentEnabled, true);
-  assert.equal(config.buildCommand, 'npm run build');
+  assert.match(config.buildCommand, /RELEASE_CONTRACT_CHECK=1 npm run build/);
+  assert.match(config.buildCommand, /\$VERCEL_ENV.*preview/);
   assert.match(pkg.scripts.build, /^node scripts\/check-release-contract\.mjs && next build$/);
 });
