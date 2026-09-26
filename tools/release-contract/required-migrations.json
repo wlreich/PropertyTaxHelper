@@ -1,10 +1,10 @@
 {
   "contracts": [
     {
-      "name": "property_neighborhood_analysis.agent_assignments",
-      "version": "20260925223030",
-      "file": "supabase/migrations/20260925223030_neighborhood_agent_activity.sql",
-      "supersedesRepositoryVersion": "20260925203301"
+      "name": "property_neighborhood_analysis.current_release_source",
+      "version": "20260926173000",
+      "file": "supabase/migrations/20260926173000_current_supplemental_neighborhood.sql",
+      "supersedesRepositoryVersion": "20260925223030"
     }
   ]
 }

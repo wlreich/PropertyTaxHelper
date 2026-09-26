@@ -37,10 +37,10 @@ test('malformed, unknown-home and duplicate agent assignments fail the release g
 
 test('migration gate distinguishes missing versions from known version drift', async () => {
   const missing = await checkMigrationParity('20260925222242\n');
-  assert.match(missing.failures[0], /missing migration 20260925223030/);
-  const drift = await checkMigrationParity('20260925203301\n');
-  assert.match(drift.failures[0], /version drift.*20260925203301.*20260925223030/);
-  assert.deepEqual((await checkMigrationParity('20260925223030\n')).failures, []);
+  assert.match(missing.failures[0], /missing migration 20260926173000/);
+  const drift = await checkMigrationParity('20260925223030\n');
+  assert.match(drift.failures[0], /version drift.*20260925223030.*20260926173000/);
+  assert.deepEqual((await checkMigrationParity('20260926173000\n')).failures, []);
 });
 
 test('Vercel Git deployment invokes the production contract before building', async () => {
