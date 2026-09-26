@@ -75,7 +75,10 @@ export function buildPropertyReport(input: PropertyReportInput) {
   // Under-review profiles must never recover withheld values from older snapshots.
   if (p.values_under_review && current.dataset_id !== selected.dataset_id) return null;
   const selectedReleaseKey=releaseKey(current);
-  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>s.tax_year<=current.tax_year && releaseKey(s)<=selectedReleaseKey);
+  const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>{
+    const key=releaseKey(s);
+    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || key.trim()!=='' && key<=selectedReleaseKey);
+  });
   const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && releaseKey(s)<=selectedReleaseKey);
   const evidence = protestEvidence(snapshots,observations);
   const story = currentAssessmentStory(current,snapshots,evidence,null,input.protestsUnavailable);
@@ -223,7 +226,7 @@ export function buildPropertyReport(input: PropertyReportInput) {
         `Sources: ${h.sources.map(s=>`${s.label}, ${s.date}`).join('; ') || 'Valuation sources unavailable'}.`,
         ...snapshots.filter(s=>s.tax_year===h.year && s.valuation_note).map(s=>s.valuation_note!),
       ].filter(Boolean).join(' ')}))),
-      trend,
+      ...(chartHistory.length ? [trend] : []),
       note('An agent assignment does not confirm who handled a case. Interim releases remain identified by date and stage; known conflicting preliminary baselines are excluded from reduction calculations. A recorded protest alongside a reduction does not establish causation.'),
     ]});
   }

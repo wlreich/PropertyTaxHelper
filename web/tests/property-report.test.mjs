@@ -117,9 +117,17 @@ test('selected preliminary reports exclude same-day later completed releases',()
  const i=input('999282'),preliminary=i.snapshots[0];
  preliminary.export_date='2026-04-02';preliminary.export_time_raw='2026-04-02 08:00:00';
  i.snapshots.push({...preliminary,dataset_id:'same-day-later-final',roll_stage:'certified',export_time_raw:'2026-04-02 12:00:00',market_value:400000,assessed_value:390000});
+ i.snapshots.push({...preliminary,dataset_id:'unknown-order-final',roll_stage:'certified',export_date:null,export_time_raw:null,market_value:410000,assessed_value:395000});
  const report=buildPropertyReport({...i,release:preliminary.dataset_id}),history=reportTable(report,'Proposed market value → Final market value → Assessed value'),trend=reportTrend(report);
  assert.equal(report.stage,'preliminary');assert.equal(history.rows[0].cells[2],'Unavailable');assert.equal(history.rows[0].cells[3],'Unavailable');
- assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000/);
+ assert.deepEqual(trend.rows[0].stages.map(x=>x.display),['Unavailable','Pending','Pending']);assert.doesNotMatch(JSON.stringify(report),/\$400,000|\$390,000|\$410,000|\$395,000/);
+});
+
+test('protest-only history retains its exact row without rendering an empty trend',()=>{
+ const i=input('999282');i.snapshots=[];
+ const evidence={dataset_id:'protest-only',tax_year:2025,export_date:'2025-05-01',export_time_raw:'2025-05-01 08:00:00',protest_flag:true,arb_case_listed:false,arb_agent_listed:false,arb_agent_name:null,arb_status_codes:[]};
+ const report=buildPropertyReport({...i,protests:[evidence]}),history=reportTable(report,'Proposed market value → Final market value → Assessed value');
+ assert.equal(history.rows[0].cells[0],'2025 · Protest records only');assert.equal(reportTrend(report),undefined);
 });
 
 test('selected completed reports retain same-day earlier proposals and exclude later prior-year evidence',()=>{
