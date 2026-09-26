@@ -189,6 +189,13 @@ test('current valuation uses the exact published supplemental source and cohort'
  assert.equal(certified.source_id,anchor);assert.equal(certified.subject.market_value,450000);
  assert.equal(certified.homes.find(h=>h.property_id==='100').market,450000);
  assert.equal(certified.homes.some(h=>h.property_id==='120'),true);
+ const certifiedPeriod=certified.annual_periods.find(p=>p.release.tax_year===2026&&p.release.roll_stage==='certified');
+ assert.equal(certifiedPeriod.release.dataset_id,anchor);
+ assert.equal(certifiedPeriod.homes.find(h=>h.property_id==='100').market,450000);
+ assert.equal(certifiedPeriod.homes.some(h=>h.property_id==='120'),true);
+ const certifiedAnalysis=neighborhoodAnalysis(parseNeighborhoodAnalysis(certified,'100'));
+ assert.equal(certifiedAnalysis.story.outcome.certified.dataset_id,anchor);
+ assert.equal(certifiedAnalysis.latestOutcome.certified.dataset_id,anchor);
  await db.exec('reset role');
  await db.query(`insert into tcad_ingest.datasets(id,archive_sha256,layout_sha256,parser_version,source_encoding,tax_year,roll_stage,source_url,archive_location,header,status,completed_at)
   select $1,repeat('8',64),layout_sha256,parser_version,source_encoding,2026,'supplemental',source_url,archive_location,'{"run_date_time":"08/26/2026 12:00"}'::jsonb,status,completed_at from tcad_ingest.datasets where id=$2`,[supp,anchor]);
@@ -217,6 +224,8 @@ test('current valuation uses the exact published supplemental source and cohort'
  assert.equal(changedAnalysis.current.dataset_id,supp);assert.equal(changedAnalysis.story.final.release.dataset_id,supp);
  assert.equal(changedAnalysis.story.final.versusProposal.current.dataset_id,supp);
  assert.equal(changedAnalysis.latestOutcome.certified.roll_stage,'certified');
+ assert.equal(changedAnalysis.latestOutcome.certified.dataset_id,competing);
+ assert.notEqual(changedAnalysis.latestOutcome.certified.dataset_id,supp);
  assert.deepEqual(changedAnalysis.agentActivity.map(x=>x.certified.roll_stage),['certified']);
  const other=parseNeighborhoodAnalysis(await call('120'),'120');assert.ok(other);
  assert.equal(other.neighborhood,'SECOND');assert.equal(other.source_id,supp);assert.equal(other.subject.market_value,777000);

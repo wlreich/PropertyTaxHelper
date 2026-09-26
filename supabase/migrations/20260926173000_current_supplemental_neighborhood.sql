@@ -62,6 +62,8 @@ begin
  for period in
   select r from (
    select r,row_number() over(partition by r->>'tax_year',r->>'roll_stage' order by
+    case when selected_stage='certified' and r->>'roll_stage'='certified'
+      and (r->>'tax_year')::integer=selected_year then (r->>'dataset_id'=chosen::text)::integer else 0 end desc,
     case when r->>'roll_stage'='preliminary' then r->>'export_date' end asc,
     case when r->>'roll_stage'='certified' then r->>'export_date' end desc,r->>'dataset_id') rank
    from jsonb_array_elements(releases) r
