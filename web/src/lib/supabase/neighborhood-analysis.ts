@@ -1,10 +1,42 @@
 import 'server-only';
+import { unstable_cache } from 'next/cache.js';
+import { createClient } from '@supabase/supabase-js';
 import { rpc } from './properties.ts';
 import { parseNeighborhood } from './neighborhood.ts';
 import { validPropertyId } from '../property-comparisons.ts';
 import { validDate, type SeasonContext } from '../seasons.ts';
 import { neighborhoodAnalysis, type AgentAssignment, type AnnualPeriod, type AnnualHome, type NeighborhoodAnalysisData } from '../neighborhood-analysis.ts';
 import type { Cap } from '../neighborhood.ts';
+
+// Read the public release pointer on each request. A newly published source
+// changes the cache key immediately; the short TTL also bounds corrections to
+// historical snapshots made without switching the active source.
+async function neighborhoodReleaseKey() {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key?.startsWith('sb_publishable_')) return null;
+  try {
+    const client = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
+    });
+    const { data, error } = await client.from('property_releases')
+      .select('dataset_id,source_dataset_id,published_at')
+      .abortSignal(AbortSignal.timeout(15_000)).single();
+    if (error || !data?.dataset_id || !data.source_dataset_id || !data.published_at) return null;
+    return `${data.dataset_id}:${data.source_dataset_id}:${data.published_at}`;
+  } catch { return null; }
+}
+
+const loadNeighborhoodValue = (id: string, phase: string | null, year: number | null) =>
+  rpc('property_neighborhood_analysis', { p_id: id, p_phase: phase, p_year: year },
+    { SUPABASE_URL: process.env.SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY }, fetch);
+
+const cachedNeighborhoodValue = (releaseKey: string) => unstable_cache(async (id: string, phase: string | null, year: number | null) => {
+  const value = await loadNeighborhoodValue(id, phase, year);
+  // Do not cache a transient transport or database failure.
+  if (value === null) throw new Error('Neighborhood analysis unavailable');
+  return value;
+}, ['neighborhood-analysis-v1', releaseKey], { revalidate: 60 });
 
 const object = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const amount = (v: unknown): v is number | null => v === null || typeof v === 'number' && Number.isFinite(v) && v >= 0;
@@ -80,9 +112,15 @@ export function parseNeighborhoodAnalysis(value: unknown, id: string): Neighborh
 // same activeSeason(getSeasonCalendar()) context already used by the overview.
 export async function getNeighborhoodAnalysis(id: string, season: SeasonContext | null = null) {
   if (!validPropertyId(id)) return { status: 'invalid' as const };
-  const value = await rpc('property_neighborhood_analysis', {
-    p_id: id, p_phase: season?.phase ?? null, p_year: season?.config.tax_year ?? null,
-  }, { SUPABASE_URL: process.env.SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY }, fetch);
+  const phase = season?.phase ?? null, year = season?.config.tax_year ?? null;
+  const releaseKey = await neighborhoodReleaseKey();
+  let value: unknown;
+  if (releaseKey) {
+    try { value = await cachedNeighborhoodValue(releaseKey)(id, phase, year); }
+    catch { value = await loadNeighborhoodValue(id, phase, year); }
+  } else {
+    value = await loadNeighborhoodValue(id, phase, year);
+  }
   if (object(value) && value.available === true && ['missing_property', 'missing_snapshot', 'missing_area', 'area_too_large', 'too_many_releases'].includes(String(value.status))) {
     return { status: value.status as 'missing_property' | 'missing_snapshot' | 'missing_area' | 'area_too_large' | 'too_many_releases' };
   }
