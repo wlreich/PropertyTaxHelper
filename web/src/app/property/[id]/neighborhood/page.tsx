@@ -22,14 +22,19 @@ export const maxDuration=90;
 export const metadata={title:'Your neighborhood | ParcelSavvy'};
 export default async function NeighborhoodPage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<EvidenceQuery>}) {
  const {id}=await params;if(!validPropertyId(id))notFound();
- const calendar=await getSeasonCalendar(),season=calendar?activeSeason(calendar):null;
- const query=await searchParams;
- const result=await getNeighborhoodAnalysis(id,season);
+ const [calendar,query]=await Promise.all([getSeasonCalendar(),searchParams]);
+ const season=calendar?activeSeason(calendar):null;
+ const analysisPromise=getNeighborhoodAnalysis(id,season);
+ // The evidence window is calendar-based when a season is published. Load its
+ // activity while the larger neighborhood analysis runs.
+ const calendarWindow=season?readEvidenceWindow(query,season.config.tax_year+(season.phase==='post'?1:0)):null;
+ const activityPromise=calendarWindow&&!calendarWindow.error?getWindowActivity(id,calendarWindow.window):null;
+ const result=await analysisPromise;
  const defaultYear=season?season.config.tax_year+(season.phase==='post'?1:0):result.status==='ok'?result.analysis.current.tax_year:new Date().getUTCFullYear();
  const {window,error}=readEvidenceWindow(query,defaultYear);
  if(result.status==='missing_property')notFound();
  if(result.status!=='ok')return <><SiteHeader/><main id="main-content" className="main-shell profile-shell"><h1>Your neighborhood</h1><PropertyNavigation propertyId={id} active="neighborhood" evidenceQuery={error?'':evidenceParams(window).toString()}/><div className="notice"><h2>{result.status==='missing_area'?'No market area is recorded for this property':result.status==='missing_snapshot'?'Neighborhood records are not available yet':'Neighborhood data is temporarily unavailable'}</h2><p>Open the property overview or try again later.</p><Link href={`/property/${id}`}>Property overview</Link></div></main><SiteFooter/></>;
- const activity=error?null:await getWindowActivity(id,window);
+ const activity=error?null:activityPromise?await activityPromise:await getWindowActivity(id,window);
  const {data:d,analysis}=result;
  const matches=activity?.rows.length?await getActivityMatches(id,analysis.current.dataset_id,analysis.current.tax_year,activity.rows.map(r=>r.property_id)):null;
  return <><SiteHeader/><main id="main-content" className="main-shell profile-shell neighborhood-page"><p className="neighborhood-context"><Link href={`/property/${id}`}>← Property overview</Link> / {d.subject.address} · {d.subject.living_area?.toLocaleString('en-US')??'Unreported'} sq ft · Class {d.subject.class_code??'not reported'}</p><PropertyNavigation propertyId={id} active="neighborhood" evidenceQuery={error?'':evidenceParams(window).toString()}/><div className="neighborhood-title"><h1>Your neighborhood, in context.</h1><NeighborhoodPrintLink propertyId={id} evidenceQuery={error?'':evidenceParams(window).toString()}/></div><div className="neighborhood-group"><p>Appraisal District group <strong>{d.neighborhood}</strong> · {d.homes.length.toLocaleString('en-US')} single-family homes</p><NeighborhoodDisclosure title="About this group" open><p>The Appraisal District grouping may differ from the named subdivision. Subdivision on record: {d.subdivision??'Not reported'}. The analysis includes homes with usable residential building and market-value records.</p></NeighborhoodDisclosure></div><NeighborhoodAnalysisView data={d} analysis={analysis} season={season} activity={<NeighborhoodActivity key={JSON.stringify([id,analysis.current.dataset_id,window])} matches={matches} releaseLabel={`${snapshotLabel(analysis.current)} appraisal release · ${dateLabel(analysis.current.export_date)}`} sourceId={analysis.current.dataset_id} data={activity} propertyId={id} window={window} error={error}/>}/></main><SiteFooter/></>;
