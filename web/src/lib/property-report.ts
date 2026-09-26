@@ -77,7 +77,9 @@ export function buildPropertyReport(input: PropertyReportInput) {
   const selectedReleaseKey=releaseKey(current);
   const snapshots = (p.values_under_review ? [] : input.snapshots).filter(s=>{
     const key=releaseKey(s);
-    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || key.trim()!=='' && key<=selectedReleaseKey);
+    const date=key.slice(0,10),selectedDate=selectedReleaseKey.slice(0,10);
+    const ordered=key.trim()!=='' && selectedReleaseKey.trim()!=='' && (date<selectedDate || date===selectedDate && key.slice(11).trim()!=='' && selectedReleaseKey.slice(11).trim()!=='' && key<=selectedReleaseKey);
+    return s.tax_year<=current.tax_year && (s.dataset_id===current.dataset_id || ordered);
   });
   const observations = (input.protests ?? []).filter(s=>s.tax_year<=current.tax_year && current.export_date!==null && s.export_date!==null && releaseKey(s)<=selectedReleaseKey);
   const evidence = protestEvidence(snapshots,observations);
