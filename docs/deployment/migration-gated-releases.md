@@ -1,35 +1,24 @@
-# Migration-gated website releases
+# Database contract gate for web releases
 
-Website releases that consume new database response fields must use the **Migration-gated web release** workflow. The workflow is intentionally separate from migration application: database DDL is reviewed and applied first, and the website is deployed only after the recorded migration version and the public read contract both pass.
+The ParcelSavvy account currently has one Supabase project and no separate staging database. Vercel Git deployment remains enabled. A production Vercel build calls the published `property_neighborhood_analysis` RPC with the existing server-side `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` before `next build`. If required response fields are absent or invalid, the build fails and the existing live deployment stays in place. Local, CI and preview builds use fixture tests and do not require live credentials. No new GitHub or Vercel secrets are needed.
 
-## PAR-68 reconciliation evidence
+## Migration reconciliation
 
-The agent-activity SQL was originally committed as `20260925203301_neighborhood_agent_activity.sql`. Production evidence from the September 25, 2026 application records the exact SQL under version `20260925223030`. The repository file is therefore renamed to `20260925223030_neighborhood_agent_activity.sql`; its SQL body is unchanged. This aligns a new checkout with live history and does **not** apply, repeat, or reverse the `create or replace function` statement.
-
-`tools/release-contract/required-migrations.json` records the required live version and the superseded repository version. The parity check fails distinctly when:
-
-- `20260925223030` is absent (missing migration); or
-- only `20260925203301` is recorded (known version drift).
-
-For an environment with the old version, first verify that its installed `property_neighborhood_analysis` returns the required contract. Then repair only Supabase migration history, marking `20260925203301` reverted and `20260925223030` applied. Do not run the SQL again. History repair must be reviewed for that environment; the deployment workflow deliberately never edits migration history or applies DDL.
+The agent-activity SQL was originally committed as `20260925203301_neighborhood_agent_activity.sql`, but production recorded the exact applied SQL as `20260925223030`. The repository file is renamed to `20260925223030_neighborhood_agent_activity.sql` without changing its SQL body. Do not apply it again to production. `tools/release-contract/check-migration-parity.mjs` and `required-migrations.json` distinguish a missing version from that known history drift when supplied a target environment's migration history. Before releasing a new database-dependent feature, use the normal reviewed migration process and verify the recorded target version; do not treat a committed SQL file as proof that it ran.
 
 ## Release order
 
-1. Apply reviewed migrations to the target database using the normal database change process.
-2. Opening or updating a relevant pull request automatically runs **Migration-gated web release** as a nonproduction deployment. This makes the acceptance path executable before the new workflow reaches the default branch; it still uses the repository's protected `Preview` GitHub environment and does not expose environment secrets to forked pull requests. The environment must provide `RELEASE_DATABASE_URL`, `RELEASE_SUPABASE_PUBLISHABLE_KEY`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`, plus the nonproduction `RELEASE_SUPABASE_URL` variable. If Vercel Deployment Protection is enabled, configure its scoped automation secret as `VERCEL_AUTOMATION_BYPASS_SECRET`; it is sent only to the immutable deployment's read-only smoke requests. Never point this environment at production. The `production` target uses the existing `Production` environment.
-3. The first job reads `supabase_migrations.schema_migrations` and performs no writes. It requires version `20260925223030`, then calls `property_neighborhood_analysis` for property `736302` through the publishable API.
-4. Only after that job succeeds does the second job build and deploy the web commit. It checks both the screen and printable neighborhood URLs on the resulting nonproduction deployment.
-5. Preserve the successful run URL as deployment-order evidence. Review the application logs for no `Neighborhood release contract failure` entries.
-6. After normal PR checks, review, and the automatic PR nonproduction run pass, merge. A merge, squash, or rebase can create a different commit, so manually run this workflow from `main` with `target: nonproduction` for the resulting main SHA. Only then run it again for the same SHA with `target: production`. Production is rejected on other branches and requires an unexpired successful nonproduction artifact created from `main` for that exact commit.
+1. Apply and verify reviewed database migrations for the target environment. For this incident, production already has `20260925223030`.
+2. Run the focused release contract fixtures and ordinary required PR checks. The contract validator checks the fields actually consumed by the website, including agent assignment entries; it does not freeze the current 571-home count.
+3. Merge only after review and required checks pass. Vercel's existing Git integration starts the deployment. On production builds, `web/scripts/check-release-contract.mjs` makes a read-only anon RPC request for property 736302 using the existing server environment. Missing config, HTTP errors, invalid stage/source/population, missing `agent_assignments`, or malformed entries fail the build before promotion.
+4. Inspect the production deployment and screen/print neighborhood panels after release. The build gate checks the database contract, while rendered layout and pagination remain covered by the browser/PDF CI and release review.
 
-The live contract requires `status: ok`, a source UUID, usable annual periods, neighborhood `T2450`, a structurally valid nonempty eligible-home result, and `agent_assignments` as an array. The fixture records the observed count of 571 to detect validator regressions. The live gate reports its observed count but intentionally does not assert 571, so a legitimate published-data change does not freeze deployment.
+The local test fixture exercises successful, missing-field, unavailable-RPC and missing-config outcomes. The production build check can be exercised against a safe fixture endpoint with `RELEASE_CONTRACT_CHECK=1`; do not point test deployments at live credentials merely to satisfy a test.
 
-## Failure and rollback behavior
+## Failure and rollback
 
-- **Parity or pre-deployment contract failure:** no web deployment runs. Apply the missing reviewed migration or reconcile verified history, then rerun the gate. Do not bypass the job.
-- **Missing required RPC field:** parsing fails closed. The screen/print route renders its existing visible unavailable state, while the server logs `Neighborhood release contract failure` with a field-specific reason and property ID. It never treats HTTP 200 alone as contract success.
-- **Post-deployment smoke failure:** do not promote that deployment. Inspect the immutable deployment and database logs; keep the prior alias active.
-- **Production web regression:** redeploy/promote the last known-good web commit. The additive database function contract remains in place, allowing application and database rollback decisions to stay independent.
-- **Database rollback:** do not remove `agent_assignments` while any deployed web version requires it. A database rollback needs a separately reviewed forward migration and must pass the contract against the web version that will remain active.
+- A failed build leaves the prior production deployment serving traffic. Inspect the named missing field or RPC error, apply the reviewed migration, and retry the same commit.
+- The app retains its visible unavailable fallback and logs `Neighborhood release contract failure` when a runtime response later drifts. A production rollback can promote the last known-good web deployment while the additive database contract remains available.
+- Do not remove a field required by a deployed web version. Any database rollback needs a separate reviewed forward change and compatibility check.
 
-The gate performs only public reads plus a migration-history read. It does not change the active property release, property calculations, access policies, or published counts.
+This build guard verifies the live response contract. It does not independently query the private `supabase_migrations` history from Vercel. The parity tool remains available to the migration operator for exact version checks; a fully automatic version-history gate across separate staging and production environments requires that infrastructure and credentials to exist first.

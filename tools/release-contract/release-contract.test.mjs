@@ -43,10 +43,10 @@ test('migration gate distinguishes missing versions from known version drift', a
   assert.deepEqual((await checkMigrationParity('20260925223030\n')).failures, []);
 });
 
-test('release workflow exposes a PR gate and requires exact main-SHA nonproduction provenance', async () => {
-  const workflow = await readFile(new URL('../../.github/workflows/release-gate.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /\n  pull_request:\n/);
-  assert.match(workflow, /github\.event_name == 'pull_request'/);
-  assert.match(workflow, /head_sha===process\.env\.GITHUB_SHA&&a\.workflow_run\?\.head_branch==='main'/);
-  assert.match(workflow, /name: nonproduction-release-\$\{\{ github\.sha \}\}/);
+test('Vercel Git deployment invokes the production contract before building', async () => {
+  const config = JSON.parse(await readFile(new URL('../../web/vercel.json', import.meta.url), 'utf8'));
+  const pkg = JSON.parse(await readFile(new URL('../../web/package.json', import.meta.url), 'utf8'));
+  assert.equal(config.git.deploymentEnabled, true);
+  assert.equal(config.buildCommand, 'npm run build');
+  assert.match(pkg.scripts.build, /^node scripts\/check-release-contract\.mjs && next build$/);
 });
