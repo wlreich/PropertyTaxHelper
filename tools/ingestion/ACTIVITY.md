@@ -53,6 +53,9 @@ It retains the original appraisal and supplemental export dates; this is a
 continuity measure, not a claim that the new appraisal export was scanned for
 additional deeds. Refresh the projection from reviewed sources when a new
 activity import or an appraisal-source-compatible publisher is available.
+The public neighborhood activity RPC uses the newest visible appraisal source
+within a prepared release for its market-area group and property types; a
+preparation ID is an anchor, not a raw appraisal source ID.
 
 The public RPC `property_neighborhood_activity(property_id, year)` returns a
 bounded (10,000 maximum) activity list for the active district neighborhood,

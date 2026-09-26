@@ -77,6 +77,7 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  // and has no matching activity import of its own.
  await db.query("insert into public.property_search_documents select $1,property_id,address,city,postal_code,property_type,search_text,market_value,appraised_value,assessed_value,land_value,improvement_value,land_acres,source_record_count,values_under_review,shared_ownership,improvement_records,land_segments,is_parkland,is_vacant_land from public.property_search_documents where dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
  await db.query("update public.property_search_documents set values_under_review=true where dataset_id=$1 and property_id='120'",[next]);
+ await db.query("insert into public.property_snapshot_profiles select $1,dataset_id,property_id,snapshot from public.property_snapshot_profiles where anchor_dataset_id=$2 and dataset_id=$2 and property_id in ('100','120')",[next,anchor]);
  await db.query('update public.property_search_state set dataset_id=$1',[next]);
  await db.exec('set role anon');
  assert.equal((await db.query('select count(*)::int n from public.property_activity')).rows[0].n,2);
@@ -84,6 +85,7 @@ test('activity reconciles transactions, retains unknowns, excludes private/futur
  assert.equal((await db.query("select count(*)::int n from public.property_activity where property_id='120'")).rows[0].n,0);
  assert.deepEqual((await db.query('select activity_year from public.property_activity_releases')).rows.map(r=>r.activity_year),[2026]);
  assert.equal((await db.query('select appraisal_export_date::text as appraisal, sales_export_date::text as sales from public.property_activity_releases')).rows[0].sales,'2026-08-27');
+ const carried=await call('100');assert.equal(carried.status,'ok');assert.equal(carried.neighborhood,'T2450');assert.equal(carried.rows.length,2);
  await assert.rejects(db.query('select tcad_ingest.carry_forward_property_activity($1,$2)',[anchor,next]));
  await db.exec('reset role');
  assert.equal((await db.query('select tcad_ingest.carry_forward_property_activity($1,$2) n',[anchor,next])).rows[0].n,0);
