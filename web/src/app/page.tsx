@@ -7,6 +7,7 @@ import { SearchEntryLink } from "@/components/search-entry-link";
 import { SiteNavigation } from "@/components/site-navigation";
 import { Unavailable } from "@/components/site-shell";
 import { BrandLogo } from "@/components/brand-logo";
+import { SocialLinks } from "@/components/social-links";
 import { TermDefinition } from "@/components/term-definition";
 import styles from "./search-page.module.css";
 import { appraisalDistrict } from "@/lib/appraisal-district";
@@ -61,6 +62,8 @@ function HomeFooter() {
             <Link href="/report-data-issue">Report a data issue</Link>
             <Link href="/support">Support ParcelSavvy</Link>
           </nav>
+          <h2 className={styles.footerSocialHeading}>Follow ParcelSavvy</h2>
+          <SocialLinks className={styles.footerSocialLinks} />
         </div>
         <div>
           <h2>Legal &amp; access</h2>
