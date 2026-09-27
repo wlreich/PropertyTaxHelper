@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 const manrope = localFont({ src: "../../fonts/manrope-latin-wght-normal.woff2", variable: "--font-manrope", weight: "200 800", display: "swap", fallback: ["Arial"], adjustFontFallback: "Arial" });
 const inter = localFont({ src: "../../fonts/inter-latin-wght-normal.woff2", variable: "--font-inter", weight: "100 900", display: "swap", fallback: ["Arial"], adjustFontFallback: "Arial" });
@@ -24,6 +25,7 @@ export default function RootLayout({
           Skip to content
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   );
