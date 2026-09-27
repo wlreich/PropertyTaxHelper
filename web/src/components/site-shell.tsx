@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandLogo } from "./brand-logo";
 import { appraisalDistrict } from "@/lib/appraisal-district";
 import { SiteNavigation } from './site-navigation';
+import { SocialLinks } from "./social-links";
 export function SiteHeader({ propertyOverview = false }: { propertyOverview?: boolean }) {
   return (
     <header className={`site-header${propertyOverview ? " overview-site-header" : ""}`}>
@@ -28,6 +29,8 @@ export function SiteFooter() {
         <Link href="/terms">Terms</Link>
         <Link href="/accessibility">Accessibility</Link>
       </nav>
+      <p className="site-footer-social-heading">Follow ParcelSavvy</p>
+      <SocialLinks />
       <p>ParcelSavvy is operated by Systems &amp; Sense LLC.</p>
     </footer>
   );

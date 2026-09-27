@@ -291,6 +291,25 @@ h1 span {
   gap: var(--space-2) var(--space-4);
   margin: var(--space-3) 0;
 }
+.site-footer-social-heading {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding-inline: var(--space-1);
+}
+.social-links svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+.social-links-external {
+  font-size: var(--text-label);
+}
 .site-footer a,
 .notice a {
   text-decoration: underline;
@@ -757,6 +776,12 @@ h1 span {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+}
+@media print {
+  .social-links,
+  .site-footer-social-heading {
+    display: none !important;
   }
 }
 

@@ -556,6 +556,31 @@
   gap: var(--space-2);
 }
 
+.footerSocialHeading {
+  margin-top: var(--space-6);
+}
+
+.homeFooter .footerSocialLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.page .homeFooter .footerSocialLinks a {
+  color: var(--color-surface-info);
+  text-decoration: none;
+}
+
+.page .homeFooter .footerSocialLinks a:hover {
+  color: var(--color-surface);
+  text-decoration: underline;
+}
+
+.page .homeFooter .footerSocialLinks a:focus-visible {
+  outline-color: var(--color-focus-on-dark);
+}
+
 .page .homeFooter nav[aria-label] > a {
   width: fit-content;
   color: var(--color-surface-info);
