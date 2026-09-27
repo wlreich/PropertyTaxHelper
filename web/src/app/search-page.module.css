@@ -768,7 +768,7 @@
   outline-offset: var(--focus-offset);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1240px) {
   .headerInner {
     flex-wrap: wrap;
     padding: var(--space-4) 0;
@@ -777,8 +777,15 @@
 
   .county {
     flex-basis: 100%;
+    order: 3;
   }
 
+  .headerInner :global(.site-navigation) {
+    order: 2;
+  }
+}
+
+@media (max-width: 980px) {
   .hero {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
