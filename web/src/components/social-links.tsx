@@ -1,5 +1,7 @@
 type SocialLinksProps = {
   className?: string;
+  as?: "nav" | "div";
+  variant?: "labeled" | "icon-only";
 };
 
 function FacebookIcon() {
@@ -36,11 +38,18 @@ const socialAccounts = [
   },
 ];
 
-export function SocialLinks({ className }: SocialLinksProps) {
+export function SocialLinks({
+  className,
+  as: Container = "nav",
+  variant = "labeled",
+}: SocialLinksProps) {
   return (
-    <nav
+    <Container
       aria-label="Follow ParcelSavvy"
-      className={["social-links", className].filter(Boolean).join(" ")}
+      className={["social-links", `social-links-${variant}`, className]
+        .filter(Boolean)
+        .join(" ")}
+      role={Container === "div" ? "group" : undefined}
     >
       {socialAccounts.map(({ name, href, icon }) => (
         <a
@@ -51,10 +60,10 @@ export function SocialLinks({ className }: SocialLinksProps) {
           aria-label={`${name} (opens in a new tab)`}
         >
           {icon}
-          <span>{name}</span>
+          <span className="social-links-label">{name}</span>
           <span className="social-links-external" aria-hidden="true">↗</span>
         </a>
       ))}
-    </nav>
+    </Container>
   );
 }

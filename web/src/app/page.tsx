@@ -151,13 +151,13 @@ async function HomeContent({
           >
             <BrandLogo />
           </Link>
-          <SiteNavigation home />
           <div className={styles.county}>
             <span>{appraisalDistrict.countyLabel}</span>
             <span className={styles.districtName}>
               County Appraisal District: {appraisalDistrict.name} ({appraisalDistrict.abbreviation})
             </span>
           </div>
+          <SiteNavigation home />
         </div>
       </header>
 

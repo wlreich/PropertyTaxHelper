@@ -777,6 +777,11 @@
 
   .county {
     flex-basis: 100%;
+    order: 3;
+  }
+
+  .headerInner :global(.site-navigation) {
+    order: 2;
   }
 
   .hero {

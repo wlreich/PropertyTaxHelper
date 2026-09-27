@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SearchEntryLink } from './search-entry-link';
+import { SocialLinks } from './social-links';
 
 /** One shared set of destinations, with native keyboard-accessible mobile disclosure. */
 export function SiteNavigation({ home = false }: { home?: boolean }) {
@@ -10,10 +11,16 @@ export function SiteNavigation({ home = false }: { home?: boolean }) {
     <Link href={home ? '/#support' : '/support'}>{home ? 'Support us' : 'Support ParcelSavvy'}</Link>
   </>;
   return <nav className="site-navigation" aria-label={home ? 'Main navigation' : 'Site navigation'}>
-    <div className="site-navigation-desktop">{links}</div>
+    <div className="site-navigation-desktop">
+      {links}
+      <SocialLinks as="div" variant="icon-only" className="site-header-social-links" />
+    </div>
     <details className="site-navigation-mobile">
       <summary>Menu</summary>
-      <div className="site-navigation-links">{links}</div>
+      <div className="site-navigation-links">
+        {links}
+        <SocialLinks as="div" className="site-navigation-social-links" />
+      </div>
     </details>
   </nav>;
 }
