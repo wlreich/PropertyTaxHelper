@@ -21,7 +21,8 @@ test('desktop headers use icon-only links while mobile navigation keeps labels',
   assert.match(homePage, /<SiteNavigation home \/>/);
   assert.match(siteNavigation, /<div className="site-navigation-desktop">[\s\S]*<SocialLinks as="div" variant="icon-only" className="site-header-social-links" \/>/);
   assert.match(siteNavigation, /<details className="site-navigation-mobile">[\s\S]*<summary onKeyDown=\{toggleMobileMenu\}>Menu<\/summary>[\s\S]*<SocialLinks as="div" className="site-navigation-social-links" \/>/);
-  assert.match(siteNavigation, /event\.key !== 'Enter' && event\.key !== ' '/);
+  assert.match(siteNavigation, /event\.key !== 'Enter'/);
+  assert.doesNotMatch(siteNavigation, /event\.key !== ' '/);
   assert.match(globalStyles, /\.site-header-social-links \{ display: none; \}/);
   assert.match(homeStyles, /@media \(max-width: 1240px\) \{[\s\S]*\.headerInner[\s\S]*flex-wrap: wrap;[\s\S]*\.county[\s\S]*order: 3;/);
 });
