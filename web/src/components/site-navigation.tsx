@@ -5,7 +5,7 @@ import { SearchEntryLink } from './search-entry-link';
 import { SocialLinks } from './social-links';
 
 function toggleMobileMenu(event: React.KeyboardEvent<HTMLElement>) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
+  if (event.key !== 'Enter') return;
   const details = event.currentTarget.closest('details');
   if (!(details instanceof HTMLDetailsElement)) return;
   event.preventDefault();
