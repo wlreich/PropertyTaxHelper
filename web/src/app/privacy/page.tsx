@@ -93,8 +93,10 @@ export default function PrivacyPage() {
       <section>
         <h2>Cookies and analytics</h2>
         <p>
-          ParcelSavvy does not currently use advertising cookies or third-party
-          behavioral analytics. Essential hosting, security, or administrative
+          We use Vercel Web Analytics to count visits and page views and understand
+          which pages people use. It does not use advertising cookies. We do not
+          use this information for targeted advertising or to track you across
+          other websites. Essential hosting, security, or administrative
           functions may use limited cookies or similar technologies. If our
           practices materially change, we will update this policy before using
           information for the new purpose.
